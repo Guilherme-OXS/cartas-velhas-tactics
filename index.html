@@ -12,13 +12,13 @@
     <meta property="og:title" content="Cartas Velhas: Cyberpunk Tactics">
     <meta property="og:description" content="Desafia os teus amigos neste jogo tático 3D. Regra do Infinito, Cartas Especiais e Multiplayer em tempo real.">
     <meta property="og:type" content="website">
-
-    <title>Cartas Velhas: Cyberpunk Tactics v0.9.9</title>
+    
+    <title>Cartas Velhas: Cyberpunk Tactics v0.9.12</title>
     <style>
         /* --- CORE STYLES --- */
         body { margin: 0; overflow: hidden; background-color: #050510; font-family: 'Segoe UI', Tahoma, monospace; user-select: none; touch-action: none; }
         
-        /* Scanlines */
+        /* Scanlines (Efeito Retro TV) */
         body::after {
             content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
@@ -30,7 +30,7 @@
 
         :root { --x-color: #ff0055; --o-color: #00e5ff; --card-bg: rgba(10, 10, 20, 0.90); }
 
-        /* --- UI COMPONENTS --- */
+        /* UI COMPONENTS */
         .cyber-panel {
             background: rgba(0, 0, 0, 0.9); border: 1px solid #333; border-left: 4px solid var(--o-color);
             padding: 30px; max-width: 600px; width: 90%; position: relative;
@@ -39,17 +39,16 @@
         }
         
         .title-glitch { 
-            font-size: 3.5rem; font-weight: 900; color: #fff; text-align: center; line-height: 0.9; 
+            font-size: 3rem; font-weight: 900; color: #fff; text-align: center; line-height: 0.9; 
             text-shadow: 3px 3px 0px var(--x-color); margin-bottom: 20px; text-transform: uppercase;
             animation: glitch-anim 3s infinite alternate;
         }
 
         .cyber-btn { 
             background: transparent; border: 1px solid var(--o-color); color: var(--o-color); 
-            padding: 12px 30px; font-size: 1rem; font-weight: bold; letter-spacing: 2px; cursor: pointer; 
-            margin: 8px; transition: 0.2s; text-transform: uppercase; min-width: 200px; 
-            position: relative; overflow: hidden; display: inline-block;
-            transform: skewX(-10deg);
+            padding: 10px 20px; font-size: 0.9rem; font-weight: bold; letter-spacing: 2px; cursor: pointer; 
+            margin: 5px; transition: 0.2s; text-transform: uppercase; min-width: 180px; 
+            position: relative; overflow: hidden; display: inline-block; transform: skewX(-10deg);
         }
         .cyber-btn span { display: block; transform: skewX(10deg); }
         .cyber-btn:hover { background: var(--o-color); color: #000; box-shadow: 0 0 15px var(--o-color); }
@@ -61,13 +60,21 @@
 
         /* Scrollbar Customizada */
         .scroll-content {
-            max-height: 50vh; overflow-y: auto; padding-right: 15px; text-align: left;
-            scrollbar-width: thin; scrollbar-color: var(--o-color) #111;
-            pointer-events: auto; /* Garante scroll no mobile */
+            max-height: 60vh; overflow-y: auto; padding-right: 15px; text-align: left;
+            scrollbar-width: thin; scrollbar-color: var(--o-color) #111; pointer-events: auto;
         }
         .scroll-content::-webkit-scrollbar { width: 6px; }
         .scroll-content::-webkit-scrollbar-track { background: #111; }
         .scroll-content::-webkit-scrollbar-thumb { background-color: var(--o-color); border-radius: 3px; }
+
+        /* TABELA DE CARTAS */
+        .card-row { display: flex; align-items: center; margin-bottom: 10px; border-bottom: 1px dashed #333; padding-bottom: 5px; }
+        .card-preview { font-size: 1.5rem; width: 40px; text-align: center; margin-right: 10px; }
+        .card-info { flex: 1; }
+        .card-title { color: #fff; font-weight: bold; font-size: 0.9rem; }
+        .card-rarity { font-size: 0.7rem; text-transform: uppercase; margin-left: 5px; }
+        .rarity-common { color: #888; } .rarity-rare { color: #00ff88; } .rarity-legendary { color: #bd00ff; }
+        .card-desc-text { color: #aaa; font-size: 0.8rem; }
 
         .update-block { margin-bottom: 20px; border-bottom: 1px dashed #333; padding-bottom: 15px; }
         .update-title { color: var(--o-color); font-weight: bold; font-size: 1rem; margin-bottom: 5px; text-transform: uppercase; }
@@ -141,18 +148,30 @@
     <div id="screen-menu" class="screen">
         <div class="cyber-panel" style="text-align: center; border:none; background:transparent; box-shadow:none;">
             <div class="title-glitch">CARTAS<br>VELHAS</div>
-            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 30px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.9 (BETA)</p>
+            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 30px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.12 (BETA)</p>
             
             <input type="text" id="my-name-input" class="input-code" style="width: 200px; border-color: var(--o-color);" maxlength="10" placeholder="SEU NICKNAME" value="PLAYER">
             <br>
             <button class="cyber-btn" onclick="startQuickMatch()"><span>⚡ PARTIDA RÁPIDA</span></button>
             <br>
+            <button class="cyber-btn" onclick="startBotMatch()"><span>🤖 JOGAR VS BOT</span></button>
+            <br>
             <button class="cyber-btn secondary" onclick="openScreen('screen-lobby-custom')"><span>CRIAR / ENTRAR</span></button>
             <br>
             <div style="margin-top: 10px;">
-                <button class="cyber-btn secondary" style="min-width: 100px; font-size: 0.8rem;" onclick="openScreen('screen-credits')"><span>CRÉDITOS</span></button>
-                <button class="cyber-btn secondary" style="min-width: 100px; font-size: 0.8rem;" onclick="openScreen('screen-updates')"><span>UPDATES</span></button>
+                <button class="cyber-btn secondary" style="min-width: 100px; font-size: 0.7rem;" onclick="openScreen('screen-cards')"><span>CARTAS</span></button>
+                <button class="cyber-btn secondary" style="min-width: 100px; font-size: 0.7rem;" onclick="openScreen('screen-credits')"><span>CRÉDITOS</span></button>
+                <button class="cyber-btn secondary" style="min-width: 100px; font-size: 0.7rem;" onclick="openScreen('screen-updates')"><span>UPDATES</span></button>
             </div>
+        </div>
+    </div>
+
+    <div id="screen-cards" class="screen hidden">
+        <div class="cyber-panel">
+            <h2 style="color:#fff; margin-top:0;">CONHECIMENTO</h2>
+            <div class="scroll-content" id="cards-list-ui">
+                </div>
+            <center><button class="cyber-btn secondary" style="margin-top:20px;" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button></center>
         </div>
     </div>
 
@@ -174,11 +193,23 @@
     <div id="screen-updates" class="screen hidden">
         <div class="cyber-panel">
             <h2 style="color:#fff; margin-top:0;">SYSTEM LOG</h2>
-            
             <div class="scroll-content">
                 <div class="update-block">
+                    <div class="update-title">v0.9.12 - Empate & Fixes</div>
+                    <span class="update-item">Nova Regra: EMPATE se ambos vencerem na mesma jogada (Troca).</span>
+                    <span class="update-item">Partida reinicia sem pontos em caso de empate.</span>
+                    <span class="update-item">Correção: Placar zera na Revanche.</span>
+                </div>
+                <div class="update-block">
+                    <div class="update-title">v0.9.10 - Bot Update</div>
+                    <span class="update-item">Modo VS Bot Disponível.</span>
+                    <span class="update-item">Nova Carta: Empurrar (Mover Inimigo).</span>
+                    <span class="update-item">Seleção livre (Origem/Destino).</span>
+                    <span class="update-item">Menu de explicação das cartas.</span>
+                </div>
+                <div class="update-block">
                     <div class="update-title">v0.9.9 - Restauração</div>
-                    <span class="update-item">Correção Crítica: Matchmaking revertido para lógica estável.</span>
+                    <span class="update-item">Correção Crítica: Matchmaking revertido para lógica estável (Zig-Zag).</span>
                     <span class="update-item">Implementado Jitter (atraso aleatório) para evitar conflitos.</span>
                 </div>
                 <div class="update-block">
@@ -190,39 +221,35 @@
                 <div class="update-block">
                     <div class="update-title">v0.7.0 - Expansão Mobile & Matchmaking</div>
                     <span class="update-item">Partida Rápida: Algoritmo automático de busca de salas.</span>
-                    <span class="update-item">Suporte Mobile Real: Toque e redimensionamento corrigidos.</span>
+                    <span class="update-item">Suporte Mobile Real.</span>
                     <span class="update-item">Resiliência: Tratamento de desconexões.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.6.0 - Polimento de Jogabilidade</div>
-                    <span class="update-item">Handshake Robusto: Confirmação de conexão.</span>
+                    <span class="update-item">Handshake Robusto.</span>
                     <span class="update-item">Feedback Visual: Glitch na peça mais antiga.</span>
                     <span class="update-item">Revanche: Botão para reiniciar partida instantaneamente.</span>
                     <span class="update-item">Auto-Jogada por tempo limite.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.5.0 - Multiplayer P2P</div>
-                    <span class="update-item">Conexão Direta: Implementação do PeerJS.</span>
+                    <span class="update-item">Conexão Direta via PeerJS.</span>
                     <span class="update-item">Sistema de Salas Privadas.</span>
                     <span class="update-item">Sincronização Total em tempo real.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.4.0 - Sistema de Cartas</div>
-                    <span class="update-item">Introdução do Deck Building (Mão de Cartas).</span>
+                    <span class="update-item">Introdução do Deck Building.</span>
                     <span class="update-item">Novas Cartas: Escudo, Mover e Trocar.</span>
-                    <span class="update-item">Sistema Anti-Bloqueio.</span>
+                    <span class="update-item">Sistema Anti-Bloqueio de mão.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.3.0 - A Revolução 3D</div>
                     <span class="update-item">Migração para Three.js (WebGL).</span>
-                    <span class="update-item">Iluminação néon dinâmica e plataforma flutuante.</span>
-                    <span class="update-item">Câmara Cinemática.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.2.0 - Ação e "Sumo"</div>
-                    <span class="update-item">Poderes Iniciais: Bomba e Hack.</span>
-                    <span class="update-item">Efeitos: Screen shake e partículas.</span>
-                    <span class="update-item">Áudio: Sintetizador interno.</span>
+                    <span class="update-item">Poderes Iniciais, Screen shake e Áudio.</span>
                 </div>
                 <div class="update-block" style="border:none;">
                     <div class="update-title">v0.1.0 - A Base</div>
@@ -244,26 +271,22 @@
 
     <div id="screen-lobby-wait" class="screen hidden">
         <h2 style="color:#fff;">LOBBY</h2>
-        
         <div id="lobby-host-ui" class="hidden" style="text-align:center;">
             <p style="color:#aaa;">PARTILHE ESTE CÓDIGO</p>
             <div id="display-code" class="input-code" style="border:none; cursor:pointer;" onclick="copyCode()">...</div>
             <p style="color:var(--o-color); animation: pulse-border 1s infinite; padding: 5px;">Aguardando oponente...</p>
         </div>
-        
         <div id="lobby-client-ui" class="hidden" style="text-align:center;">
             <p style="color:#aaa;">DIGITE O CÓDIGO</p>
             <input type="text" id="input-code" class="input-code" maxlength="6" placeholder="XXXXXX">
             <br><button id="btn-connect" class="cyber-btn" onclick="connectToHost()"><span>CONECTAR</span></button>
             <p id="client-status" class="match-log"></p>
         </div>
-
         <div id="lobby-quick-ui" class="hidden" style="text-align:center;">
             <p style="color:#00ff88; font-weight:bold;">BUSCANDO PARTIDA</p>
             <div class="loader"></div>
             <p id="quick-log" class="match-log">A iniciar...</p>
         </div>
-
         <button class="cyber-btn secondary" onclick="location.reload()" style="margin-top:30px;"><span>CANCELAR</span></button>
     </div>
 
@@ -274,7 +297,41 @@
     </div>
 
 <script>
-    // --- HELPERS UI ---
+    // --- CONFIG E DADOS ---
+    const APP_ID = "cv-tactics-final-v5-"; 
+    const MAX_PUB_ROOMS = 20;
+    const BOT_TIMEOUT = 10000; 
+
+    const CARDS = {
+        'PLACE': { name: 'Básica', icon: '♟️', rarity: 'common', weight: 40, desc: 'Coloca uma peça no tabuleiro. Se tiveres 3, a mais velha some.' },
+        'BOMB': { name: 'Bomba', icon: '💣', rarity: 'rare', weight: 15, desc: 'Destrói uma peça do inimigo (se não tiver escudo).' },
+        'SHIELD': { name: 'Escudo', icon: '🛡️', rarity: 'rare', weight: 15, desc: 'Coloca uma peça protegida contra Bombas e Trocas.' },
+        'MOVE': { name: 'Mover', icon: '🔄', rarity: 'rare', weight: 10, desc: 'Move uma peça TUA para um espaço vazio.' },
+        'PUSH': { name: 'Empurrar', icon: '✋', rarity: 'rare', weight: 10, desc: 'Move uma peça INIMIGA para um espaço vazio.' },
+        'SWAP': { name: 'Trocar', icon: '🔁', rarity: 'legendary', weight: 10, desc: 'Troca a posição de uma peça tua com uma do inimigo.' }
+    };
+
+    const GameState = {
+        board: Array(9).fill(null),
+        history: { 'X': [], 'O': [] },
+        hands: { 'X': [], 'O': [] },
+        shields: {},
+        scores: { 'X': 0, 'O': 0 },
+        names: { 'X': 'P1', 'O': 'P2' },
+        turn: 'X',
+        winner: null,
+        targetWins: 3,
+        winningLine: null
+    };
+
+    let peer, conn, mySide = null, isHost = false, isBotMatch = false;
+    let timeLeft = 16, myName = "PLAYER", isQuickMatch = false;
+    let selectedHandIdx = null, activeCardType = null, stepSourceIdx = null;
+    let particles = [], cameraShake = 0;
+    let isInGame = false;
+    let botTimer = null;
+
+    // --- UI HELPERS ---
     function resetLobbyUI() {
         document.getElementById('lobby-host-ui').classList.add('hidden');
         document.getElementById('lobby-client-ui').classList.add('hidden');
@@ -286,9 +343,26 @@
         const target = document.getElementById(screenId);
         if(target) target.classList.remove('hidden');
         if(audioCtx.state === 'suspended') audioCtx.resume();
+        if(screenId === 'screen-cards') renderCardsHelp();
     }
 
-    // --- AUDIO SYSTEM ---
+    function renderCardsHelp() {
+        const container = document.getElementById('cards-list-ui');
+        container.innerHTML = '';
+        for (const key in CARDS) {
+            const c = CARDS[key];
+            container.innerHTML += `
+                <div class="card-row">
+                    <div class="card-preview">${c.icon}</div>
+                    <div class="card-info">
+                        <div class="card-title">${c.name} <span class="card-rarity rarity-${c.rarity}">${c.rarity}</span></div>
+                        <div class="card-desc-text">${c.desc}</div>
+                    </div>
+                </div>`;
+        }
+    }
+
+    // --- AUDIO ---
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const SoundFX = {
         playTone: (freq, type, duration, vol=0.1) => {
@@ -305,63 +379,23 @@
         place: () => SoundFX.playTone(600, 'sine', 0.3, 0.2),
         explode: () => { SoundFX.playTone(100, 'sawtooth', 0.4, 0.3); },
         roundWin: () => { [440, 554, 659].forEach((f, i) => setTimeout(() => SoundFX.playTone(f, 'square', 0.4, 0.2), i*100)); },
-        matchWin: () => { [440, 554, 659, 880, 1100].forEach((f, i) => setTimeout(() => SoundFX.playTone(f, 'square', 0.6, 0.3), i*150)); }
+        matchWin: () => { [440, 554, 659, 880, 1100].forEach((f, i) => setTimeout(() => SoundFX.playTone(f, 'square', 0.6, 0.3), i*150)); },
+        error: () => { SoundFX.playTone(150, 'sawtooth', 0.2, 0.2); }
     };
 
-    // --- GAME DATA ---
-    const CARDS = {
-        'PLACE': { name: 'Básica', icon: '♟️', rarity: 'common', weight: 45 },
-        'BOMB': { name: 'Bomba', icon: '💣', rarity: 'rare', weight: 15 },
-        'SHIELD': { name: 'Escudo', icon: '🛡️', rarity: 'rare', weight: 15 },
-        'MOVE': { name: 'Mover', icon: '🔄', rarity: 'rare', weight: 15 },
-        'SWAP': { name: 'Trocar', icon: '🔁', rarity: 'legendary', weight: 10 }
-    };
-
-    const GameState = {
-        board: Array(9).fill(null),
-        history: { 'X': [], 'O': [] },
-        hands: { 'X': [], 'O': [] },
-        shields: {},
-        scores: { 'X': 0, 'O': 0 },
-        names: { 'X': 'P1', 'O': 'P2' },
-        turn: 'X',
-        winner: null,
-        targetWins: 3,
-        winningLine: null
-    };
-
-    // --- NETWORKING (PEERJS) ---
-    const APP_ID = "cv-tactics-final-v2-"; 
-    const MAX_PUB_ROOMS = 20; 
-    
-    let peer, conn, mySide = null, isHost = false;
-    let timeLeft = 16, myName = "PLAYER", isQuickMatch = false;
-    let selectedHandIdx = null, activeCardType = null, stepSourceIdx = null;
-    let particles = [], cameraShake = 0;
-    let isInGame = false;
-
+    // --- NETWORKING ---
     function initPeer(id = null) { return new Peer(id, { debug: 1 }); }
-
-    function updateName() {
-        myName = document.getElementById('my-name-input').value.trim() || "PLAYER";
-        if(myName.length > 10) myName = myName.substr(0,10);
-    }
+    function updateName() { myName = document.getElementById('my-name-input').value.trim() || "PLAYER"; if(myName.length > 10) myName = myName.substr(0,10); }
 
     function openLobby(mode) {
-        updateName();
-        openScreen('screen-lobby-wait');
-        resetLobbyUI();
-
+        updateName(); openScreen('screen-lobby-wait'); resetLobbyUI();
         if (mode === 'host') setupHostPrivate(); 
         else if (mode === 'join') document.getElementById('lobby-client-ui').classList.remove('hidden');
     }
 
-    // --- HOST PRIVADO ---
     function setupHostPrivate() {
-        isHost = true; mySide = 'X';
-        resetLobbyUI();
-        document.getElementById('lobby-host-ui').classList.remove('hidden');
-        
+        isHost = true; mySide = 'X'; isBotMatch = false;
+        resetLobbyUI(); document.getElementById('lobby-host-ui').classList.remove('hidden');
         const code = Math.random().toString(36).substr(2, 6).toUpperCase();
         document.getElementById('display-code').innerText = code;
         GameState.names['X'] = myName;
@@ -370,15 +404,13 @@
         peer.on('connection', handleConnectionRequest);
     }
 
-    // --- CLIENTE PRIVADO ---
     function connectToHost() {
-        updateName();
+        updateName(); isBotMatch = false;
         const code = document.getElementById('input-code').value.trim().toUpperCase();
         if (code.length < 4) return;
         const btn = document.getElementById('btn-connect');
         const stat = document.getElementById('client-status');
         btn.disabled = true; btn.innerText = "..."; stat.innerText = "A conectar...";
-        
         if(peer) peer.destroy();
         peer = initPeer();
         peer.on('open', () => {
@@ -388,98 +420,84 @@
         });
     }
 
-    // --- PARTIDA RÁPIDA (MATCHMAKING ZIG-ZAG ROBUSTO) ---
+    // --- MATCHMAKING ---
     function startQuickMatch() {
-        updateName();
-        isQuickMatch = true;
-        openScreen('screen-lobby-wait');
-        resetLobbyUI();
+        updateName(); isBotMatch = false;
+        openScreen('screen-lobby-wait'); resetLobbyUI();
         document.getElementById('lobby-quick-ui').classList.remove('hidden');
         document.getElementById('quick-log').innerText = "Iniciando...";
-        
-        // Jitter: Atraso aleatório para evitar colisão
         const randomDelay = Math.floor(Math.random() * 1500);
         setTimeout(() => findPublicMatch(0), randomDelay);
     }
 
     function findPublicMatch(roomIndex) {
+        if(isBotMatch) return;
         if(roomIndex >= MAX_PUB_ROOMS) {
-            document.getElementById('quick-log').innerText = "Servidores cheios.";
-            // Fallback para privado
-            setTimeout(() => {
-                document.getElementById('quick-log').innerText = "Criando sala manual...";
-                setupHostPrivate();
-            }, 1500);
+            document.getElementById('quick-log').innerText = "Criando sala pública...";
+            setTimeout(() => setupHostPrivate(), 1000);
             return;
         }
-
         const roomID = APP_ID + 'PUB-' + roomIndex;
         document.getElementById('quick-log').innerText = `Verificando Sala ${roomIndex + 1}...`;
-
-        // 1. TENTA SER HOST (CRIAR SALA)
         if(peer) peer.destroy();
         peer = initPeer(roomID);
 
-        // Sucesso: Virei Host!
         peer.on('open', () => {
-            document.getElementById('quick-log').innerText = `Sala ${roomIndex + 1} Criada! Aguardando...`;
+            document.getElementById('quick-log').innerText = "Sala criada! Aguardando...";
             isHost = true; mySide = 'X'; GameState.names['X'] = myName;
-            
             peer.on('connection', (c) => {
-                if(conn && conn.open) { 
-                    c.on('open', () => { c.send({type:'ROOM_FULL'}); setTimeout(()=>c.close(),500); }); 
-                    return; 
-                }
+                if(conn && conn.open) { c.on('open', () => { c.send({type:'ROOM_FULL'}); setTimeout(()=>c.close(),500); }); return; }
                 handleConnectionRequest(c);
             });
         });
 
-        // Erro: Sala ocupada (ID indisponível) -> TENTA ENTRAR
         peer.on('error', (err) => {
-            if(err.type === 'unavailable-id') {
-                console.log(`Sala ${roomIndex} ocupada. Tentando entrar...`);
-                connectToPublicRoom(roomID, roomIndex);
-            } else {
-                console.log("Erro rede, próxima sala.");
-                findPublicMatch(roomIndex + 1);
-            }
+            if(err.type === 'unavailable-id') connectToPublicRoom(roomID, roomIndex);
+            else findPublicMatch(roomIndex + 1);
         });
     }
 
     function connectToPublicRoom(roomID, currentIdx) {
-        // Cria um peer temporário para ser cliente
         const tempPeer = initPeer();
-        
         tempPeer.on('open', () => {
             conn = tempPeer.connect(roomID, { reliable: true });
-            
-            // Conectou!
             conn.on('open', () => {
-                console.log("Entrou na sala!");
-                isHost = false; mySide = 'O';
+                isHost = false; mySide = 'O'; isBotMatch = false;
                 conn.send({ type: 'JOIN_HANDSHAKE', name: myName });
                 setupClientListener();
             });
-
-            // Rejeitado (Sala Cheia)
             conn.on('data', (data) => {
-                if(data.type === 'ROOM_FULL') {
-                    console.log("Sala cheia, próxima...");
-                    conn.close();
-                    tempPeer.destroy();
-                    findPublicMatch(currentIdx + 1);
-                } else handleData(data);
+                if(data.type === 'ROOM_FULL') { conn.close(); tempPeer.destroy(); findPublicMatch(currentIdx + 1); } 
+                else handleData(data);
             });
-
-            // Timeout (Host fantasma/crashou)
-            setTimeout(() => {
-                if(!conn.open) {
-                    console.log("Sem resposta. Próxima...");
-                    tempPeer.destroy();
-                    findPublicMatch(currentIdx + 1);
-                }
-            }, 2000);
+            setTimeout(() => { if(!conn.open) { tempPeer.destroy(); findPublicMatch(currentIdx + 1); } }, 2000);
         });
+    }
+
+    // --- BOT MODE ---
+    function startBotMatch() {
+        updateName();
+        if(peer) peer.destroy();
+        isBotMatch = true; isHost = true; mySide = 'X';
+        GameState.names['X'] = myName; GameState.names['O'] = "BOT-T800";
+        startGame();
+    }
+
+    function botTurn() {
+        if(GameState.winner || GameState.turn !== 'O') return;
+        setTimeout(() => {
+            const hand = GameState.hands['O'];
+            const availableMoves = [];
+            for(let i=0; i<9; i++) if(GameState.board[i] === null) availableMoves.push(i);
+            
+            let action = null;
+            if(availableMoves.length > 0) {
+                action = { type: 'PLACE', target: availableMoves[Math.floor(Math.random()*availableMoves.length)], cardIdx: 0 };
+            } else {
+                action = { type: 'TIMEOUT' };
+            }
+            processAction(action, 'O');
+        }, 1500);
     }
 
     // --- HANDLERS ---
@@ -491,20 +509,31 @@
         });
         conn.on('close', () => { showToast("OPONENTE SAIU", "#ff0000"); setTimeout(()=>location.reload(), 3000); });
     }
-
     function configureConnection() { conn.on('open', () => { conn.send({ type: 'JOIN_HANDSHAKE', name: myName }); setupClientListener(); }); }
     function setupClientListener() { conn.on('data', handleData); conn.on('close', () => { showToast("DESCONECTADO", "#ff0000"); setTimeout(()=>location.reload(), 3000); }); }
-
     function handleData(data) {
         if (data.type === 'STATE_UPDATE') syncState(data.state, data.serverTime);
         else if (data.type === 'ACTION' && isHost) processAction(data.action, 'O');
         else if (data.type === 'TOAST') showToast(data.msg, data.color);
-        else if (data.type === 'RESTART' && !isHost) openScreen('ui-layer');
+        else if (data.type === 'RESTART' && !isHost) {
+            GameState.scores = { 'X': 0, 'O': 0 };
+            openScreen('ui-layer');
+        }
     }
 
     // --- GAMEPLAY ---
-    function startGame() { GameState.scores = { 'X': 0, 'O': 0 }; resetMatch(); }
-    function resetMatch() { resetBoard(); GameState.winner = null; GameState.hands = { 'X': generateHand(), 'O': generateHand() }; GameState.turn = 'X'; broadcastState(); if(isHost) sendData({ type: 'RESTART' }); }
+    function startGame() { 
+        GameState.scores = { 'X': 0, 'O': 0 }; 
+        resetMatch(); 
+    }
+    function resetMatch() { 
+        resetBoard(); 
+        GameState.winner = null; 
+        GameState.hands = { 'X': generateHand(), 'O': generateHand() }; 
+        GameState.turn = 'X'; 
+        broadcastState(); 
+        if(isHost && !isBotMatch) sendData({ type: 'RESTART' }); 
+    }
     function resetBoard() { GameState.board.fill(null); GameState.history = { 'X': [], 'O': [] }; GameState.shields = {}; GameState.winningLine = null; timeLeft = 16; }
 
     function generateHand() { const h = ['PLACE']; for(let i=0; i<2; i++) h.push(getRandomCard()); return h; }
@@ -526,6 +555,14 @@
             GameState.board[source] = null; GameState.board[target] = player;
             GameState.history[player] = GameState.history[player].filter(i => i !== source); GameState.history[player].push(target); success = true; SoundFX.place();
         }
+        else if (type === 'PUSH' && GameState.board[target] === null) {
+             const enemy = player === 'X' ? 'O' : 'X';
+             if(GameState.board[source] === enemy && !isProtected(source)) {
+                GameState.board[source] = null; GameState.board[target] = enemy;
+                GameState.history[enemy] = GameState.history[enemy].filter(i => i !== source); GameState.history[enemy].push(target);
+                success = true; SoundFX.click();
+             }
+        }
         else if (type === 'SHIELD' && GameState.board[target] === player) { GameState.shields[target] = 2; success = true; SoundFX.place(); }
         else if (type === 'SWAP' && !isProtected(target) && !isProtected(source)) {
             const enemy = player === 'X' ? 'O' : 'X';
@@ -537,48 +574,79 @@
 
         if (success) {
             if(type !== 'TIMEOUT') { GameState.hands[player].splice(cardIdx, 1); GameState.hands[player].push(GameState.hands[player].includes('PLACE') ? getRandomCard() : 'PLACE'); }
-            const winLine = checkRoundWin();
-            if (winLine) {
-                GameState.winningLine = winLine; const winner = GameState.board[winLine[0]]; GameState.scores[winner]++; SoundFX.roundWin(); cameraShake = 0.8;
-                if (GameState.scores[winner] >= GameState.targetWins) { setTimeout(() => { GameState.winner = winner; broadcastState(); }, 2000); }
-                else { setTimeout(() => { resetBoard(); GameState.turn = (winner === 'X' ? 'O' : 'X'); broadcastState(); }, 2500); }
+            
+            // CHECK WIN OR DRAW
+            const winLineX = checkLineWin('X');
+            const winLineO = checkLineWin('O');
+            
+            if(winLineX && winLineO) {
+                // EMPATE POR DUPLA VITÓRIA
+                showToast("EMPATE!", "#ffffff");
+                SoundFX.error();
+                setTimeout(() => { 
+                    resetBoard(); 
+                    broadcastState();
+                    if(isBotMatch && GameState.turn === 'O') botTurn();
+                }, 2500);
+            } else if (winLineX || winLineO) {
+                const winLine = winLineX || winLineO;
+                GameState.winningLine = winLine; 
+                const winner = GameState.board[winLine[0]]; 
+                GameState.scores[winner]++; 
+                SoundFX.roundWin(); cameraShake = 0.8;
+                
+                if (GameState.scores[winner] >= GameState.targetWins) { 
+                    setTimeout(() => { GameState.winner = winner; broadcastState(); }, 2000); 
+                } else { 
+                    setTimeout(() => { 
+                        resetBoard(); 
+                        GameState.turn = (winner === 'X' ? 'O' : 'X'); 
+                        broadcastState(); 
+                        if(isBotMatch && GameState.turn === 'O') botTurn(); 
+                    }, 2500); 
+                }
             } else {
                 GameState.turn = GameState.turn === 'X' ? 'O' : 'X'; for (let k in GameState.shields) if (GameState.shields[k] > 0) GameState.shields[k]--; timeLeft = 15;
             }
             broadcastState();
+            if(isBotMatch && !winLineX && !winLineO && GameState.turn === 'O') botTurn();
         }
     }
 
-    function checkRoundWin() {
+    function checkLineWin(player) {
         const w = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-        for (let c of w) { if (GameState.board[c[0]] && GameState.board[c[0]] === GameState.board[c[1]] && GameState.board[c[0]] === GameState.board[c[2]]) return c; } return null;
+        for (let c of w) { 
+            if (GameState.board[c[0]] === player && GameState.board[c[1]] === player && GameState.board[c[2]] === player) return c; 
+        } 
+        return null;
     }
 
     function isProtected(idx) { return GameState.shields[idx] > 0; }
-    function broadcastState() { if (conn && conn.open) conn.send({ type: 'STATE_UPDATE', state: GameState, serverTime: timeLeft }); syncState(GameState, timeLeft); }
+    function broadcastState() { 
+        if (!isBotMatch && conn && conn.open) conn.send({ type: 'STATE_UPDATE', state: GameState, serverTime: timeLeft }); 
+        syncState(GameState, timeLeft); 
+    }
 
     function syncState(newState, serverTime) {
         Object.assign(GameState, newState); if (serverTime !== undefined) timeLeft = serverTime;
         document.getElementById('name-x').innerText = GameState.names.X; document.getElementById('name-o').innerText = GameState.names.O;
         if(isQuickMatch) document.getElementById('room-code').innerText = "RÁPIDA";
+        if(isBotMatch) document.getElementById('room-code').innerText = "OFFLINE";
         
         updateVisuals();
         if (GameState.winner) { showGameOver(); return; }
-        
-        isInGame = true;
-        openScreen('ui-layer');
+        isInGame = true; openScreen('ui-layer');
     }
 
     function showGameOver() {
-        isInGame = false;
-        openScreen('screen-gameover');
+        isInGame = false; openScreen('screen-gameover');
         const wName = GameState.names[GameState.winner];
         document.getElementById('winner-text').innerText = wName + " VENCEU!";
         document.getElementById('winner-text').style.color = (GameState.winner==='X'?'var(--x-color)':'var(--o-color)');
         SoundFX.matchWin();
         const area = document.getElementById('rematch-area'); area.innerHTML = '';
         if(isHost) {
-            const btn = document.createElement('button'); btn.className = 'cyber-btn'; btn.innerHTML = '<span>REVANCHE</span>'; btn.onclick = () => { resetMatch(); }; area.appendChild(btn);
+            const btn = document.createElement('button'); btn.className = 'cyber-btn'; btn.innerHTML = '<span>REVANCHE</span>'; btn.onclick = () => { startGame(); }; area.appendChild(btn);
         } else area.innerHTML = '<p style="color:#aaa;">Aguardando Host...</p>';
     }
 
@@ -596,10 +664,7 @@
     document.getElementById('canvas-container').appendChild(renderer.domElement);
     const pieceGroup = new THREE.Group(); scene.add(pieceGroup);
     const particlesGroup = new THREE.Group(); scene.add(particlesGroup);
-
-    const gridHelper = new THREE.GridHelper(100, 100, 0x222222, 0x111111);
-    gridHelper.position.y = -2; scene.add(gridHelper);
-
+    const gridHelper = new THREE.GridHelper(100, 100, 0x222222, 0x111111); gridHelper.position.y = -2; scene.add(gridHelper);
     window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
 
     const tileGeo = new THREE.BoxGeometry(2.8, 0.2, 2.8);
@@ -610,7 +675,6 @@
         const edges = new THREE.LineSegments(new THREE.EdgesGeometry(tileGeo), new THREE.LineBasicMaterial({color:0x333344, transparent:true, opacity:0.3}));
         t.add(edges); scene.add(t); tiles.push(t);
     }
-    
     const dl = new THREE.DirectionalLight(0xffffff, 0.5); dl.position.set(5, 10, 5); scene.add(dl);
     const pl1 = new THREE.PointLight(0xff0055, 1, 30); pl1.position.set(5, 5, 5); scene.add(pl1);
     const pl2 = new THREE.PointLight(0x00e5ff, 1, 30); pl2.position.set(-5, 5, -5); scene.add(pl2);
@@ -629,8 +693,7 @@
     }
 
     function updateVisuals() {
-        camera.userData.targetRot = (mySide==='X') ? 0 : Math.PI;
-        pieceGroup.clear();
+        camera.userData.targetRot = (mySide==='X') ? 0 : Math.PI; pieceGroup.clear();
         if(GameState.winningLine) spawnWinParticles(GameState.winningLine);
         GameState.board.forEach((c, i) => {
             if(c) {
@@ -665,59 +728,28 @@
         updateHandUI();
     }
 
-    const raycaster = new THREE.Raycaster(); const mouse = new THREE.Vector2();
-    let menuTime = 0;
-
+    const raycaster = new THREE.Raycaster(); const mouse = new THREE.Vector2(); let menuTime = 0;
     function animate() {
         requestAnimationFrame(animate);
-        
         if(isInGame) {
-            if(cameraShake > 0) {
-                cameraShake -= 0.05; if(cameraShake < 0) cameraShake = 0;
-                camera.position.x += (Math.random()-0.5) * cameraShake; camera.position.y += (Math.random()-0.5) * cameraShake; camera.position.z += (Math.random()-0.5) * cameraShake;
-            }
-            const targetRot = camera.userData.targetRot || 0;
-            const angle = THREE.MathUtils.lerp(Math.atan2(camera.position.x, camera.position.z), targetRot, 0.05);
-            if(cameraShake < 0.1) {
-                camera.position.x = Math.sin(angle) * 14; camera.position.z = Math.cos(angle) * 14;
-                camera.position.y = THREE.MathUtils.lerp(camera.position.y, 15, 0.1); camera.lookAt(0,0,0);
-            }
-        } else {
-            menuTime += 0.005;
-            camera.position.x = Math.sin(menuTime) * 18; camera.position.z = Math.cos(menuTime) * 18;
-            camera.position.y = 12; camera.lookAt(0,0,0);
-        }
-
+            if(cameraShake > 0) { cameraShake -= 0.05; if(cameraShake < 0) cameraShake = 0; camera.position.x += (Math.random()-0.5) * cameraShake; camera.position.y += (Math.random()-0.5) * cameraShake; camera.position.z += (Math.random()-0.5) * cameraShake; }
+            const targetRot = camera.userData.targetRot || 0; const angle = THREE.MathUtils.lerp(Math.atan2(camera.position.x, camera.position.z), targetRot, 0.05);
+            if(cameraShake < 0.1) { camera.position.x = Math.sin(angle) * 14; camera.position.z = Math.cos(angle) * 14; camera.position.y = THREE.MathUtils.lerp(camera.position.y, 15, 0.1); camera.lookAt(0,0,0); }
+        } else { menuTime += 0.005; camera.position.x = Math.sin(menuTime) * 18; camera.position.z = Math.cos(menuTime) * 18; camera.position.y = 12; camera.lookAt(0,0,0); }
         gridHelper.position.z = (Date.now() * 0.002) % 2;
-
-        pieceGroup.children.forEach(p => {
-            p.rotation.y += p.userData.spinSpeed || 0.01;
-            if(p.userData.isGlitching) { p.visible = Math.random()>0.1; p.scale.setScalar(0.9+Math.random()*0.2); }
-            p.children.forEach(c => { if(c.userData.anim==='shield') c.rotation.z-=0.05; });
-        });
-
+        pieceGroup.children.forEach(p => { p.rotation.y += p.userData.spinSpeed || 0.01; if(p.userData.isGlitching) { p.visible = Math.random()>0.1; p.scale.setScalar(0.9+Math.random()*0.2); } p.children.forEach(c => { if(c.userData.anim==='shield') c.rotation.z-=0.05; }); });
         particlesGroup.clear();
-        for(let i=particles.length-1; i>=0; i--) {
-            const p = particles[i]; p.life -= 0.02; p.pos.add(p.vel); if(p.gravity) p.vel.y += p.gravity;
-            if(p.life <= 0) { particles.splice(i,1); continue; }
-            const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.1,0.1,0.1), new THREE.MeshBasicMaterial({color:p.color}));
-            mesh.position.copy(p.pos); mesh.rotation.x = Math.random()*Math.PI; particlesGroup.add(mesh);
-        }
+        for(let i=particles.length-1; i>=0; i--) { const p = particles[i]; p.life -= 0.02; p.pos.add(p.vel); if(p.gravity) p.vel.y += p.gravity; if(p.life <= 0) { particles.splice(i,1); continue; } const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.1,0.1,0.1), new THREE.MeshBasicMaterial({color:p.color})); mesh.position.copy(p.pos); mesh.rotation.x = Math.random()*Math.PI; particlesGroup.add(mesh); }
         renderer.render(scene, camera);
     }
     animate();
 
-    setInterval(() => {
-        if(!GameState.winner && document.getElementById('screen-lobby-wait').classList.contains('hidden')) {
-            if(timeLeft > 0) timeLeft -= 0.1; if(isHost && timeLeft <= 0) processAction({ type: 'TIMEOUT' }, GameState.turn);
-            const pct = Math.max(0, (timeLeft/15)*100); document.getElementById('timer-bar').style.width = pct + '%';
-        }
-    }, 100);
+    setInterval(() => { if(!GameState.winner && document.getElementById('screen-lobby-wait').classList.contains('hidden')) { if(timeLeft > 0) timeLeft -= 0.1; if(isHost && timeLeft <= 0) processAction({ type: 'TIMEOUT' }, GameState.turn); const pct = Math.max(0, (timeLeft/15)*100); document.getElementById('timer-bar').style.width = pct + '%'; } }, 100);
 
     function handleCardClick(idx, type) {
         if(GameState.turn !== mySide) return; if(selectedHandIdx === idx) { resetSelection(); return; }
         selectedHandIdx=idx; activeCardType=type; stepSourceIdx=null; SoundFX.click(); updateHandUI();
-        const hint = { 'PLACE':'Espaço vazio', 'BOMB':'Inimigo', 'SHIELD':'Sua peça', 'MOVE':'1. Sua peça', 'SWAP':'1. Inimigo' };
+        const hint = { 'PLACE':'Espaço vazio', 'BOMB':'Inimigo', 'SHIELD':'Sua peça', 'MOVE':'1. Sua peça', 'PUSH':'1. Peça Inimiga', 'SWAP':'1. Inimigo' };
         document.getElementById('hint-pill').innerText = hint[type] || ''; document.getElementById('hint-pill').classList.add('active');
     }
 
@@ -732,41 +764,66 @@
         });
     }
 
-    // --- INPUT HANDLING ---
+    // --- INPUT HANDLING (LIVRE SELEÇÃO) ---
     function onInput(x, y) {
         mouse.x=(x/window.innerWidth)*2-1; mouse.y=-(y/window.innerHeight)*2+1;
         raycaster.setFromCamera(mouse, camera);
         const ints=raycaster.intersectObjects(tiles);
+        
         if(ints.length && activeCardType && GameState.turn===mySide && !GameState.winningLine) {
             const idx=ints[0].object.userData.id;
             const my=GameState.board[idx]===mySide, en=GameState.board[idx]&&!my, emp=!GameState.board[idx];
+
+            // Ações Simples
             if(activeCardType==='PLACE' && emp) sendAction({type:'PLACE', target:idx, cardIdx:selectedHandIdx});
             else if(activeCardType==='BOMB' && en) sendAction({type:'BOMB', target:idx, cardIdx:selectedHandIdx});
             else if(activeCardType==='SHIELD' && my) sendAction({type:'SHIELD', target:idx, cardIdx:selectedHandIdx});
-            else if(activeCardType==='MOVE') {
-                if(stepSourceIdx===null && my) { stepSourceIdx=idx; document.getElementById('hint-pill').innerText="2. Destino vazio"; }
-                else if(stepSourceIdx!==null && emp) sendAction({type:'MOVE', source:stepSourceIdx, target:idx, cardIdx:selectedHandIdx});
-            } else if(activeCardType==='SWAP') {
-                if(stepSourceIdx===null && en) { stepSourceIdx=idx; document.getElementById('hint-pill').innerText="2. Sua peça"; }
-                else if(stepSourceIdx!==null && my) sendAction({type:'SWAP', source:idx, target:stepSourceIdx, cardIdx:selectedHandIdx});
+            
+            // Ações Compostas (Livre Seleção)
+            else if(activeCardType==='MOVE' || activeCardType==='PUSH' || activeCardType==='SWAP') {
+                if(stepSourceIdx === null) {
+                    // Validação do Primeiro Clique
+                    let isValidFirstClick = false;
+                    if (activeCardType === 'MOVE') { if (my || emp) isValidFirstClick = true; }
+                    else if (activeCardType === 'PUSH') { if (en || emp) isValidFirstClick = true; } 
+                    else if (activeCardType === 'SWAP') { if (my || en) isValidFirstClick = true; }
+
+                    if (isValidFirstClick) {
+                        stepSourceIdx = idx;
+                        document.getElementById('hint-pill').innerText = "2. Selecione o destino";
+                        SoundFX.hover();
+                    } else {
+                        showToast("ALVO INVÁLIDO", "#ff3333");
+                        SoundFX.error(); 
+                    }
+                } else {
+                    // Segundo Clique
+                    let s = stepSourceIdx; let t = idx;
+                    
+                    if(activeCardType==='MOVE') {
+                        if(GameState.board[t]===mySide && GameState.board[s]===null) { let tmp=s;s=t;t=tmp; }
+                        if(GameState.board[s]===mySide && GameState.board[t]===null) sendAction({type:'MOVE', source:s, target:t, cardIdx:selectedHandIdx});
+                        else { stepSourceIdx = idx; SoundFX.error(); } 
+                    }
+                    else if(activeCardType==='PUSH') {
+                         const enemy = mySide==='X'?'O':'X';
+                         if(GameState.board[t]===enemy && GameState.board[s]===null) { let tmp=s;s=t;t=tmp; }
+                         if(GameState.board[s]===enemy && GameState.board[t]===null) sendAction({type:'PUSH', source:s, target:t, cardIdx:selectedHandIdx});
+                         else { stepSourceIdx = idx; SoundFX.error(); }
+                    }
+                    else if(activeCardType==='SWAP') {
+                         if(GameState.board[s]!==mySide) { let tmp=s;s=t;t=tmp; }
+                         const enemy = mySide==='X'?'O':'X';
+                         if(GameState.board[s]===mySide && GameState.board[t]===enemy) sendAction({type:'SWAP', source:s, target:t, cardIdx:selectedHandIdx});
+                         else { stepSourceIdx = idx; SoundFX.error(); }
+                    }
+                }
             }
         }
     }
 
     window.addEventListener('mousedown', e => { if(e.button===0) onInput(e.clientX, e.clientY); else resetSelection(); });
-    
-    // --- CORREÇÃO FINAL: SUPORTE MOBILE ---
-    // Agora o toque só conta como input de jogo se for no CANVAS. 
-    // Elementos da UI (cartas, botões) usam o clique nativo.
-    window.addEventListener('touchstart', e => { 
-        if(e.touches.length > 0) {
-            if(e.target.tagName === 'CANVAS') { 
-                e.preventDefault(); 
-                onInput(e.touches[0].clientX, e.touches[0].clientY); 
-            }
-        }
-    }, {passive: false});
-
+    window.addEventListener('touchstart', e => { if(e.touches.length > 0 && e.target.tagName === 'CANVAS') { e.preventDefault(); onInput(e.touches[0].clientX, e.touches[0].clientY); } }, {passive: false});
     function copyCode() { navigator.clipboard.writeText(document.getElementById('display-code').innerText); showToast("COPIADO", "#fff"); }
     function showToast(m,c) { const t=document.getElementById('toast-msg'); t.innerText=m; t.style.textShadow=`0 0 50px ${c}`; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000); }
     function quitGame() { if(conn) conn.close(); location.reload(); }
