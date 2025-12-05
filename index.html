@@ -13,12 +13,12 @@
     <meta property="og:description" content="Desafia os teus amigos neste jogo tático 3D. Regra do Infinito, Cartas Especiais e Multiplayer em tempo real.">
     <meta property="og:type" content="website">
     
-    <title>Cartas Velhas: Cyberpunk Tactics v0.9.12</title>
+    <title>Cartas Velhas: Cyberpunk Tactics v0.9.15</title>
     <style>
         /* --- CORE STYLES --- */
         body { margin: 0; overflow: hidden; background-color: #050510; font-family: 'Segoe UI', Tahoma, monospace; user-select: none; touch-action: none; }
         
-        /* Scanlines (Efeito Retro TV) */
+        /* Scanlines */
         body::after {
             content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
@@ -58,7 +58,6 @@
         .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, rgba(26,26,46,0.8) 0%, #000 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; transition: opacity 0.5s; opacity: 1; visibility: visible; }
         .hidden { opacity: 0; visibility: hidden; pointer-events: none; transition: 0.5s; }
 
-        /* Scrollbar Customizada */
         .scroll-content {
             max-height: 60vh; overflow-y: auto; padding-right: 15px; text-align: left;
             scrollbar-width: thin; scrollbar-color: var(--o-color) #111; pointer-events: auto;
@@ -81,7 +80,6 @@
         .update-item { color: #ccc; font-size: 0.85rem; margin-bottom: 3px; display: block; }
         .update-item::before { content: "> "; color: #666; }
 
-        /* HUD & GAMEPLAY */
         .hud-top { padding: 10px; display: flex; flex-direction: column; align-items: center; background: linear-gradient(to bottom, rgba(0,0,0,0.95), transparent); width: 100%; }
         .scores { display: flex; gap: 30px; margin-top: 5px; align-items: center; justify-content: center; width: 100%; }
         .player-score { transition: 0.3s; opacity: 0.4; transform: scale(0.9); display: flex; flex-direction: column; align-items: center; }
@@ -148,7 +146,8 @@
     <div id="screen-menu" class="screen">
         <div class="cyber-panel" style="text-align: center; border:none; background:transparent; box-shadow:none;">
             <div class="title-glitch">CARTAS<br>VELHAS</div>
-            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 30px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.12 (BETA)</p>
+            
+            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 30px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.15 (BETA)</p>
             
             <input type="text" id="my-name-input" class="input-code" style="width: 200px; border-color: var(--o-color);" maxlength="10" placeholder="SEU NICKNAME" value="PLAYER">
             <br>
@@ -195,6 +194,16 @@
             <h2 style="color:#fff; margin-top:0;">SYSTEM LOG</h2>
             <div class="scroll-content">
                 <div class="update-block">
+                    <div class="update-title">v0.9.15 - Quality of Life</div>
+                    <span class="update-item">Correção: Jogador 2 agora recebe as cartas na partida privada.</span>
+                    <span class="update-item">Sistema: Seu Nickname fica salvo automaticamente.</span>
+                </div>
+                
+                <div class="update-block">
+                    <div class="update-title">v0.9.13 - Sync Fix</div>
+                    <span class="update-item">Correção: Distribuição de cartas no modo "Criar Sala" corrigida.</span>
+                </div>
+                <div class="update-block">
                     <div class="update-title">v0.9.12 - Empate & Fixes</div>
                     <span class="update-item">Nova Regra: EMPATE se ambos vencerem na mesma jogada (Troca).</span>
                     <span class="update-item">Partida reinicia sem pontos em caso de empate.</span>
@@ -204,12 +213,13 @@
                     <div class="update-title">v0.9.10 - Bot Update</div>
                     <span class="update-item">Modo VS Bot Disponível.</span>
                     <span class="update-item">Nova Carta: Empurrar (Mover Inimigo).</span>
+                    <span class="update-item">Correção: Placar zera ao reiniciar.</span>
                     <span class="update-item">Seleção livre (Origem/Destino).</span>
                     <span class="update-item">Menu de explicação das cartas.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.9 - Restauração</div>
-                    <span class="update-item">Correção Crítica: Matchmaking revertido para lógica estável (Zig-Zag).</span>
+                    <span class="update-item">Correção Crítica: Matchmaking revertido para lógica estável.</span>
                     <span class="update-item">Implementado Jitter (atraso aleatório) para evitar conflitos.</span>
                 </div>
                 <div class="update-block">
@@ -228,8 +238,6 @@
                     <div class="update-title">v0.6.0 - Polimento de Jogabilidade</div>
                     <span class="update-item">Handshake Robusto.</span>
                     <span class="update-item">Feedback Visual: Glitch na peça mais antiga.</span>
-                    <span class="update-item">Revanche: Botão para reiniciar partida instantaneamente.</span>
-                    <span class="update-item">Auto-Jogada por tempo limite.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.5.0 - Multiplayer P2P</div>
@@ -241,7 +249,6 @@
                     <div class="update-title">v0.4.0 - Sistema de Cartas</div>
                     <span class="update-item">Introdução do Deck Building.</span>
                     <span class="update-item">Novas Cartas: Escudo, Mover e Trocar.</span>
-                    <span class="update-item">Sistema Anti-Bloqueio de mão.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.3.0 - A Revolução 3D</div>
@@ -385,7 +392,12 @@
 
     // --- NETWORKING ---
     function initPeer(id = null) { return new Peer(id, { debug: 1 }); }
-    function updateName() { myName = document.getElementById('my-name-input').value.trim() || "PLAYER"; if(myName.length > 10) myName = myName.substr(0,10); }
+    
+    function updateName() { 
+        myName = document.getElementById('my-name-input').value.trim() || "PLAYER"; 
+        if(myName.length > 10) myName = myName.substr(0,10); 
+        localStorage.setItem('cv_username', myName); 
+    }
 
     function openLobby(mode) {
         updateName(); openScreen('screen-lobby-wait'); resetLobbyUI();
@@ -406,6 +418,9 @@
 
     function connectToHost() {
         updateName(); isBotMatch = false;
+        isHost = false;
+        mySide = 'O'; 
+
         const code = document.getElementById('input-code').value.trim().toUpperCase();
         if (code.length < 4) return;
         const btn = document.getElementById('btn-connect');
@@ -504,7 +519,14 @@
     function handleConnectionRequest(c) {
         conn = c;
         conn.on('data', (data) => {
-            if(data.type === 'JOIN_HANDSHAKE') { GameState.names['O'] = data.name; startGame(); }
+            if(data.type === 'JOIN_HANDSHAKE') { 
+                GameState.names['O'] = data.name; 
+                if(GameState.hands['X'].length === 0) {
+                    startGame(); 
+                } else {
+                    broadcastState(); 
+                }
+            }
             else handleData(data);
         });
         conn.on('close', () => { showToast("OPONENTE SAIU", "#ff0000"); setTimeout(()=>location.reload(), 3000); });
@@ -619,6 +641,11 @@
             if (GameState.board[c[0]] === player && GameState.board[c[1]] === player && GameState.board[c[2]] === player) return c; 
         } 
         return null;
+    }
+
+    function checkRoundWin() {
+        const w = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+        for (let c of w) { if (GameState.board[c[0]] && GameState.board[c[0]] === GameState.board[c[1]] && GameState.board[c[0]] === GameState.board[c[2]]) return c; } return null;
     }
 
     function isProtected(idx) { return GameState.shields[idx] > 0; }
@@ -827,6 +854,12 @@
     function copyCode() { navigator.clipboard.writeText(document.getElementById('display-code').innerText); showToast("COPIADO", "#fff"); }
     function showToast(m,c) { const t=document.getElementById('toast-msg'); t.innerText=m; t.style.textShadow=`0 0 50px ${c}`; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000); }
     function quitGame() { if(conn) conn.close(); location.reload(); }
+
+    const savedName = localStorage.getItem('cv_username');
+    if(savedName) {
+        document.getElementById('my-name-input').value = savedName;
+        myName = savedName;
+    }
 </script>
 </body>
 </html>
