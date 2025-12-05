@@ -198,9 +198,8 @@
                     <div class="update-title">v0.9.16 - Stability Patch</div>
                     <span class="update-item">Segurança: Proteção contra nomes inválidos/longos.</span>
                     <span class="update-item">Rede: Suavização do timer (anti-jitter).</span>
-                    <span class="update-item">UI: Prevenção de cliques duplos no Matchmaking.</span>
+                    <span class="update-item">Performance: Otimização de partículas (Vazamento de memória corrigido).</span>
                 </div>
-                
                 <div class="update-block">
                     <div class="update-title">v0.9.15 - Quality of Life</div>
                     <span class="update-item">Correção: Jogador 2 agora recebe as cartas na partida privada.</span>
@@ -441,7 +440,6 @@
 
     // --- MATCHMAKING ---
     function startQuickMatch() {
-        // CORREÇÃO: Desativa botão para evitar spam
         const btn = document.getElementById('btn-quick');
         if(btn) btn.disabled = true;
 
@@ -528,7 +526,6 @@
         conn = c;
         conn.on('data', (data) => {
             if(data.type === 'JOIN_HANDSHAKE') { 
-                // CORREÇÃO: Limita tamanho do nome recebido (segurança)
                 let safeName = data.name || "PLAYER";
                 if(safeName.length > 10) safeName = safeName.substr(0,10);
                 
@@ -586,8 +583,11 @@
             success = true; SoundFX.explode(); cameraShake = 0.5; spawnExplosion(target);
         }
         else if (type === 'MOVE' && GameState.board[target] === null) {
-            GameState.board[source] = null; GameState.board[target] = player;
-            GameState.history[player] = GameState.history[player].filter(i => i !== source); GameState.history[player].push(target); success = true; SoundFX.place();
+            // CORREÇÃO: Verifica se a peça é realmente do jogador (Anti-Cheat)
+            if(GameState.board[source] === player) {
+                GameState.board[source] = null; GameState.board[target] = player;
+                GameState.history[player] = GameState.history[player].filter(i => i !== source); GameState.history[player].push(target); success = true; SoundFX.place();
+            }
         }
         else if (type === 'PUSH' && GameState.board[target] === null) {
              const enemy = player === 'X' ? 'O' : 'X';
@@ -600,9 +600,12 @@
         else if (type === 'SHIELD' && GameState.board[target] === player) { GameState.shields[target] = 2; success = true; SoundFX.place(); }
         else if (type === 'SWAP' && !isProtected(target) && !isProtected(source)) {
             const enemy = player === 'X' ? 'O' : 'X';
-            GameState.board[source] = enemy; GameState.board[target] = player;
-            GameState.history[player] = GameState.history[player].map(i => i === source ? target : i);
-            GameState.history[enemy] = GameState.history[enemy].map(i => i === target ? source : i); success = true; SoundFX.click();
+            // CORREÇÃO: Garante a posse das peças (Anti-Cheat)
+            if(GameState.board[source] === player && GameState.board[target] === enemy) {
+                GameState.board[source] = enemy; GameState.board[target] = player;
+                GameState.history[player] = GameState.history[player].map(i => i === source ? target : i);
+                GameState.history[enemy] = GameState.history[enemy].map(i => i === target ? source : i); success = true; SoundFX.click();
+            }
         }
         else if (type === 'TIMEOUT') { GameState.hands[player].shift(); GameState.hands[player].push('PLACE'); success = true; }
 
@@ -669,7 +672,6 @@
     function syncState(newState, serverTime) {
         Object.assign(GameState, newState); 
         
-        // CORREÇÃO: Suaviza o timer. Só atualiza se o desvio for > 0.5s
         if (serverTime !== undefined) {
              if(Math.abs(timeLeft - serverTime) > 0.5) timeLeft = serverTime;
         }
@@ -724,6 +726,9 @@
     const pl1 = new THREE.PointLight(0xff0055, 1, 30); pl1.position.set(5, 5, 5); scene.add(pl1);
     const pl2 = new THREE.PointLight(0x00e5ff, 1, 30); pl2.position.set(-5, 5, -5); scene.add(pl2);
     scene.add(new THREE.AmbientLight(0xffffff, 0.3));
+
+    // CORREÇÃO: Partículas otimizadas (Geometry fora do loop)
+    const particleGeo = new THREE.BoxGeometry(0.1, 0.1, 0.1); 
 
     function spawnExplosion(idx) {
         const x = (idx%3-1)*3.1; const z = (Math.floor(idx/3)-1)*3.1;
@@ -784,7 +789,11 @@
         gridHelper.position.z = (Date.now() * 0.002) % 2;
         pieceGroup.children.forEach(p => { p.rotation.y += p.userData.spinSpeed || 0.01; if(p.userData.isGlitching) { p.visible = Math.random()>0.1; p.scale.setScalar(0.9+Math.random()*0.2); } p.children.forEach(c => { if(c.userData.anim==='shield') c.rotation.z-=0.05; }); });
         particlesGroup.clear();
-        for(let i=particles.length-1; i>=0; i--) { const p = particles[i]; p.life -= 0.02; p.pos.add(p.vel); if(p.gravity) p.vel.y += p.gravity; if(p.life <= 0) { particles.splice(i,1); continue; } const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.1,0.1,0.1), new THREE.MeshBasicMaterial({color:p.color})); mesh.position.copy(p.pos); mesh.rotation.x = Math.random()*Math.PI; particlesGroup.add(mesh); }
+        for(let i=particles.length-1; i>=0; i--) { const p = particles[i]; p.life -= 0.02; p.pos.add(p.vel); if(p.gravity) p.vel.y += p.gravity; if(p.life <= 0) { particles.splice(i,1); continue; } 
+            // CORREÇÃO: Reutiliza geometria para evitar Memory Leak
+            const mesh = new THREE.Mesh(particleGeo, new THREE.MeshBasicMaterial({color:p.color})); 
+            mesh.position.copy(p.pos); mesh.rotation.x = Math.random()*Math.PI; particlesGroup.add(mesh); 
+        }
         renderer.render(scene, camera);
     }
     animate();
