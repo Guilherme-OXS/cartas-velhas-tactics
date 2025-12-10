@@ -13,7 +13,7 @@
     <meta property="og:description" content="Desafia os teus amigos neste jogo tático 3D. Regra do Infinito, Cartas Especiais e Multiplayer em tempo real.">
     <meta property="og:type" content="website">
     
-    <title>Cartas Velhas: Cyberpunk Tactics v0.9.28 (ULTIMATE)</title>
+    <title>Cartas Velhas: Cyberpunk Tactics v0.9.29 (NAME FIX)</title>
     <style>
         /* --- CORE STYLES --- */
         body { margin: 0; overflow: hidden; background-color: #050510; font-family: 'Segoe UI', Tahoma, monospace; user-select: none; touch-action: none; }
@@ -153,10 +153,33 @@
 
         #modal-nickname { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
 
-        /* NOVAS FUNCIONALIDADES */
-        .chat-bar { position: absolute; bottom: 140px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; pointer-events: auto; }
-        .emoji-btn { background: rgba(0,0,0,0.5); border: 1px solid #444; color: #fff; font-size: 1.2rem; padding: 5px; border-radius: 50%; cursor: pointer; transition: 0.2s; }
-        .emoji-btn:hover { transform: scale(1.2); background: var(--o-color); border-color: #fff; }
+        /* NOVA UI DE REAÇÕES - BARRA LATERAL */
+        .chat-bar { 
+            position: absolute; 
+            top: 50%; 
+            right: 15px; /* Canto direito */
+            transform: translateY(-50%); 
+            display: flex; 
+            flex-direction: column; /* Pilha vertical */
+            gap: 15px; 
+            pointer-events: auto; 
+            z-index: 50;
+        }
+        .emoji-btn { 
+            background: rgba(0,0,0,0.6); 
+            border: 1px solid var(--o-color); 
+            color: #fff; 
+            font-size: 1.5rem; 
+            width: 50px; 
+            height: 50px; 
+            border-radius: 50%; 
+            cursor: pointer; 
+            transition: 0.2s; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .emoji-btn:hover { transform: scale(1.1); background: var(--o-color); box-shadow: 0 0 15px var(--o-color); }
         
         .mute-btn { position: absolute; top: 10px; left: 10px; background: none; border: none; color: #666; font-size: 1.5rem; cursor: pointer; pointer-events: auto; z-index: 50; }
         .mute-btn.active { color: #ff3333; }
@@ -218,7 +241,7 @@
         <div class="cyber-panel">
             <div class="title-glitch">CARTAS<br>VELHAS</div>
             
-            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 30px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.28 (ULTIMATE)</p>
+            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 30px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.29 (NAME FIX)</p>
             
             <div id="guest-input-area">
                 <p style="color:#aaa; font-size:0.8rem;">ACESSO RESTRITO A OPERADORES LOGADOS</p>
@@ -358,6 +381,12 @@
             <h2 style="color:#fff; margin-top:0;">SYSTEM LOG</h2>
             <div class="scroll-content">
                 <div class="update-block">
+                    <div class="update-title">v0.9.29 - Name Fix & UI Polish</div>
+                    <span class="update-item">Fix: Salvar nome agora funciona corretamente.</span>
+                    <span class="update-item">UI: Emojis movidos para a lateral direita.</span>
+                    <span class="update-item">Histórico restaurado.</span>
+                </div>
+                <div class="update-block">
                     <div class="update-title">v0.9.28 - Ultimate Update</div>
                     <span class="update-item">Feature: Chat Rápido (Emojis).</span>
                     <span class="update-item">Feature: Botão Mute & Histórico de Partidas.</span>
@@ -385,9 +414,112 @@
                     <span class="update-item">Sistema: Adicionados logs de debug para Busca e Ranking.</span>
                 </div>
                 <div class="update-block">
+                    <div class="update-title">v0.9.23 - Fixes Finais</div>
+                    <span class="update-item">Profile: Mudança de nome liberada.</span>
+                    <span class="update-item">Rank: Correção na listagem do Top 100.</span>
+                    <span class="update-item">UI: Créditos restaurados.</span>
+                </div>
+                <div class="update-block">
                     <div class="update-title">v0.9.22 - Identidade & Ranking</div>
                     <span class="update-item">Sistema: Ranking Global (Top 100) por ELO.</span>
                     <span class="update-item">Login: Escolha obrigatória de Nickname permanente.</span>
+                    <span class="update-item">Histórico: Log completo restaurado.</span>
+                </div>
+                <div class="update-block">
+                    <div class="update-title">v0.9.21 - Social & Fair Play</div>
+                    <span class="update-item">Feature: Busca de Amigos (Tela Social).</span>
+                    <span class="update-item">Fair Play: Partidas contra BOT não contam Rank.</span>
+                </div>
+                <div class="update-block">
+                    <div class="update-title">v0.9.20 - Perfil Avançado</div>
+                    <span class="update-item">Feature: Tela de Perfil completa (Wins/Losses/Rank).</span>
+                    <span class="update-item">Feature: Edição de Nickname com salvamento.</span>
+                    <span class="update-item">Feature: Ver perfil do oponente (clique no nome).</span>
+                </div>
+                <div class="update-block">
+                    <div class="update-title">v0.9.19 - Persistência Total</div>
+                    <span class="update-item">Database: Firestore conectado para salvar vitórias.</span>
+                </div>
+                <div class="update-block">
+                    <div class="update-title">v0.9.17 - Login System</div>
+                    <span class="update-item">Backend: Integração com Firebase (Google).</span>
+                    <span class="update-item">UI: Perfil de jogador com foto e nome real.</span>
+                    <span class="update-item">Persistência: Login automático ao voltar.</span>
+                </div>
+                <div class="update-block">
+                    <div class="update-title">v0.9.16 - Stability Patch</div>
+                    <span class="update-item">Segurança: Proteção contra nomes inválidos/longos.</span>
+                    <span class="update-item">Rede: Suavização do timer (anti-jitter).</span>
+                    <span class="update-item">Performance: Otimização de partículas.</span>
+                </div>
+                <div class="update-block">
+                    <div class="update-title">v0.9.15 - Quality of Life</div>
+                    <span class="update-item">Correção: Jogador 2 recebe cartas.</span>
+                    <span class="update-item">Sistema: Nickname local salvo.</span>
+                </div>
+                <div class="update-block">
+                    <div class="update-title">v0.9.13 - Sync Fix</div>
+                    <span class="update-item">Correção: Distribuição de cartas no modo "Criar Sala" corrigida.</span>
+                </div>
+                <div class="update-block">
+                    <div class="update-title">v0.9.12 - Empate & Fixes</div>
+                    <span class="update-item">Nova Regra: EMPATE se ambos vencerem na mesma jogada (Troca).</span>
+                    <span class="update-item">Partida reinicia sem pontos em caso de empate.</span>
+                    <span class="update-item">Correção: Placar zera na Revanche.</span>
+                </div>
+                <div class="update-block">
+                    <div class="update-title">v0.9.10 - Bot Update</div>
+                    <span class="update-item">Modo VS Bot Disponível.</span>
+                    <span class="update-item">Nova Carta: Empurrar (Mover Inimigo).</span>
+                    <span class="update-item">Correção: Placar zera ao reiniciar.</span>
+                    <span class="update-item">Seleção livre (Origem/Destino).</span>
+                    <span class="update-item">Menu de explicação das cartas.</span>
+                </div>
+                <div class="update-block">
+                    <div class="update-title">v0.9.9 - Restauração</div>
+                    <span class="update-item">Correção Crítica: Matchmaking revertido para lógica estável.</span>
+                    <span class="update-item">Implementado Jitter (atraso aleatório) para evitar conflitos.</span>
+                </div>
+                <div class="update-block">
+                    <div class="update-title">v0.8.0 - Cyber Polish</div>
+                    <span class="update-item">Menu Principal estilo "Terminal Hacker".</span>
+                    <span class="update-item">Efeitos visuais (Scanlines, Iluminação Volumétrica).</span>
+                    <span class="update-item">Câmara orbital no menu principal.</span>
+                </div>
+                <div class="update-block">
+                    <div class="update-title">v0.7.0 - Expansão Mobile & Matchmaking</div>
+                    <span class="update-item">Partida Rápida: Algoritmo automático de busca de salas.</span>
+                    <span class="update-item">Suporte Mobile Real.</span>
+                    <span class="update-item">Resiliência: Tratamento de desconexões.</span>
+                </div>
+                <div class="update-block">
+                    <div class="update-title">v0.6.0 - Polimento de Jogabilidade</div>
+                    <span class="update-item">Handshake Robusto.</span>
+                    <span class="update-item">Feedback Visual: Glitch na peça mais antiga.</span>
+                </div>
+                <div class="update-block">
+                    <div class="update-title">v0.5.0 - Multiplayer P2P</div>
+                    <span class="update-item">Conexão Direta via PeerJS.</span>
+                    <span class="update-item">Sistema de Salas Privadas.</span>
+                    <span class="update-item">Sincronização Total em tempo real.</span>
+                </div>
+                <div class="update-block">
+                    <div class="update-title">v0.4.0 - Sistema de Cartas</div>
+                    <span class="update-item">Introdução do Deck Building.</span>
+                    <span class="update-item">Novas Cartas: Escudo, Mover e Trocar.</span>
+                </div>
+                <div class="update-block">
+                    <div class="update-title">v0.3.0 - A Revolução 3D</div>
+                    <span class="update-item">Migração para Three.js (WebGL).</span>
+                </div>
+                <div class="update-block">
+                    <div class="update-title">v0.2.0 - Ação e "Sumo"</div>
+                    <span class="update-item">Poderes Iniciais, Screen shake e Áudio.</span>
+                </div>
+                <div class="update-block" style="border:none;">
+                    <div class="update-title">v0.1.0 - A Base</div>
+                    <span class="update-item">Mecânica Principal: Regra do Infinito.</span>
+                    <span class="update-item">Visual 2D Inicial.</span>
                 </div>
             </div>
             <center><button class="cyber-btn secondary" style="margin-top:20px;" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button></center>
@@ -531,6 +663,7 @@
             db.collection('players').doc(currentUser.uid).update({ displayName: newNick, hasSetNick: true })
             .then(() => {
                 userStats.displayName = newNick; userStats.hasSetNick = true; myName = newNick;
+                localStorage.setItem('cv_username', newNick); // Backup Local
                 updateUIWithStats(); document.getElementById('modal-nickname').classList.add('hidden');
                 showToast("BEM-VINDO " + newNick, "#00ff88");
             })
@@ -542,10 +675,16 @@
         if(!currentUser) { showToast("ERRO: NÃO LOGADO", "#ff0000"); return; }
         const newNick = document.getElementById('edit-nick-input').value.trim();
         if(newNick.length > 0 && newNick.length <= 10) {
+            // Atualiza DB
             db.collection('players').doc(currentUser.uid).update({ displayName: newNick })
             .then(() => {
-                userStats.displayName = newNick; myName = newNick; 
-                updateUIWithStats(); showToast("NICK SALVO", "#00ff88");
+                // Atualiza Variáveis
+                userStats.displayName = newNick; myName = newNick;
+                // Atualiza UI Imediatamente
+                updateUIWithStats(); 
+                // Salva backup local
+                localStorage.setItem('cv_username', newNick);
+                showToast("NICK SALVO", "#00ff88");
             })
             .catch(err => { showToast("ERRO AO SALVAR", "#ff0000"); });
         } else { showToast("NOME INVÁLIDO", "#ff3333"); }
@@ -688,7 +827,12 @@
         if(target) target.classList.remove('hidden');
         if(audioCtx.state === 'suspended') audioCtx.resume();
         if(screenId === 'screen-cards') renderCardsHelp();
-        if(screenId === 'screen-profile' && currentUser) { updateUIWithStats(); loadMatchHistory(); }
+        if(screenId === 'screen-profile' && currentUser) { 
+            // FIX: Força atualização do Input de Nome ao abrir a tela
+            document.getElementById('edit-nick-input').value = userStats.displayName || myName;
+            updateUIWithStats(); 
+            loadMatchHistory(); 
+        }
         if(screenId === 'screen-leaderboard') loadLeaderboard();
     }
     function renderCardsHelp() {
