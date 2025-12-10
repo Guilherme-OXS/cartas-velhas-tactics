@@ -13,7 +13,7 @@
     <meta property="og:description" content="Desafia os teus amigos neste jogo tático 3D. Regra do Infinito, Cartas Especiais e Multiplayer em tempo real.">
     <meta property="og:type" content="website">
     
-    <title>Cartas Velhas: Cyberpunk Tactics v0.9.21</title>
+    <title>Cartas Velhas: Cyberpunk Tactics v0.9.22</title>
     <style>
         /* --- CORE STYLES --- */
         body { margin: 0; overflow: hidden; background-color: #050510; font-family: 'Segoe UI', Tahoma, monospace; user-select: none; touch-action: none; }
@@ -141,6 +141,16 @@
         .search-info { text-align: left; flex: 1; }
         .search-name { color: #fff; font-weight: bold; font-size: 1rem; }
         .search-rank { color: #bd00ff; font-size: 0.8rem; font-weight: bold; }
+        
+        /* RANKING ROW */
+        .ranking-row { display: flex; align-items: center; padding: 8px; border-bottom: 1px solid #333; color: #ccc; font-size: 0.8rem; }
+        .rank-num { width: 30px; font-weight: bold; color: var(--o-color); }
+        .rank-name { flex: 1; text-align: left; font-weight: bold; color: #fff; }
+        .rank-elo { width: 60px; text-align: right; color: #bd00ff; font-weight: bold; }
+        .rank-wl { width: 80px; text-align: right; color: #888; font-size: 0.7rem; }
+
+        /* MODAL NICKNAME */
+        #modal-nickname { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
     </style>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -153,6 +163,16 @@
 <body>
 
     <div id="canvas-container" style="position: absolute; top:0; left:0; width:100%; height:100%;"></div>
+
+    <div id="modal-nickname" class="hidden">
+        <div class="cyber-panel" style="text-align: center;">
+            <h2 style="color:var(--o-color);">IDENTIFICAÇÃO NECESSÁRIA</h2>
+            <p style="color:#fff;">ESCOLHA SEU NOME DE GUERRA PERMANENTE</p>
+            <input type="text" id="permanent-nick-input" class="input-code" maxlength="10" placeholder="NICKNAME" style="border-color: var(--o-color);">
+            <br>
+            <button class="cyber-btn" onclick="saveInitialNickname()"><span>CONFIRMAR</span></button>
+        </div>
+    </div>
 
     <div id="ui-layer" class="hidden">
         <div class="hud-top pointer-events-auto">
@@ -174,7 +194,7 @@
         <div class="cyber-panel" style="text-align: center; border:none; background:transparent; box-shadow:none;">
             <div class="title-glitch">CARTAS<br>VELHAS</div>
             
-            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 30px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.21 (SOCIAL)</p>
+            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 30px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.22 (RANKING)</p>
             
             <div id="guest-input-area">
                 <input type="text" id="my-name-input" class="input-code" style="width: 200px; border-color: var(--o-color);" maxlength="10" placeholder="SEU NICKNAME" value="PLAYER">
@@ -197,12 +217,12 @@
             <button class="cyber-btn" onclick="startBotMatch()"><span>🤖 JOGAR VS BOT</span></button>
             <br>
             <button class="cyber-btn secondary" onclick="openScreen('screen-social')"><span>🔍 SOCIAL</span></button>
-            <button class="cyber-btn secondary" onclick="openScreen('screen-lobby-custom')"><span>CRIAR / ENTRAR</span></button>
+            <button class="cyber-btn secondary" onclick="openScreen('screen-leaderboard')"><span>🏆 RANK GLOBAL</span></button>
             <br>
             <div style="margin-top: 10px;">
-                <button class="cyber-btn secondary" style="min-width: 100px; font-size: 0.7rem;" onclick="openScreen('screen-cards')"><span>CARTAS</span></button>
-                <button class="cyber-btn secondary" style="min-width: 100px; font-size: 0.7rem;" onclick="openScreen('screen-credits')"><span>CRÉDITOS</span></button>
-                <button class="cyber-btn secondary" style="min-width: 100px; font-size: 0.7rem;" onclick="openScreen('screen-updates')"><span>UPDATES</span></button>
+                <button class="cyber-btn secondary" onclick="openScreen('screen-lobby-custom')"><span>SALAS</span></button>
+                <button class="cyber-btn secondary" style="min-width: 80px; font-size: 0.7rem;" onclick="openScreen('screen-cards')"><span>CARTAS</span></button>
+                <button class="cyber-btn secondary" style="min-width: 80px; font-size: 0.7rem;" onclick="openScreen('screen-updates')"><span>UPDATES</span></button>
             </div>
         </div>
     </div>
@@ -213,9 +233,9 @@
             <img id="detail-profile-img" class="big-avatar" src="" alt="Avatar">
             <br>
             <div style="margin-bottom: 20px;">
-                <label style="color:#aaa; font-size:0.7rem;">NICKNAME (EDITÁVEL)</label><br>
-                <input type="text" id="edit-nick-input" class="input-code" style="width: 200px; font-size:1rem; border-color: #555;" maxlength="10">
-                <button class="cyber-btn secondary" style="min-width: auto; padding: 10px;" onclick="saveNewNickname()">💾</button>
+                <label style="color:#aaa; font-size:0.7rem;">NICKNAME</label><br>
+                <h2 id="display-nick-profile" style="color:var(--o-color); margin:5px 0;">PLAYER</h2>
+                <p style="color:#666; font-size:0.6rem;">(Alterações no Nickname podem afetar seu Rank)</p>
             </div>
 
             <div class="stats-grid">
@@ -253,6 +273,25 @@
         </div>
     </div>
 
+    <div id="screen-leaderboard" class="screen hidden">
+        <div class="cyber-panel" style="text-align:center;">
+            <h2 style="color:#bd00ff; margin-top:0;">TOP 100 ELITE</h2>
+            <div style="border-bottom: 2px solid #333; padding-bottom: 5px; margin-bottom: 10px; display:flex; color:#666; font-size:0.7rem; font-weight:bold;">
+                <span style="width:30px;">#</span>
+                <span style="flex:1; text-align:left;">AGENTE</span>
+                <span style="width:60px; text-align:right;">ELO</span>
+                <span style="width:80px; text-align:right;">W / L</span>
+            </div>
+            
+            <div id="leaderboard-list" class="scroll-content" style="height: 400px;">
+                <div class="loader"></div>
+            </div>
+            
+            <br>
+            <button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button>
+        </div>
+    </div>
+
     <div id="screen-cards" class="screen hidden">
         <div class="cyber-panel">
             <h2 style="color:#fff; margin-top:0;">CONHECIMENTO</h2>
@@ -283,6 +322,12 @@
             <h2 style="color:#fff; margin-top:0;">SYSTEM LOG</h2>
             <div class="scroll-content">
                 <div class="update-block">
+                    <div class="update-title">v0.9.22 - Identidade & Ranking</div>
+                    <span class="update-item">Sistema: Ranking Global (Top 100) por ELO.</span>
+                    <span class="update-item">Login: Escolha obrigatória de Nickname permanente.</span>
+                    <span class="update-item">Histórico: Log completo restaurado.</span>
+                </div>
+                <div class="update-block">
                     <div class="update-title">v0.9.21 - Social & Fair Play</div>
                     <span class="update-item">Feature: Busca de Amigos (Tela Social).</span>
                     <span class="update-item">Fair Play: Partidas contra BOT não contam Rank.</span>
@@ -296,7 +341,6 @@
                 <div class="update-block">
                     <div class="update-title">v0.9.19 - Persistência Total</div>
                     <span class="update-item">Database: Firestore conectado para salvar vitórias.</span>
-                    <span class="update-item">Correção: Verificação de segurança de código.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.17 - Login System</div>
@@ -309,6 +353,75 @@
                     <span class="update-item">Segurança: Proteção contra nomes inválidos/longos.</span>
                     <span class="update-item">Rede: Suavização do timer (anti-jitter).</span>
                     <span class="update-item">Performance: Otimização de partículas.</span>
+                </div>
+                <div class="update-block">
+                    <div class="update-title">v0.9.15 - Quality of Life</div>
+                    <span class="update-item">Correção: Jogador 2 recebe cartas.</span>
+                    <span class="update-item">Sistema: Nickname local salvo.</span>
+                </div>
+                <div class="update-block">
+                    <div class="update-title">v0.9.13 - Sync Fix</div>
+                    <span class="update-item">Correção: Distribuição de cartas no modo "Criar Sala" corrigida.</span>
+                </div>
+                <div class="update-block">
+                    <div class="update-title">v0.9.12 - Empate & Fixes</div>
+                    <span class="update-item">Nova Regra: EMPATE se ambos vencerem na mesma jogada (Troca).</span>
+                    <span class="update-item">Partida reinicia sem pontos em caso de empate.</span>
+                    <span class="update-item">Correção: Placar zera na Revanche.</span>
+                </div>
+                <div class="update-block">
+                    <div class="update-title">v0.9.10 - Bot Update</div>
+                    <span class="update-item">Modo VS Bot Disponível.</span>
+                    <span class="update-item">Nova Carta: Empurrar (Mover Inimigo).</span>
+                    <span class="update-item">Correção: Placar zera ao reiniciar.</span>
+                    <span class="update-item">Seleção livre (Origem/Destino).</span>
+                    <span class="update-item">Menu de explicação das cartas.</span>
+                </div>
+                <div class="update-block">
+                    <div class="update-title">v0.9.9 - Restauração</div>
+                    <span class="update-item">Correção Crítica: Matchmaking revertido para lógica estável.</span>
+                    <span class="update-item">Implementado Jitter (atraso aleatório) para evitar conflitos.</span>
+                </div>
+                <div class="update-block">
+                    <div class="update-title">v0.8.0 - Cyber Polish</div>
+                    <span class="update-item">Menu Principal estilo "Terminal Hacker".</span>
+                    <span class="update-item">Efeitos visuais (Scanlines, Iluminação Volumétrica).</span>
+                    <span class="update-item">Câmara orbital no menu principal.</span>
+                </div>
+                <div class="update-block">
+                    <div class="update-title">v0.7.0 - Expansão Mobile & Matchmaking</div>
+                    <span class="update-item">Partida Rápida: Algoritmo automático de busca de salas.</span>
+                    <span class="update-item">Suporte Mobile Real.</span>
+                    <span class="update-item">Resiliência: Tratamento de desconexões.</span>
+                </div>
+                <div class="update-block">
+                    <div class="update-title">v0.6.0 - Polimento de Jogabilidade</div>
+                    <span class="update-item">Handshake Robusto.</span>
+                    <span class="update-item">Feedback Visual: Glitch na peça mais antiga.</span>
+                </div>
+                <div class="update-block">
+                    <div class="update-title">v0.5.0 - Multiplayer P2P</div>
+                    <span class="update-item">Conexão Direta via PeerJS.</span>
+                    <span class="update-item">Sistema de Salas Privadas.</span>
+                    <span class="update-item">Sincronização Total em tempo real.</span>
+                </div>
+                <div class="update-block">
+                    <div class="update-title">v0.4.0 - Sistema de Cartas</div>
+                    <span class="update-item">Introdução do Deck Building.</span>
+                    <span class="update-item">Novas Cartas: Escudo, Mover e Trocar.</span>
+                </div>
+                <div class="update-block">
+                    <div class="update-title">v0.3.0 - A Revolução 3D</div>
+                    <span class="update-item">Migração para Three.js (WebGL).</span>
+                </div>
+                <div class="update-block">
+                    <div class="update-title">v0.2.0 - Ação e "Sumo"</div>
+                    <span class="update-item">Poderes Iniciais, Screen shake e Áudio.</span>
+                </div>
+                <div class="update-block" style="border:none;">
+                    <div class="update-title">v0.1.0 - A Base</div>
+                    <span class="update-item">Mecânica Principal: Regra do Infinito.</span>
+                    <span class="update-item">Visual 2D Inicial.</span>
                 </div>
             </div>
             <center><button class="cyber-btn secondary" style="margin-top:20px;" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button></center>
@@ -369,7 +482,7 @@
     const db = firebase.firestore(); // BANCO DE DADOS ATIVO
     let currentUser = null;
     let userStats = { wins: 0, losses: 0, rank: 1000, displayName: "Player" };
-    let opponentStats = { rank: '?', wins: '?' }; // Dados do inimigo
+    let opponentStats = { rank: '?', wins: '?' }; 
 
     // --- CONFIG E DADOS ---
     const APP_ID = "cv-tactics-final-v5-"; 
@@ -416,22 +529,28 @@
             if (doc.exists) {
                 // Jogador existe, carrega
                 userStats = doc.data();
-                // Garante que o nome local é o salvo no DB
-                if(userStats.displayName) myName = userStats.displayName;
-                showToast(`WINS: ${userStats.wins}`, "#00ff88");
+                
+                // VERIFICA SE JÁ TEM NICK PERSONALIZADO
+                if(userStats.hasSetNick) {
+                    myName = userStats.displayName;
+                    showToast(`WINS: ${userStats.wins}`, "#00ff88");
+                } else {
+                    // SE NÃO TIVER, MOSTRA MODAL OBRIGATÓRIO
+                    document.getElementById('modal-nickname').classList.remove('hidden');
+                }
             } else {
-                // Cria novo
+                // Cria novo e pede nick
                 userStats = {
-                    displayName: user.displayName,
+                    displayName: user.displayName, // Provisório
                     photoURL: user.photoURL,
                     wins: 0,
                     losses: 0,
                     rank: 1000,
+                    hasSetNick: false, // Flag para saber se escolheu o nick
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
                 await userRef.set(userStats);
-                myName = userStats.displayName;
-                showToast("PERFIL CRIADO", "#00ff88");
+                document.getElementById('modal-nickname').classList.remove('hidden');
             }
             updateUIWithStats();
         } catch (e) {
@@ -439,21 +558,26 @@
         }
     }
     
-    // Função para alterar nickname
-    function saveNewNickname() {
+    // Salva o Nick Inicial (Obrigatório)
+    function saveInitialNickname() {
         if(!currentUser) return;
-        const newNick = document.getElementById('edit-nick-input').value.trim();
-        if(newNick.length > 0 && newNick.length <= 10) {
-            db.collection('players').doc(currentUser.uid).update({ displayName: newNick })
+        const newNick = document.getElementById('permanent-nick-input').value.trim();
+        if(newNick.length > 2 && newNick.length <= 10) {
+            db.collection('players').doc(currentUser.uid).update({ 
+                displayName: newNick,
+                hasSetNick: true
+            })
             .then(() => {
                 userStats.displayName = newNick;
+                userStats.hasSetNick = true;
                 myName = newNick;
                 updateUIWithStats();
-                showToast("NICK SALVO", "#00ff88");
+                document.getElementById('modal-nickname').classList.add('hidden');
+                showToast("BEM-VINDO " + newNick, "#00ff88");
             })
             .catch(err => { showToast("ERRO SALVAR", "#ff0000"); });
         } else {
-            showToast("NOME INVÁLIDO", "#ff3333");
+            showToast("NOME INVÁLIDO (3-10 CARACTERES)", "#ff3333");
         }
     }
     
@@ -469,9 +593,7 @@
         }
 
         try {
-            // Busca Exata no Firestore
             const snapshot = await db.collection('players').where('displayName', '==', queryName).limit(5).get();
-            
             resultsArea.innerHTML = '';
             
             if(snapshot.empty) {
@@ -493,10 +615,49 @@
                 `;
                 resultsArea.appendChild(card);
             });
-            
         } catch(e) {
             console.error(e);
             resultsArea.innerHTML = '<p style="color:#ff3333;">ERRO DE REDE</p>';
+        }
+    }
+    
+    // CARREGAR RANKING GLOBAL (TOP 100)
+    async function loadLeaderboard() {
+        const list = document.getElementById('leaderboard-list');
+        list.innerHTML = '<div class="loader"></div>';
+        
+        try {
+            const snapshot = await db.collection('players')
+                                     .orderBy('rank', 'desc')
+                                     .limit(100)
+                                     .get();
+                                     
+            list.innerHTML = '';
+            if(snapshot.empty) {
+                list.innerHTML = '<p>SEM DADOS</p>';
+                return;
+            }
+            
+            let rank = 1;
+            snapshot.forEach(doc => {
+                const p = doc.data();
+                const row = document.createElement('div');
+                row.className = 'ranking-row';
+                // Destaque para o próprio jogador
+                if(currentUser && doc.id === currentUser.uid) row.style.backgroundColor = "rgba(0, 229, 255, 0.1)";
+                
+                row.innerHTML = `
+                    <div class="rank-num">${rank++}</div>
+                    <div class="rank-name">${p.displayName || 'Anon'}</div>
+                    <div class="rank-elo">${p.rank || 1000}</div>
+                    <div class="rank-wl">${p.wins}/${p.losses}</div>
+                `;
+                list.appendChild(row);
+            });
+            
+        } catch(e) {
+            console.error(e);
+            list.innerHTML = '<p style="color:#ff3333;">ERRO AO CARREGAR RANKING</p>';
         }
     }
 
@@ -510,7 +671,7 @@
         
         // UI Tela de Perfil
         document.getElementById('detail-profile-img').src = currentUser ? currentUser.photoURL : '';
-        document.getElementById('edit-nick-input').value = userStats.displayName || myName;
+        document.getElementById('display-nick-profile').innerText = userStats.displayName || "DESCONHECIDO";
         document.getElementById('stat-rank').innerText = userStats.rank || 1000;
         document.getElementById('stat-wins').innerText = userStats.wins || 0;
         document.getElementById('stat-losses').innerText = userStats.losses || 0;
@@ -556,7 +717,7 @@
         const provider = new firebase.auth.GoogleAuthProvider();
         auth.signInWithPopup(provider)
             .then((result) => {
-                showToast("BEM VINDO!", "#00ff88");
+                showToast("LOGIN SUCESSO!", "#00ff88");
             }).catch((error) => {
                 console.error(error);
                 showToast("ERRO LOGIN", "#ff0000");
@@ -583,16 +744,10 @@
             guestArea.classList.add('hidden');
             userArea.classList.remove('hidden');
             
-            // Atualiza UI
-            document.getElementById('profile-name').innerText = user.displayName;
+            // Atualiza UI Básica (Foto)
             document.getElementById('profile-img').src = user.photoURL;
             
-            // Define nome inicial
-            let cleanName = user.displayName.split(' ')[0]; 
-            if(cleanName.length > 10) cleanName = cleanName.substr(0,10);
-            myName = cleanName;
-
-            // CARREGA O PERFIL DA BASE DE DADOS
+            // CARREGA O PERFIL DA BASE DE DADOS E VERIFICA NICK
             loadUserProfile(user);
             
         } else {
@@ -600,6 +755,7 @@
             currentUser = null;
             guestArea.classList.remove('hidden');
             userArea.classList.add('hidden');
+            document.getElementById('modal-nickname').classList.add('hidden');
             
             // Recupera nome do localStorage
             updateName();
@@ -620,6 +776,7 @@
         if(audioCtx.state === 'suspended') audioCtx.resume();
         if(screenId === 'screen-cards') renderCardsHelp();
         if(screenId === 'screen-profile' && currentUser) updateUIWithStats();
+        if(screenId === 'screen-leaderboard') loadLeaderboard(); // Carrega ranking ao abrir
     }
 
     function renderCardsHelp() {
