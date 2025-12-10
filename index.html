@@ -13,7 +13,7 @@
     <meta property="og:description" content="Desafia os teus amigos neste jogo tático 3D. Regra do Infinito, Cartas Especiais e Multiplayer em tempo real.">
     <meta property="og:type" content="website">
     
-    <title>Cartas Velhas: Cyberpunk Tactics v0.9.20</title>
+    <title>Cartas Velhas: Cyberpunk Tactics v0.9.21</title>
     <style>
         /* --- CORE STYLES --- */
         body { margin: 0; overflow: hidden; background-color: #050510; font-family: 'Segoe UI', Tahoma, monospace; user-select: none; touch-action: none; }
@@ -85,7 +85,7 @@
 
         .hud-top { padding: 10px; display: flex; flex-direction: column; align-items: center; background: linear-gradient(to bottom, rgba(0,0,0,0.95), transparent); width: 100%; }
         .scores { display: flex; gap: 30px; margin-top: 5px; align-items: center; justify-content: center; width: 100%; }
-        .player-score { transition: 0.3s; opacity: 0.4; transform: scale(0.9); display: flex; flex-direction: column; align-items: center; cursor: pointer; } /* Added cursor pointer */
+        .player-score { transition: 0.3s; opacity: 0.4; transform: scale(0.9); display: flex; flex-direction: column; align-items: center; cursor: pointer; } 
         .player-score.active-turn { opacity: 1; transform: scale(1.1); text-shadow: 0 0 10px currentColor; }
         .score-val { font-size: 2.5rem; font-weight: 900; }
         .player-name { font-size: 0.7rem; color: #fff; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
@@ -129,12 +129,18 @@
         .user-nick { color: #fff; font-weight: bold; font-size: 0.9rem; }
         .user-status { color: #00ff88; font-size: 0.7rem; }
         
-        /* NEW STATS GRID STYLE */
+        /* STATS GRID STYLE */
         .stats-grid { display: flex; justify-content: space-around; width: 100%; margin-top: 20px; gap: 10px; }
         .stat-box { background: rgba(255,255,255,0.05); border: 1px solid #333; padding: 10px; flex: 1; text-align: center; border-radius: 5px; }
         .stat-val { font-size: 1.5rem; font-weight: bold; color: #fff; }
         .stat-label { font-size: 0.7rem; color: #aaa; text-transform: uppercase; }
         .big-avatar { width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--o-color); margin-bottom: 10px; object-fit: cover; }
+        
+        /* SEARCH CARD STYLE */
+        .search-result-card { background: rgba(0,0,0,0.6); border: 1px solid #444; border-left: 2px solid var(--o-color); padding: 10px; margin-bottom: 10px; display: flex; align-items: center; gap: 15px; }
+        .search-info { text-align: left; flex: 1; }
+        .search-name { color: #fff; font-weight: bold; font-size: 1rem; }
+        .search-rank { color: #bd00ff; font-size: 0.8rem; font-weight: bold; }
     </style>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -168,7 +174,7 @@
         <div class="cyber-panel" style="text-align: center; border:none; background:transparent; box-shadow:none;">
             <div class="title-glitch">CARTAS<br>VELHAS</div>
             
-            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 30px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.20 (PROFILE+)</p>
+            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 30px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.21 (SOCIAL)</p>
             
             <div id="guest-input-area">
                 <input type="text" id="my-name-input" class="input-code" style="width: 200px; border-color: var(--o-color);" maxlength="10" placeholder="SEU NICKNAME" value="PLAYER">
@@ -190,6 +196,7 @@
             <br>
             <button class="cyber-btn" onclick="startBotMatch()"><span>🤖 JOGAR VS BOT</span></button>
             <br>
+            <button class="cyber-btn secondary" onclick="openScreen('screen-social')"><span>🔍 SOCIAL</span></button>
             <button class="cyber-btn secondary" onclick="openScreen('screen-lobby-custom')"><span>CRIAR / ENTRAR</span></button>
             <br>
             <div style="margin-top: 10px;">
@@ -230,6 +237,21 @@
             <button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button>
         </div>
     </div>
+    
+    <div id="screen-social" class="screen hidden">
+        <div class="cyber-panel" style="text-align:center;">
+            <h2 style="color:#fff; margin-top:0;">REDE NEURAL</h2>
+            <p style="color:#aaa; font-size:0.8rem;">BUSCAR AGENTES ATIVOS</p>
+            <input type="text" id="search-player-input" class="input-code" placeholder="NICK DO JOGADOR">
+            <button class="cyber-btn" onclick="searchPlayer()"><span>BUSCAR</span></button>
+            
+            <div id="search-results-area" class="scroll-content" style="margin-top:20px; height: 300px;">
+                </div>
+            
+            <br>
+            <button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button>
+        </div>
+    </div>
 
     <div id="screen-cards" class="screen hidden">
         <div class="cyber-panel">
@@ -260,6 +282,11 @@
         <div class="cyber-panel">
             <h2 style="color:#fff; margin-top:0;">SYSTEM LOG</h2>
             <div class="scroll-content">
+                <div class="update-block">
+                    <div class="update-title">v0.9.21 - Social & Fair Play</div>
+                    <span class="update-item">Feature: Busca de Amigos (Tela Social).</span>
+                    <span class="update-item">Fair Play: Partidas contra BOT não contam Rank.</span>
+                </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.20 - Perfil Avançado</div>
                     <span class="update-item">Feature: Tela de Perfil completa (Wins/Losses/Rank).</span>
@@ -429,6 +456,49 @@
             showToast("NOME INVÁLIDO", "#ff3333");
         }
     }
+    
+    // BUSCAR JOGADORES (SOCIAL)
+    async function searchPlayer() {
+        const queryName = document.getElementById('search-player-input').value.trim();
+        const resultsArea = document.getElementById('search-results-area');
+        resultsArea.innerHTML = '<div class="loader"></div>';
+        
+        if(queryName.length === 0) {
+            resultsArea.innerHTML = '<p style="color:#aaa;">DIGITE UM NOME</p>';
+            return;
+        }
+
+        try {
+            // Busca Exata no Firestore
+            const snapshot = await db.collection('players').where('displayName', '==', queryName).limit(5).get();
+            
+            resultsArea.innerHTML = '';
+            
+            if(snapshot.empty) {
+                resultsArea.innerHTML = '<p style="color:#ff3333;">NENHUM AGENTE ENCONTRADO</p>';
+                return;
+            }
+
+            snapshot.forEach(doc => {
+                const p = doc.data();
+                const card = document.createElement('div');
+                card.className = 'search-result-card';
+                card.innerHTML = `
+                    <img src="${p.photoURL}" class="user-avatar">
+                    <div class="search-info">
+                        <div class="search-name">${p.displayName}</div>
+                        <div class="search-rank">RANK: ${p.rank || 1000}</div>
+                        <div style="color:#aaa; font-size:0.7rem;">VITÓRIAS: ${p.wins || 0}</div>
+                    </div>
+                `;
+                resultsArea.appendChild(card);
+            });
+            
+        } catch(e) {
+            console.error(e);
+            resultsArea.innerHTML = '<p style="color:#ff3333;">ERRO DE REDE</p>';
+        }
+    }
 
     // Atualiza a interface
     function updateUIWithStats() {
@@ -449,6 +519,7 @@
     // Salva o resultado final da partida
     function saveGameResult(isWin) {
         if (!currentUser) return; 
+        if (isBotMatch) return; // AGORA NÃO CONTA SE FOR BOT!
 
         const userRef = db.collection('players').doc(currentUser.uid);
         
@@ -913,7 +984,7 @@
         document.getElementById('winner-text').style.color = (GameState.winner==='X'?'var(--x-color)':'var(--o-color)');
         SoundFX.matchWin();
         
-        // --- SALVA O RESULTADO NA BASE DE DADOS ---
+        // --- SALVA O RESULTADO NA BASE DE DADOS (SE NÃO FOR BOT) ---
         if(currentUser && GameState.winner === mySide) {
             saveGameResult(true);
             showToast("RANK SUBIU!", "#00ff88");
