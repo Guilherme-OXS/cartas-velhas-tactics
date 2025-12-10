@@ -13,7 +13,7 @@
     <meta property="og:description" content="Desafia os teus amigos neste jogo tático 3D. Regra do Infinito, Cartas Especiais e Multiplayer em tempo real.">
     <meta property="og:type" content="website">
     
-    <title>Cartas Velhas: Cyberpunk Tactics v0.9.26 (FULL)</title>
+    <title>Cartas Velhas: Cyberpunk Tactics v0.9.27 (RANK FIX)</title>
     <style>
         /* --- CORE STYLES --- */
         body { margin: 0; overflow: hidden; background-color: #050510; font-family: 'Segoe UI', Tahoma, monospace; user-select: none; touch-action: none; }
@@ -30,11 +30,11 @@
 
         :root { --x-color: #ff0055; --o-color: #00e5ff; --card-bg: rgba(10, 10, 20, 0.90); }
 
-        /* UI COMPONENTS - CORREÇÃO DE ALINHAMENTO */
+        /* UI COMPONENTS */
         .screen { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
             background: radial-gradient(circle at center, rgba(26,26,46,0.8) 0%, #000 100%); 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; /* Garante centralização */
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
             z-index: 100; transition: opacity 0.5s; opacity: 1; visibility: visible; 
         }
         .hidden { opacity: 0; visibility: hidden; pointer-events: none; transition: 0.5s; }
@@ -44,8 +44,7 @@
             padding: 30px; max-width: 600px; width: 90%; position: relative;
             box-shadow: 0 0 20px rgba(0, 229, 255, 0.1); backdrop-filter: blur(5px);
             transform: skewX(-2deg);
-            margin: auto; /* Reforça a centralização */
-            text-align: center; /* Centraliza o conteúdo interno */
+            margin: auto; text-align: center;
         }
         
         .title-glitch { 
@@ -76,7 +75,6 @@
         .scroll-content::-webkit-scrollbar-track { background: #111; }
         .scroll-content::-webkit-scrollbar-thumb { background-color: var(--o-color); border-radius: 3px; }
 
-        /* TABELA DE CARTAS */
         .card-row { display: flex; align-items: center; margin-bottom: 10px; border-bottom: 1px dashed #333; padding-bottom: 5px; }
         .card-preview { font-size: 1.5rem; width: 40px; text-align: center; margin-right: 10px; }
         .card-info { flex: 1; }
@@ -124,41 +122,35 @@
         
         @keyframes glitch-anim { 0% { text-shadow: 3px 3px 0px var(--x-color); } 20% { text-shadow: -3px -3px 0px var(--o-color); } 40% { text-shadow: 2px -2px 0px #fff; } 100% { text-shadow: 3px 3px 0px var(--x-color); } }
         
-        /* Loader para feedback visual */
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--o-color); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
         .credits-name { color: var(--o-color); font-weight: bold; font-size: 1.2rem; margin: 10px 0; display: block; text-shadow: 0 0 10px var(--o-color); }
         .match-log { color: #aaa; font-family: monospace; font-size: 0.8rem; margin-top: 10px; height: 20px; }
 
-        /* USER PROFILE STYLES */
         .user-profile-container { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 20px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; border: 1px solid #333; }
         .user-avatar { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--o-color); object-fit: cover; }
         .user-info { text-align: left; }
         .user-nick { color: #fff; font-weight: bold; font-size: 0.9rem; }
         .user-status { color: #00ff88; font-size: 0.7rem; }
         
-        /* STATS GRID STYLE */
         .stats-grid { display: flex; justify-content: space-around; width: 100%; margin-top: 20px; gap: 10px; }
         .stat-box { background: rgba(255,255,255,0.05); border: 1px solid #333; padding: 10px; flex: 1; text-align: center; border-radius: 5px; }
         .stat-val { font-size: 1.5rem; font-weight: bold; color: #fff; }
         .stat-label { font-size: 0.7rem; color: #aaa; text-transform: uppercase; }
         .big-avatar { width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--o-color); margin-bottom: 10px; object-fit: cover; }
         
-        /* SEARCH CARD STYLE */
         .search-result-card { background: rgba(0,0,0,0.6); border: 1px solid #444; border-left: 2px solid var(--o-color); padding: 10px; margin-bottom: 10px; display: flex; align-items: center; gap: 15px; }
         .search-info { text-align: left; flex: 1; }
         .search-name { color: #fff; font-weight: bold; font-size: 1rem; }
         .search-rank { color: #bd00ff; font-size: 0.8rem; font-weight: bold; }
         
-        /* RANKING ROW */
         .ranking-row { display: flex; align-items: center; padding: 8px; border-bottom: 1px solid #333; color: #ccc; font-size: 0.8rem; }
         .rank-num { width: 30px; font-weight: bold; color: var(--o-color); }
         .rank-name { flex: 1; text-align: left; font-weight: bold; color: #fff; }
         .rank-elo { width: 60px; text-align: right; color: #bd00ff; font-weight: bold; }
         .rank-wl { width: 80px; text-align: right; color: #888; font-size: 0.7rem; }
 
-        /* MODAL NICKNAME */
         #modal-nickname { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
     </style>
     
@@ -203,7 +195,7 @@
         <div class="cyber-panel">
             <div class="title-glitch">CARTAS<br>VELHAS</div>
             
-            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 30px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.26 (LOGGED)</p>
+            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 30px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.27 (RANK FIX)</p>
             
             <div id="guest-input-area">
                 <p style="color:#aaa; font-size:0.8rem;">ACESSO RESTRITO A OPERADORES LOGADOS</p>
@@ -335,6 +327,12 @@
         <div class="cyber-panel">
             <h2 style="color:#fff; margin-top:0;">SYSTEM LOG</h2>
             <div class="scroll-content">
+                <div class="update-block">
+                    <div class="update-title">v0.9.27 - Rank & Nick Fix</div>
+                    <span class="update-item">Fix: Input de nome agora carrega o valor correto.</span>
+                    <span class="update-item">Fix: Usuários sem Rank agora são corrigidos ao logar.</span>
+                    <span class="update-item">Fix: Feedback de lista vazia no Ranking.</span>
+                </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.26 - Login & Anim Fix</div>
                     <span class="update-item">Sistema: Jogo permitido apenas após Login.</span>
@@ -567,6 +565,14 @@
                 // Jogador existe, carrega
                 userStats = doc.data();
                 
+                // CORREÇÃO: Se usuário existe mas Rank é undefined (versão antiga), conserta
+                if (userStats.rank === undefined || userStats.rank === null) {
+                    userStats.rank = 1000;
+                    userStats.wins = userStats.wins || 0;
+                    userStats.losses = userStats.losses || 0;
+                    userRef.update({ rank: 1000, wins: 0, losses: 0 }); // Atualiza no DB
+                }
+                
                 // VERIFICA SE JÁ TEM NICK PERSONALIZADO
                 if(userStats.hasSetNick) {
                     myName = userStats.displayName;
@@ -578,11 +584,11 @@
             } else {
                 // Cria novo e pede nick
                 userStats = {
-                    displayName: user.displayName, // Provisório
+                    displayName: user.displayName || "Agente", 
                     photoURL: user.photoURL,
                     wins: 0,
                     losses: 0,
-                    rank: 1000,
+                    rank: 1000, // IMPORTANTE PARA O RANKING
                     hasSetNick: false, // Flag para saber se escolheu o nick
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
@@ -633,8 +639,8 @@
             .then(() => {
                 console.log("Nick salvo com sucesso no Firestore.");
                 userStats.displayName = newNick;
-                myName = newNick; // Atualiza a variável global do nome imediatamente
-                updateUIWithStats(); // Atualiza a interface
+                myName = newNick; 
+                updateUIWithStats(); 
                 showToast("NICK SALVO", "#00ff88");
             })
             .catch(err => { 
@@ -700,7 +706,20 @@
                                      
             list.innerHTML = '';
             if(snapshot.empty) {
-                list.innerHTML = '<p style="color:#aaa;">SEM DADOS DE RANKING</p>';
+                // Se estiver vazio, mas o usuário atual existe, mostra ele
+                if (currentUser) {
+                     list.innerHTML = `
+                        <div class="ranking-row" style="background:rgba(0, 229, 255, 0.1);">
+                            <div class="rank-num">1</div>
+                            <div class="rank-name">${userStats.displayName}</div>
+                            <div class="rank-elo">${userStats.rank || 1000}</div>
+                            <div class="rank-wl">${userStats.wins}/${userStats.losses}</div>
+                        </div>
+                        <p style="color:#aaa; text-align:center; margin-top:10px;">Você é o primeiro Operador!</p>
+                     `;
+                } else {
+                     list.innerHTML = '<p style="color:#aaa;">SEM DADOS DE RANKING</p>';
+                }
                 return;
             }
             
@@ -722,7 +741,12 @@
             
         } catch(e) {
             console.error("Erro ao carregar leaderboard:", e);
-            list.innerHTML = '<p style="color:#ff3333;">ERRO AO CARREGAR RANKING (VER CONSOLE)</p>';
+            // Mensagem de ajuda caso falte índice
+            if(e.message.includes("index")) {
+                list.innerHTML = '<p style="color:#ff3333;">ERRO: ADMIN PRECISA CRIAR ÍNDICE (F12)</p>';
+            } else {
+                list.innerHTML = '<p style="color:#ff3333;">ERRO AO CARREGAR RANKING</p>';
+            }
         }
     }
 
@@ -736,7 +760,9 @@
         
         // UI Tela de Perfil
         document.getElementById('detail-profile-img').src = currentUser ? currentUser.photoURL : '';
+        // CORREÇÃO: Força o input a ter o valor do nome atual
         document.getElementById('edit-nick-input').value = userStats.displayName || myName;
+        
         document.getElementById('stat-rank').innerText = userStats.rank || 1000;
         document.getElementById('stat-wins').innerText = userStats.wins || 0;
         document.getElementById('stat-losses').innerText = userStats.losses || 0;
@@ -1292,17 +1318,14 @@
         } else { menuTime += 0.005; camera.position.x = Math.sin(menuTime) * 18; camera.position.z = Math.cos(menuTime) * 18; camera.position.y = 12; camera.lookAt(0,0,0); }
         gridHelper.position.z = (Date.now() * 0.002) % 2;
         
-        // --- CORREÇÃO DA ANIMAÇÃO DO 'X' AQUI ---
         pieceGroup.children.forEach(p => { 
             p.rotation.y += p.userData.spinSpeed || 0.01; 
             if(p.userData.isGlitching) { p.visible = Math.random()>0.1; p.scale.setScalar(0.9+Math.random()*0.2); } 
             
             p.children.forEach(c => { 
-                // AQUI estava o bug: '=' virou '==='
                 if(c.userData.anim === 'shield') c.rotation.z -= 0.05; 
             }); 
         });
-        // ----------------------------------------
         
         particlesGroup.clear();
         for(let i=particles.length-1; i>=0; i--) { const p = particles[i]; p.life -= 0.02; p.pos.add(p.vel); if(p.gravity) p.vel.y += p.gravity; if(p.life <= 0) { particles.splice(i,1); continue; } 
