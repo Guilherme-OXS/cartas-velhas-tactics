@@ -13,7 +13,7 @@
     <meta property="og:description" content="Desafia os teus amigos neste jogo tático 3D. Regra do Infinito, Cartas Especiais e Multiplayer em tempo real.">
     <meta property="og:type" content="website">
     
-    <title>Cartas Velhas: Cyberpunk Tactics v0.9.17</title>
+    <title>Cartas Velhas: Cyberpunk Tactics v0.9.19</title>
     <style>
         /* --- CORE STYLES --- */
         body { margin: 0; overflow: hidden; background-color: #050510; font-family: 'Segoe UI', Tahoma, monospace; user-select: none; touch-action: none; }
@@ -135,6 +135,7 @@
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -160,7 +161,7 @@
         <div class="cyber-panel" style="text-align: center; border:none; background:transparent; box-shadow:none;">
             <div class="title-glitch">CARTAS<br>VELHAS</div>
             
-            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 30px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.17 (LOGIN ALPHA)</p>
+            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 30px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.19 (DB CONNECTED)</p>
             
             <div id="guest-input-area">
                 <input type="text" id="my-name-input" class="input-code" style="width: 200px; border-color: var(--o-color);" maxlength="10" placeholder="SEU NICKNAME" value="PLAYER">
@@ -172,7 +173,7 @@
                 <img id="profile-img" class="user-avatar" src="" alt="User">
                 <div class="user-info">
                     <div id="profile-name" class="user-nick">Player</div>
-                    <div class="user-status">● Online</div>
+                    <div class="user-status">● Carregando stats...</div>
                 </div>
                 <button class="cyber-btn secondary" style="min-width:auto; padding:5px 10px; font-size:0.6rem; margin-left:10px;" onclick="logout()">SAIR</button>
             </div>
@@ -209,7 +210,7 @@
                 <hr style="border-color:#333; margin: 20px 0;">
                 <p>Engine: Three.js WebGL</p>
                 <p>Network: PeerJS P2P</p>
-                <p>Backend: Firebase Auth</p>
+                <p>Backend: Firebase Auth & Firestore</p>
                 <p>Audio: WebAudio API Synth</p>
             </div>
             <center><button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button></center>
@@ -220,6 +221,11 @@
         <div class="cyber-panel">
             <h2 style="color:#fff; margin-top:0;">SYSTEM LOG</h2>
             <div class="scroll-content">
+                <div class="update-block">
+                    <div class="update-title">v0.9.19 - Persistência Total</div>
+                    <span class="update-item">Database: Firestore conectado para salvar vitórias.</span>
+                    <span class="update-item">Correção: Verificação de segurança de código.</span>
+                </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.17 - Login System</div>
                     <span class="update-item">Backend: Integração com Firebase (Google).</span>
@@ -344,20 +350,22 @@
 <script>
     // --- CONFIG FIREBASE ---
     const firebaseConfig = {
-  	apiKey: "AIzaSyCSkDG6kWhKcuK0bhzJU7HazHBwHtuQ9zo",
-  	authDomain: "cartas-velhas-db.firebaseapp.com",
-  	projectId: "cartas-velhas-db",
-  	storageBucket: "cartas-velhas-db.firebasestorage.app",
-  	messagingSenderId: "146756048632",
-  	appId: "1:146756048632:web:efebe19fc28ef9f87c0d0d",
-  	measurementId: "G-H70FLB4DB4"
+    apiKey: "AIzaSyCSkDG6kWhKcuK0bhzJU7HazHBwHtuQ9zo",
+    authDomain: "cartas-velhas-db.firebaseapp.com",
+    projectId: "cartas-velhas-db",
+    storageBucket: "cartas-velhas-db.firebasestorage.app",
+    messagingSenderId: "146756048632",
+    appId: "1:146756048632:web:efebe19fc28ef9f87c0d0d",
+    measurementId: "G-H70FLB4DB4"
     };
 
 
     // INICIALIZAR FIREBASE
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
+    const db = firebase.firestore(); // BANCO DE DADOS ATIVO
     let currentUser = null;
+    let userStats = { wins: 0, losses: 0, rank: 1000 };
 
     // --- CONFIG E DADOS ---
     const APP_ID = "cv-tactics-final-v5-"; 
@@ -392,6 +400,70 @@
     let particles = [], cameraShake = 0;
     let isInGame = false;
     let botTimer = null;
+
+    // --- DATABASE LOGIC (SALVAR E CARREGAR DADOS) ---
+
+    // Carrega dados do utilizador ao logar
+    async function loadUserProfile(user) {
+        try {
+            const userRef = db.collection('players').doc(user.uid);
+            const doc = await userRef.get();
+
+            if (doc.exists) {
+                // Jogador existe, carrega
+                userStats = doc.data();
+                showToast(`WINS: ${userStats.wins}`, "#00ff88");
+            } else {
+                // Cria novo
+                userStats = {
+                    displayName: user.displayName,
+                    photoURL: user.photoURL,
+                    wins: 0,
+                    losses: 0,
+                    rank: 1000,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                await userRef.set(userStats);
+                showToast("PERFIL CRIADO", "#00ff88");
+            }
+            updateUIWithStats();
+        } catch (e) {
+            console.error("Erro no DB:", e);
+            // showToast("ERRO DB", "#ff0000"); // Descomente para debug se necessário
+        }
+    }
+
+    // Atualiza o texto na tela de perfil
+    function updateUIWithStats() {
+        const statusDiv = document.querySelector('.user-status');
+        if(statusDiv) {
+            statusDiv.innerHTML = `● Online | Rank: ${userStats.rank || 1000} | V: ${userStats.wins || 0}`;
+        }
+    }
+
+    // Salva o resultado final da partida
+    function saveGameResult(isWin) {
+        if (!currentUser) return; // Só salva se estiver logado
+
+        const userRef = db.collection('players').doc(currentUser.uid);
+        
+        if (isWin) {
+            userRef.update({
+                wins: firebase.firestore.FieldValue.increment(1),
+                rank: firebase.firestore.FieldValue.increment(25) // Ganha 25 pontos
+            }).catch(e => console.log(e));
+            userStats.wins++;
+            userStats.rank += 25;
+        } else {
+            userRef.update({
+                losses: firebase.firestore.FieldValue.increment(1),
+                rank: firebase.firestore.FieldValue.increment(-15) // Perde 15 pontos
+            }).catch(e => console.log(e));
+            userStats.losses++;
+            userStats.rank -= 15;
+        }
+        updateUIWithStats();
+    }
 
     // --- LOGIN LOGIC ---
     function loginGoogle() {
@@ -433,6 +505,9 @@
             let cleanName = user.displayName.split(' ')[0]; // Pega só o primeiro nome
             if(cleanName.length > 10) cleanName = cleanName.substr(0,10);
             myName = cleanName;
+
+            // CARREGA O PERFIL DA BASE DE DADOS
+            loadUserProfile(user);
             
         } else {
             // Não logado
@@ -793,11 +868,22 @@
     }
 
     function showGameOver() {
-        isInGame = false; openScreen('screen-gameover');
+        isInGame = false;
+        openScreen('screen-gameover');
         const wName = GameState.names[GameState.winner];
         document.getElementById('winner-text').innerText = wName + " VENCEU!";
         document.getElementById('winner-text').style.color = (GameState.winner==='X'?'var(--x-color)':'var(--o-color)');
         SoundFX.matchWin();
+        
+        // --- SALVA O RESULTADO NA BASE DE DADOS ---
+        if(currentUser && GameState.winner === mySide) {
+            saveGameResult(true);
+            showToast("RANK SUBIU!", "#00ff88");
+        } else if (currentUser && GameState.winner !== mySide) {
+            saveGameResult(false);
+        }
+        // ------------------------------------------
+
         const area = document.getElementById('rematch-area'); area.innerHTML = '';
         if(isHost) {
             const btn = document.createElement('button'); btn.className = 'cyber-btn'; btn.innerHTML = '<span>REVANCHE</span>'; btn.onclick = () => { startGame(); }; area.appendChild(btn);
