@@ -4,16 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <meta name="description" content="Cartas Velhas: Cyberpunk Tactics. Uma reinvenção estratégica 3D multiplayer do Jogo da Velha com cartas, poderes e física. Jogue grátis online.">
-    <meta name="keywords" content="Cartas Velhas, Cyberpunk Tactics, Jogo da Velha 3D, Jogo de Estratégia, Multiplayer P2P, Guilherme Otávio Xavier de Souza, Browser Game, WebGL">
-    <meta name="author" content="Guilherme Otávio Xavier de Souza">
-    <meta name="robots" content="index, follow">
-
-    <meta property="og:title" content="Cartas Velhas: Cyberpunk Tactics">
-    <meta property="og:description" content="Desafia os teus amigos neste jogo tático 3D. Regra do Infinito, Cartas Especiais e Multiplayer em tempo real.">
-    <meta property="og:type" content="website">
-    
-    <title>Cartas Velhas: Cyberpunk Tactics v0.9.29 (NAME FIX)</title>
+    <meta name="description" content="Cartas Velhas: Cyberpunk Tactics. Jogo de estratégia 3D.">
+    <title>Cartas Velhas: Cyberpunk Tactics v0.9.30 (UI & DB FIX)</title>
     <style>
         /* --- CORE STYLES --- */
         body { margin: 0; overflow: hidden; background-color: #050510; font-family: 'Segoe UI', Tahoma, monospace; user-select: none; touch-action: none; }
@@ -75,6 +67,7 @@
         .scroll-content::-webkit-scrollbar-track { background: #111; }
         .scroll-content::-webkit-scrollbar-thumb { background-color: var(--o-color); border-radius: 3px; }
 
+        /* ELEMENTOS UI */
         .card-row { display: flex; align-items: center; margin-bottom: 10px; border-bottom: 1px dashed #333; padding-bottom: 5px; }
         .card-preview { font-size: 1.5rem; width: 40px; text-align: center; margin-right: 10px; }
         .card-info { flex: 1; }
@@ -153,33 +146,34 @@
 
         #modal-nickname { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
 
-        /* NOVA UI DE REAÇÕES - BARRA LATERAL */
+        /* NOVA UI DE REAÇÕES - BARRA LATERAL FIXA DIREITA */
         .chat-bar { 
             position: absolute; 
             top: 50%; 
-            right: 15px; /* Canto direito */
+            right: 20px; /* Alinhado à direita */
             transform: translateY(-50%); 
             display: flex; 
-            flex-direction: column; /* Pilha vertical */
+            flex-direction: column; /* Vertical */
             gap: 15px; 
             pointer-events: auto; 
             z-index: 50;
         }
         .emoji-btn { 
-            background: rgba(0,0,0,0.6); 
-            border: 1px solid var(--o-color); 
+            background: rgba(0,0,0,0.8); 
+            border: 2px solid var(--o-color); 
             color: #fff; 
-            font-size: 1.5rem; 
-            width: 50px; 
-            height: 50px; 
+            font-size: 1.8rem; 
+            width: 55px; 
+            height: 55px; 
             border-radius: 50%; 
             cursor: pointer; 
             transition: 0.2s; 
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 0 10px rgba(0,229,255,0.3);
         }
-        .emoji-btn:hover { transform: scale(1.1); background: var(--o-color); box-shadow: 0 0 15px var(--o-color); }
+        .emoji-btn:hover { transform: scale(1.15); background: var(--o-color); box-shadow: 0 0 20px var(--o-color); }
         
         .mute-btn { position: absolute; top: 10px; left: 10px; background: none; border: none; color: #666; font-size: 1.5rem; cursor: pointer; pointer-events: auto; z-index: 50; }
         .mute-btn.active { color: #ff3333; }
@@ -241,7 +235,7 @@
         <div class="cyber-panel">
             <div class="title-glitch">CARTAS<br>VELHAS</div>
             
-            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 30px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.29 (NAME FIX)</p>
+            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 30px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.30 (UI & DB FIX)</p>
             
             <div id="guest-input-area">
                 <p style="color:#aaa; font-size:0.8rem;">ACESSO RESTRITO A OPERADORES LOGADOS</p>
@@ -381,9 +375,13 @@
             <h2 style="color:#fff; margin-top:0;">SYSTEM LOG</h2>
             <div class="scroll-content">
                 <div class="update-block">
+                    <div class="update-title">v0.9.30 - UI & DB Fix</div>
+                    <span class="update-item">Fix: Alerta de erro no banco de dados.</span>
+                    <span class="update-item">UI: Barra lateral de Emojis melhorada.</span>
+                </div>
+                <div class="update-block">
                     <div class="update-title">v0.9.29 - Name Fix & UI Polish</div>
                     <span class="update-item">Fix: Salvar nome agora funciona corretamente.</span>
-                    <span class="update-item">UI: Emojis movidos para a lateral direita.</span>
                     <span class="update-item">Histórico restaurado.</span>
                 </div>
                 <div class="update-block">
@@ -653,6 +651,10 @@
             loadMatchHistory();
         } catch (e) {
             console.error("Erro no DB:", e);
+            if(e.code === 'permission-denied' || e.message.includes('permission-denied')) {
+                showToast("ERRO DB: PERMISSÃO NEGADA (Check Console)", "#ff0000");
+                console.warn("⚠️ ALERTA: O banco de dados no Firebase não foi ativado ou as regras bloqueiam escrita.");
+            }
         }
     }
     
@@ -663,7 +665,7 @@
             db.collection('players').doc(currentUser.uid).update({ displayName: newNick, hasSetNick: true })
             .then(() => {
                 userStats.displayName = newNick; userStats.hasSetNick = true; myName = newNick;
-                localStorage.setItem('cv_username', newNick); // Backup Local
+                localStorage.setItem('cv_username', newNick); 
                 updateUIWithStats(); document.getElementById('modal-nickname').classList.add('hidden');
                 showToast("BEM-VINDO " + newNick, "#00ff88");
             })
@@ -678,15 +680,16 @@
             // Atualiza DB
             db.collection('players').doc(currentUser.uid).update({ displayName: newNick })
             .then(() => {
-                // Atualiza Variáveis
+                console.log("SUCESSO: Nome salvo no Firebase");
                 userStats.displayName = newNick; myName = newNick;
-                // Atualiza UI Imediatamente
                 updateUIWithStats(); 
-                // Salva backup local
                 localStorage.setItem('cv_username', newNick);
                 showToast("NICK SALVO", "#00ff88");
             })
-            .catch(err => { showToast("ERRO AO SALVAR", "#ff0000"); });
+            .catch(err => { 
+                console.error("ERRO FIREBASE:", err);
+                showToast("ERRO AO SALVAR", "#ff0000"); 
+            });
         } else { showToast("NOME INVÁLIDO", "#ff3333"); }
     }
     
