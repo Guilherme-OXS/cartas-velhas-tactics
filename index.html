@@ -4,19 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <meta name="description" content="Cartas Velhas: Cyberpunk Tactics.">
-    <title>Cartas Velhas: Cyberpunk Tactics v0.9.27</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&display=swap');
+    <meta name="description" content="Cartas Velhas: Cyberpunk Tactics. Uma reinvenção estratégica 3D multiplayer do Jogo da Velha com cartas, poderes e física. Jogue grátis online.">
+    <meta name="keywords" content="Cartas Velhas, Cyberpunk Tactics, Jogo da Velha 3D, Jogo de Estratégia, Multiplayer P2P, Guilherme Otávio Xavier de Souza, Browser Game, WebGL">
+    <meta name="author" content="Guilherme Otávio Xavier de Souza">
+    <meta name="robots" content="index, follow">
 
+    <meta property="og:title" content="Cartas Velhas: Cyberpunk Tactics">
+    <meta property="og:description" content="Desafia os teus amigos neste jogo tático 3D. Regra do Infinito, Cartas Especiais e Multiplayer em tempo real.">
+    <meta property="og:type" content="website">
+    
+    <title>Cartas Velhas: Cyberpunk Tactics v0.9.25 (FIXED)</title>
+    <style>
         /* --- CORE STYLES --- */
-        body { 
-            margin: 0; overflow: hidden; background-color: #050510; 
-            font-family: 'Rajdhani', sans-serif; 
-            user-select: none; touch-action: none; color: #fff;
-        }
+        body { margin: 0; overflow: hidden; background-color: #050510; font-family: 'Segoe UI', Tahoma, monospace; user-select: none; touch-action: none; }
         
-        /* Efeitos de Tela (Scanlines) */
+        /* Scanlines */
         body::after {
             content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
@@ -26,117 +28,143 @@
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; z-index: 10; }
         .pointer-events-auto { pointer-events: auto; }
 
-        :root { --x-color: #ff0055; --o-color: #00e5ff; --bg-dark: rgba(10, 15, 20, 0.95); }
+        :root { --x-color: #ff0055; --o-color: #00e5ff; --card-bg: rgba(10, 10, 20, 0.90); }
 
-        /* --- TELAS --- */
-        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; transition: opacity 0.5s; opacity: 1; visibility: visible; display:flex; flex-direction:column; justify-content:center; align-items:center;}
+        /* UI COMPONENTS - CORREÇÃO DE ALINHAMENTO */
+        .screen { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: radial-gradient(circle at center, rgba(26,26,46,0.8) 0%, #000 100%); 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; /* Garante centralização */
+            z-index: 100; transition: opacity 0.5s; opacity: 1; visibility: visible; 
+        }
         .hidden { opacity: 0; visibility: hidden; pointer-events: none; transition: 0.5s; }
 
-        /* TELA DE LOGIN (Centralizada) */
-        #screen-login { background: radial-gradient(circle, rgba(0,0,0,0.8), #000); }
-        
-        /* TELA DE MENU (Lateral - NOVO VISUAL) */
-        #screen-menu { 
-            align-items: flex-start; /* Alinha à esquerda */
-            justify-content: center; 
-            padding-left: 5%; 
-            background: linear-gradient(90deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
-        }
-
-        /* --- COMPONENTES --- */
-        
-        /* Painel Padrão (Para modais, perfil, etc) */
         .cyber-panel {
-            background: var(--bg-dark); border: 1px solid #333; border-top: 4px solid var(--o-color);
-            padding: 30px; max-width: 500px; width: 90%; position: relative; text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8); backdrop-filter: blur(5px);
-            clip-path: polygon(0 0, 100% 0, 100% 95%, 95% 100%, 0 100%);
+            background: rgba(0, 0, 0, 0.9); border: 1px solid #333; border-left: 4px solid var(--o-color);
+            padding: 30px; max-width: 600px; width: 90%; position: relative;
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.1); backdrop-filter: blur(5px);
+            transform: skewX(-2deg);
+            margin: auto; /* Reforça a centralização */
+            text-align: center; /* Centraliza o conteúdo interno */
         }
-
-        /* Menu Lateral Container */
-        .menu-sidebar {
-            display: flex; flex-direction: column; gap: 15px; width: 280px;
-            animation: slideIn 0.5s ease-out;
-        }
-        @keyframes slideIn { from { transform: translateX(-50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-
-        /* Títulos */
+        
         .title-glitch { 
-            font-size: 4rem; font-weight: 700; color: #fff; line-height: 0.9; 
-            text-shadow: 4px 4px 0px var(--x-color); margin-bottom: 30px; text-transform: uppercase;
-            letter-spacing: 5px;
+            font-size: 3rem; font-weight: 900; color: #fff; text-align: center; line-height: 0.9; 
+            text-shadow: 3px 3px 0px var(--x-color); margin-bottom: 20px; text-transform: uppercase;
+            animation: glitch-anim 3s infinite alternate;
         }
-        
-        /* Botões Estilizados */
+
         .cyber-btn { 
-            background: rgba(0, 229, 255, 0.1); border: 1px solid var(--o-color); color: var(--o-color); 
-            padding: 12px 20px; font-size: 1rem; font-weight: bold; letter-spacing: 2px; cursor: pointer; 
-            text-transform: uppercase; width: 100%; text-align: left;
-            position: relative; overflow: hidden; transition: 0.2s;
-            clip-path: polygon(0 0, 100% 0, 100% 80%, 95% 100%, 0 100%);
+            background: transparent; border: 1px solid var(--o-color); color: var(--o-color); 
+            padding: 10px 20px; font-size: 0.9rem; font-weight: bold; letter-spacing: 2px; cursor: pointer; 
+            margin: 5px; transition: 0.2s; text-transform: uppercase; min-width: 180px; 
+            position: relative; overflow: hidden; display: inline-block; transform: skewX(-10deg);
         }
-        .cyber-btn:hover { background: var(--o-color); color: #000; padding-left: 30px; }
-        .cyber-btn::before { content: "►"; margin-right: 10px; font-size: 0.8rem; opacity: 0.5; }
-        
-        .cyber-btn.secondary { border-color: #444; color: #aaa; background: rgba(0,0,0,0.5); }
-        .cyber-btn.secondary:hover { border-color: #fff; color: #fff; background: #333; }
-        
-        .cyber-btn.google-btn { border-color: #4285F4; color: #4285F4; text-align: center; }
-        .cyber-btn.google-btn:hover { background: #4285F4; color: #fff; padding-left: 20px; }
+        .cyber-btn span { display: block; transform: skewX(10deg); }
+        .cyber-btn:hover { background: var(--o-color); color: #000; box-shadow: 0 0 15px var(--o-color); }
+        .cyber-btn.secondary { border-color: #666; color: #aaa; }
+        .cyber-btn.secondary:hover { border-color: #fff; color: #fff; background: #222; }
+        .cyber-btn:disabled { border-color: #333; color: #555; cursor: not-allowed; box-shadow: none; }
+        .cyber-btn.google-btn { border-color: #4285F4; color: #4285F4; }
+        .cyber-btn.google-btn:hover { background: #4285F4; color: #fff; box-shadow: 0 0 15px #4285F4; }
 
-        /* Perfil no Menu */
-        .menu-profile {
-            display: flex; align-items: center; gap: 15px; padding-bottom: 20px; border-bottom: 1px solid #333; margin-bottom: 10px;
-        }
-        .menu-avatar { width: 60px; height: 60px; border: 2px solid var(--o-color); object-fit: cover; }
-        .menu-user-info h3 { margin: 0; font-size: 1.2rem; color: #fff; text-transform: uppercase; }
-        .menu-user-info span { font-size: 0.8rem; color: var(--o-color); }
-
-        /* Inputs */
-        .input-code { background: rgba(0,0,0,0.5); border: 1px solid #555; padding: 12px; font-size: 1.2rem; color: #fff; text-align: center; letter-spacing: 3px; text-transform: uppercase; width: 220px; outline: none; display:block; margin: 10px auto;}
-        
-        /* Listas e Scroll */
         .scroll-content {
-            max-height: 50vh; overflow-y: auto; padding-right: 15px; text-align: left;
-            scrollbar-width: thin; scrollbar-color: var(--o-color) #111;
+            max-height: 60vh; overflow-y: auto; padding-right: 15px; text-align: left;
+            scrollbar-width: thin; scrollbar-color: var(--o-color) #111; pointer-events: auto;
         }
-        .ranking-row { display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #333; font-size: 0.9rem; }
-        .ranking-row:hover { background: rgba(255,255,255,0.05); }
-        
-        /* Loader */
-        .loader { border: 4px solid #333; border-top: 4px solid var(--o-color); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .scroll-content::-webkit-scrollbar { width: 6px; }
+        .scroll-content::-webkit-scrollbar-track { background: #111; }
+        .scroll-content::-webkit-scrollbar-thumb { background-color: var(--o-color); border-radius: 3px; }
 
-        /* Toast */
+        /* TABELA DE CARTAS */
+        .card-row { display: flex; align-items: center; margin-bottom: 10px; border-bottom: 1px dashed #333; padding-bottom: 5px; }
+        .card-preview { font-size: 1.5rem; width: 40px; text-align: center; margin-right: 10px; }
+        .card-info { flex: 1; }
+        .card-title { color: #fff; font-weight: bold; font-size: 0.9rem; }
+        .card-rarity { font-size: 0.7rem; text-transform: uppercase; margin-left: 5px; }
+        .rarity-common { color: #888; } .rarity-rare { color: #00ff88; } .rarity-legendary { color: #bd00ff; }
+        .card-desc-text { color: #aaa; font-size: 0.8rem; }
+
+        .update-block { margin-bottom: 20px; border-bottom: 1px dashed #333; padding-bottom: 15px; }
+        .update-title { color: var(--o-color); font-weight: bold; font-size: 1rem; margin-bottom: 5px; text-transform: uppercase; }
+        .update-item { color: #ccc; font-size: 0.85rem; margin-bottom: 3px; display: block; }
+        .update-item::before { content: "> "; color: #666; }
+
+        .hud-top { padding: 10px; display: flex; flex-direction: column; align-items: center; background: linear-gradient(to bottom, rgba(0,0,0,0.95), transparent); width: 100%; }
+        .scores { display: flex; gap: 30px; margin-top: 5px; align-items: center; justify-content: center; width: 100%; }
+        .player-score { transition: 0.3s; opacity: 0.4; transform: scale(0.9); display: flex; flex-direction: column; align-items: center; cursor: pointer; } 
+        .player-score.active-turn { opacity: 1; transform: scale(1.1); text-shadow: 0 0 10px currentColor; }
+        .score-val { font-size: 2.5rem; font-weight: 900; }
+        .player-name { font-size: 0.7rem; color: #fff; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .timer-container { width: 80%; max-width: 300px; height: 4px; background: #222; margin-top: 15px; }
+        .timer-bar { width: 100%; height: 100%; background: var(--o-color); transition: width 0.1s linear; box-shadow: 0 0 10px var(--o-color); }
+
+        .hand-wrapper { position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: center; perspective: 1000px; z-index: 10; }
+        .hand-container { display: flex; gap: 10px; padding: 10px; }
+        .card { 
+            width: 80px; height: 110px; background: var(--card-bg); border: 1px solid #444; border-top: 2px solid #666;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; cursor: pointer;
+            transition: all 0.2s; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.6); 
+        }
+        .card:hover { transform: translateY(-15px); border-color: #fff; z-index: 50; box-shadow: 0 0 20px rgba(255,255,255,0.2); }
+        .card.selected { transform: translateY(-25px); border-color: var(--o-color); box-shadow: 0 0 25px var(--o-color); }
+        .card.common { border-bottom: 3px solid #888; }
+        .card.rare { border-bottom: 3px solid #00ff88; }
+        .card.legendary { border-bottom: 3px solid #bd00ff; border-color: #bd00ff; }
+        .card-icon { font-size: 2rem; margin-bottom: 5px; }
+        .card-name { font-size: 0.6rem; font-weight: 800; text-transform: uppercase; }
+
+        .input-code { background: rgba(0,0,0,0.5); border: 1px solid #555; padding: 10px; font-size: 1.2rem; color: #fff; text-align: center; letter-spacing: 3px; text-transform: uppercase; width: 220px; margin-bottom: 15px; outline: none; font-family: monospace; }
+        #hint-pill { position: absolute; top: 120px; background: rgba(0,0,0,0.8); border: 1px solid var(--o-color); color: #fff; padding: 5px 15px; border-radius: 4px; font-size: 0.8rem; transform: translateY(-20px); opacity: 0; transition: 0.3s; pointer-events: none; letter-spacing: 2px; }
+        #hint-pill.active { transform: translateY(0); opacity: 1; }
+        
         #toast-msg { position: absolute; top: 40%; width: 100%; text-align: center; font-size: 3rem; font-weight: 900; color: #fff; text-shadow: 0 0 20px var(--x-color); opacity: 0; pointer-events: none; transition: 0.3s; z-index: 200; transform: scale(0.5); }
         #toast-msg.show { transform: scale(1); opacity: 1; }
+        
+        @keyframes glitch-anim { 0% { text-shadow: 3px 3px 0px var(--x-color); } 20% { text-shadow: -3px -3px 0px var(--o-color); } 40% { text-shadow: 2px -2px 0px #fff; } 100% { text-shadow: 3px 3px 0px var(--x-color); } }
+        
+        /* Loader para feedback visual */
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--o-color); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .credits-name { color: var(--o-color); font-weight: bold; font-size: 1.2rem; margin: 10px 0; display: block; text-shadow: 0 0 10px var(--o-color); }
+        .match-log { color: #aaa; font-family: monospace; font-size: 0.8rem; margin-top: 10px; height: 20px; }
 
-        /* Game HUD Elements (mantidos do original) */
-        .scores { display: flex; gap: 30px; margin-top: 5px; align-items: center; justify-content: center; width: 100%; }
-        .player-score { opacity: 0.5; transform: scale(0.9); transition: 0.3s; text-align: center; }
-        .player-score.active-turn { opacity: 1; transform: scale(1.1); text-shadow: 0 0 15px currentColor; }
-        .score-val { font-size: 2.5rem; font-weight: bold; }
-        .timer-bar { width: 100%; height: 4px; background: var(--o-color); margin-top: 15px; max-width: 300px; box-shadow: 0 0 10px var(--o-color); }
-        .hand-wrapper { position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: center; z-index: 10; }
-        .hand-container { display: flex; gap: 10px; padding: 10px; }
-        .card { width: 80px; height: 110px; background: rgba(10,10,20,0.9); border: 1px solid #444; border-top: 3px solid #666; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:0.2s; cursor:pointer; }
-        .card:hover { transform: translateY(-15px); border-color: #fff; z-index: 50; }
-        .card.selected { transform: translateY(-25px); border-color: var(--o-color); box-shadow: 0 0 15px var(--o-color); }
-        .card-icon { font-size: 2rem; }
-        .card-name { font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
-        #hint-pill { position: absolute; top: 120px; background: rgba(0,0,0,0.8); border: 1px solid var(--o-color); padding: 5px 15px; opacity: 0; transition: 0.3s; pointer-events: none; }
-        #hint-pill.active { transform: translateY(0); opacity: 1; }
+        /* USER PROFILE STYLES */
+        .user-profile-container { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 20px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; border: 1px solid #333; }
+        .user-avatar { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--o-color); object-fit: cover; }
+        .user-info { text-align: left; }
+        .user-nick { color: #fff; font-weight: bold; font-size: 0.9rem; }
+        .user-status { color: #00ff88; font-size: 0.7rem; }
+        
+        /* STATS GRID STYLE */
+        .stats-grid { display: flex; justify-content: space-around; width: 100%; margin-top: 20px; gap: 10px; }
+        .stat-box { background: rgba(255,255,255,0.05); border: 1px solid #333; padding: 10px; flex: 1; text-align: center; border-radius: 5px; }
+        .stat-val { font-size: 1.5rem; font-weight: bold; color: #fff; }
+        .stat-label { font-size: 0.7rem; color: #aaa; text-transform: uppercase; }
+        .big-avatar { width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--o-color); margin-bottom: 10px; object-fit: cover; }
+        
+        /* SEARCH CARD STYLE */
+        .search-result-card { background: rgba(0,0,0,0.6); border: 1px solid #444; border-left: 2px solid var(--o-color); padding: 10px; margin-bottom: 10px; display: flex; align-items: center; gap: 15px; }
+        .search-info { text-align: left; flex: 1; }
+        .search-name { color: #fff; font-weight: bold; font-size: 1rem; }
+        .search-rank { color: #bd00ff; font-size: 0.8rem; font-weight: bold; }
+        
+        /* RANKING ROW */
+        .ranking-row { display: flex; align-items: center; padding: 8px; border-bottom: 1px solid #333; color: #ccc; font-size: 0.8rem; }
+        .rank-num { width: 30px; font-weight: bold; color: var(--o-color); }
+        .rank-name { flex: 1; text-align: left; font-weight: bold; color: #fff; }
+        .rank-elo { width: 60px; text-align: right; color: #bd00ff; font-weight: bold; }
+        .rank-wl { width: 80px; text-align: right; color: #888; font-size: 0.7rem; }
 
-        /* Stats Grid */
-        .stats-grid { display: flex; gap: 10px; margin-top: 20px; }
-        .stat-box { flex: 1; background: rgba(0,0,0,0.3); border: 1px solid #333; padding: 10px; text-align: center; }
-        .stat-val { font-size: 1.5rem; font-weight: bold; }
-        .stat-label { font-size: 0.7rem; color: #aaa; }
-
+        /* MODAL NICKNAME */
+        #modal-nickname { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
     </style>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
@@ -145,321 +173,973 @@
 
     <div id="canvas-container" style="position: absolute; top:0; left:0; width:100%; height:100%;"></div>
 
-    <div id="screen-login" class="screen">
-        <div style="text-align: center;">
-            <div class="title-glitch">CARTAS<br>VELHAS</div>
-            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 40px; font-size: 1rem;">TACTICAL OS v0.9.27</p>
-            <div class="cyber-panel" style="background:transparent; border:none; box-shadow:none;">
-                <button class="cyber-btn google-btn" onclick="loginGoogle()"><span>LOGIN COM GOOGLE</span></button>
-            </div>
-        </div>
-    </div>
-
-    <div id="screen-nickname" class="screen hidden">
-        <div class="cyber-panel">
-            <h2 style="color:var(--o-color);">REGISTO DE OPERADOR</h2>
-            <p style="color:#ccc; font-size:0.9rem; margin-bottom:20px;">IDENTIFICAÇÃO NECESSÁRIA PARA ACESSO AO SISTEMA</p>
-            <input type="text" id="initial-nick-input" class="input-code" maxlength="10" placeholder="SEU NICKNAME">
+    <div id="modal-nickname" class="hidden">
+        <div class="cyber-panel" style="text-align: center;">
+            <h2 style="color:var(--o-color);">IDENTIFICAÇÃO NECESSÁRIA</h2>
+            <p style="color:#fff;">ESCOLHA SEU NOME DE GUERRA PERMANENTE</p>
+            <input type="text" id="permanent-nick-input" class="input-code" maxlength="10" placeholder="NICKNAME" style="border-color: var(--o-color);">
             <br>
-            <button class="cyber-btn" onclick="saveInitialNickname()"><span>REGISTRAR</span></button>
-        </div>
-    </div>
-
-    <div id="screen-menu" class="screen hidden">
-        <div class="menu-sidebar">
-            <div class="menu-profile">
-                <img id="menu-avatar" class="menu-avatar" src="" alt="Avatar">
-                <div class="menu-user-info">
-                    <h3 id="menu-nick">Player</h3>
-                    <span id="menu-status" class="user-status">CONECTADO</span>
-                </div>
-            </div>
-
-            <button class="cyber-btn" onclick="startQuickMatch()">PARTIDA RÁPIDA</button>
-            <button class="cyber-btn" onclick="startBotMatch()">TREINO VS BOT</button>
-            
-            <div style="height: 20px;"></div> <button class="cyber-btn secondary" onclick="openScreen('screen-profile')">MEU PERFIL</button>
-            <button class="cyber-btn secondary" onclick="openScreen('screen-social')">BUSCA SOCIAL</button>
-            <button class="cyber-btn secondary" onclick="openScreen('screen-leaderboard')">RANKING GLOBAL</button>
-            
-            <div style="height: 20px;"></div> <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
-                <button class="cyber-btn secondary" style="font-size:0.7rem;" onclick="openScreen('screen-lobby-custom')">SALAS</button>
-                <button class="cyber-btn secondary" style="font-size:0.7rem;" onclick="openScreen('screen-cards')">AJUDA</button>
-            </div>
-            <button class="cyber-btn secondary" style="border-color:#ff0055; color:#ff0055;" onclick="logout()">DESCONECTAR</button>
-        </div>
-    </div>
-
-    <div id="screen-profile" class="screen hidden">
-        <div class="cyber-panel">
-            <h2 style="color:#fff;">DADOS DO OPERADOR</h2>
-            <img id="detail-profile-img" class="menu-avatar" style="width:100px; height:100px; margin: 0 auto 15px auto;" src="">
-            
-            <div style="margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 20px;">
-                <label style="color:#aaa; font-size:0.7rem;">ALTERAR CODINOME</label>
-                <div style="display:flex; justify-content:center; gap:5px; margin-top:5px;">
-                    <input type="text" id="edit-nick-input" class="input-code" style="width: 180px; margin:0;" maxlength="10">
-                    <button class="cyber-btn secondary" style="min-width:auto; padding:10px 15px;" onclick="saveNewNickname()">💾</button>
-                </div>
-            </div>
-
-            <div class="stats-grid">
-                <div class="stat-box" style="border-color:#bd00ff;"><div class="stat-val" id="stat-rank" style="color:#bd00ff;">-</div><div class="stat-label">ELO</div></div>
-                <div class="stat-box" style="border-color:#00ff88;"><div class="stat-val" id="stat-wins" style="color:#00ff88;">-</div><div class="stat-label">VITÓRIAS</div></div>
-                <div class="stat-box" style="border-color:#ff0055;"><div class="stat-val" id="stat-losses" style="color:#ff0055;">-</div><div class="stat-label">DERROTAS</div></div>
-            </div>
-            <br>
-            <button class="cyber-btn secondary" onclick="openScreen('screen-menu')">VOLTAR</button>
-        </div>
-    </div>
-
-    <div id="screen-social" class="screen hidden">
-        <div class="cyber-panel">
-            <h2>REDE NEURAL</h2>
-            <input type="text" id="search-player-input" class="input-code" placeholder="NICK EXATO">
-            <button class="cyber-btn" style="width:auto; display:inline-block; min-width:150px;" onclick="searchPlayer()">BUSCAR</button>
-            <div id="search-results-area" class="scroll-content" style="margin-top:20px; height: 250px; background:rgba(0,0,0,0.3);"></div>
-            <br><button class="cyber-btn secondary" onclick="openScreen('screen-menu')">VOLTAR</button>
-        </div>
-    </div>
-
-    <div id="screen-leaderboard" class="screen hidden">
-        <div class="cyber-panel">
-            <h2 style="color:#bd00ff;">TOP 100 ELITE</h2>
-            <div id="leaderboard-list" class="scroll-content" style="height: 350px;"></div>
-            <br><button class="cyber-btn secondary" onclick="openScreen('screen-menu')">VOLTAR</button>
-        </div>
-    </div>
-
-    <div id="screen-cards" class="screen hidden">
-        <div class="cyber-panel">
-            <h2>MANUAL TÁTICO</h2>
-            <div class="scroll-content" id="cards-list-ui"></div>
-            <br><button class="cyber-btn secondary" onclick="openScreen('screen-menu')">VOLTAR</button>
-        </div>
-    </div>
-
-    <div id="screen-lobby-custom" class="screen hidden">
-        <div class="cyber-panel">
-            <h2>SALA PRIVADA</h2>
-            <button class="cyber-btn" onclick="openLobby('host')">CRIAR SALA</button>
-            <button class="cyber-btn" onclick="openLobby('join')">ENTRAR C/ CÓDIGO</button>
-            <br><br><button class="cyber-btn secondary" onclick="openScreen('screen-menu')">VOLTAR</button>
-        </div>
-    </div>
-
-    <div id="screen-lobby-wait" class="screen hidden">
-        <div class="cyber-panel">
-            <h2>LOBBY</h2>
-            <div id="lobby-host-ui" class="hidden">
-                <p>CÓDIGO DE ACESSO</p>
-                <div id="display-code" class="input-code" style="border:none; cursor:pointer; font-size:2rem; color:var(--o-color);" onclick="copyCode()">...</div>
-                <p class="loader"></p>
-            </div>
-            <div id="lobby-client-ui" class="hidden">
-                <input type="text" id="input-code" class="input-code" maxlength="6" placeholder="CÓDIGO">
-                <br><button id="btn-connect" class="cyber-btn" onclick="connectToHost()">CONECTAR</button>
-                <p id="client-status" class="match-log"></p>
-            </div>
-            <div id="lobby-quick-ui" class="hidden">
-                <p style="color:#00ff88;">BUSCANDO SINAL...</p>
-                <div class="loader"></div>
-                <p id="quick-log" class="match-log">...</p>
-            </div>
-            <br><button class="cyber-btn secondary" onclick="location.reload()">CANCELAR</button>
+            <button class="cyber-btn" onclick="saveInitialNickname()"><span>CONFIRMAR</span></button>
         </div>
     </div>
 
     <div id="ui-layer" class="hidden">
         <div class="hud-top pointer-events-auto">
-            <div style="font-size:0.8rem; background:rgba(0,0,0,0.5); display:inline-block; padding:5px 10px; margin-top:10px; cursor:pointer;" onclick="copyCode()">CANAL: <span id="room-code" style="color:#fff;">---</span></div>
+            <div style="font-size:0.7rem; color:#666; letter-spacing:2px; cursor:pointer;" onclick="copyCode()">SALA: <span id="room-code" style="color:#fff;">---</span></div>
             <div id="hint-pill">Sua Vez</div>
             <div class="scores">
-                <div id="p1-score" class="player-score" onclick="showPlayerStats('X')">
-                    <div class="score-val" style="color:var(--x-color)">0</div>
-                    <div class="player-name" id="name-x">P1</div>
-                </div>
+                <div id="p1-score" class="player-score" onclick="showPlayerStats('X')"><div class="score-val" style="color:var(--x-color)">0</div><div class="player-name" id="name-x">P1</div></div>
                 <div style="font-size:1.5rem; color:#444;">//</div>
-                <div id="p2-score" class="player-score" onclick="showPlayerStats('O')">
-                    <div class="score-val" style="color:var(--o-color)">0</div>
-                    <div class="player-name" id="name-o">P2</div>
-                </div>
+                <div id="p2-score" class="player-score" onclick="showPlayerStats('O')"><div class="score-val" style="color:var(--o-color)">0</div><div class="player-name" id="name-o">P2</div></div>
             </div>
             <div class="timer-container"><div id="timer-bar" class="timer-bar"></div></div>
         </div>
         <div id="toast-msg">TOAST</div>
         <div class="hand-wrapper"><div id="hand-container" class="hand-container pointer-events-auto"></div></div>
-        <button onclick="quitGame()" class="cyber-btn secondary pointer-events-auto" style="position:absolute; top:10px; right:10px; min-width:auto; padding:5px 15px; font-size:0.7rem;">ABORTAR</button>
+        <button onclick="quitGame()" class="cyber-btn secondary pointer-events-auto" style="position:absolute; top:10px; right:10px; min-width:auto; padding:5px 15px; font-size:0.7rem;"><span>SAIR</span></button>
     </div>
 
-    <div id="screen-gameover" class="screen hidden">
+    <div id="screen-menu" class="screen">
         <div class="cyber-panel">
-            <h1 id="winner-text" class="title-glitch">VENCEDOR</h1>
-            <button class="cyber-btn secondary" onclick="location.reload()">VOLTAR AO MENU</button>
+            <div class="title-glitch">CARTAS<br>VELHAS</div>
+            
+            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 30px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.25 (FIXED)</p>
+            
+            <div id="guest-input-area">
+                <input type="text" id="my-name-input" class="input-code" style="width: 200px; border-color: var(--o-color);" maxlength="10" placeholder="SEU NICKNAME" value="PLAYER">
+                <br>
+                <button class="cyber-btn google-btn" onclick="loginGoogle()"><span>G+ ENTRAR COM GOOGLE</span></button>
+            </div>
+
+            <div id="user-profile-area" class="user-profile-container hidden">
+                <img id="profile-img" class="user-avatar" src="" alt="User">
+                <div class="user-info">
+                    <div id="profile-name" class="user-nick">Player</div>
+                    <div class="user-status">● Carregando stats...</div>
+                </div>
+                <button class="cyber-btn" style="min-width:auto; padding:5px 10px; font-size:0.6rem; margin-left:10px;" onclick="openScreen('screen-profile')">PERFIL</button>
+                <button class="cyber-btn secondary" style="min-width:auto; padding:5px 10px; font-size:0.6rem; margin-left:5px;" onclick="logout()">SAIR</button>
+            </div>
+            <br>
+            <button id="btn-quick" class="cyber-btn" onclick="startQuickMatch()"><span>⚡ PARTIDA RÁPIDA</span></button>
+            <br>
+            <button class="cyber-btn" onclick="startBotMatch()"><span>🤖 JOGAR VS BOT</span></button>
+            <br>
+            <button class="cyber-btn secondary" onclick="openScreen('screen-social')"><span>🔍 SOCIAL</span></button>
+            <button class="cyber-btn secondary" onclick="openScreen('screen-leaderboard')"><span>🏆 RANK GLOBAL</span></button>
+            <br>
+            <div style="margin-top: 10px;">
+                <button class="cyber-btn secondary" onclick="openScreen('screen-lobby-custom')"><span>SALAS</span></button>
+                <button class="cyber-btn secondary" style="min-width: 80px; font-size: 0.7rem;" onclick="openScreen('screen-cards')"><span>CARTAS</span></button>
+                <button class="cyber-btn secondary" style="min-width: 80px; font-size: 0.7rem;" onclick="openScreen('screen-credits')"><span>CRÉDITOS</span></button>
+                <button class="cyber-btn secondary" style="min-width: 80px; font-size: 0.7rem;" onclick="openScreen('screen-updates')"><span>UPDATES</span></button>
+            </div>
         </div>
     </div>
 
+    <div id="screen-profile" class="screen hidden">
+        <div class="cyber-panel">
+            <h2 style="color:#fff; margin-top:0;">DADOS DO OPERADOR</h2>
+            <img id="detail-profile-img" class="big-avatar" src="" alt="Avatar">
+            <br>
+            <div style="margin-bottom: 20px;">
+                <label style="color:#aaa; font-size:0.7rem;">NICKNAME (EDITÁVEL)</label><br>
+                <div style="display:flex; justify-content:center; align-items:center; gap:5px;">
+                    <input type="text" id="edit-nick-input" class="input-code" style="width: 200px; font-size:1rem; border-color: #555;" maxlength="10">
+                    <button class="cyber-btn secondary" style="min-width: auto; padding: 10px;" onclick="saveNewNickname()">💾</button>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-box" style="border-color: #bd00ff;">
+                    <div class="stat-val" id="stat-rank" style="color:#bd00ff;">---</div>
+                    <div class="stat-label">ELO RANK</div>
+                </div>
+                <div class="stat-box" style="border-color: #00ff88;">
+                    <div class="stat-val" id="stat-wins" style="color:#00ff88;">---</div>
+                    <div class="stat-label">VITÓRIAS</div>
+                </div>
+                <div class="stat-box" style="border-color: #ff0055;">
+                    <div class="stat-val" id="stat-losses" style="color:#ff0055;">---</div>
+                    <div class="stat-label">DERROTAS</div>
+                </div>
+            </div>
+            
+            <br><br>
+            <button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button>
+        </div>
+    </div>
+    
+    <div id="screen-social" class="screen hidden">
+        <div class="cyber-panel">
+            <h2 style="color:#fff; margin-top:0;">REDE NEURAL</h2>
+            <p style="color:#aaa; font-size:0.8rem;">BUSCAR AGENTES ATIVOS</p>
+            <input type="text" id="search-player-input" class="input-code" placeholder="NICK DO JOGADOR">
+            <button class="cyber-btn" onclick="searchPlayer()"><span>BUSCAR</span></button>
+            
+            <div id="search-results-area" class="scroll-content" style="margin-top:20px; height: 300px;">
+                </div>
+            
+            <br>
+            <button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button>
+        </div>
+    </div>
+
+    <div id="screen-leaderboard" class="screen hidden">
+        <div class="cyber-panel">
+            <h2 style="color:#bd00ff; margin-top:0;">TOP 100 ELITE</h2>
+            <div style="border-bottom: 2px solid #333; padding-bottom: 5px; margin-bottom: 10px; display:flex; color:#666; font-size:0.7rem; font-weight:bold;">
+                <span style="width:30px;">#</span>
+                <span style="flex:1; text-align:left;">AGENTE</span>
+                <span style="width:60px; text-align:right;">ELO</span>
+                <span style="width:80px; text-align:right;">W / L</span>
+            </div>
+            
+            <div id="leaderboard-list" class="scroll-content" style="height: 400px;">
+                <div class="loader"></div>
+            </div>
+            
+            <br>
+            <button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button>
+        </div>
+    </div>
+
+    <div id="screen-cards" class="screen hidden">
+        <div class="cyber-panel">
+            <h2 style="color:#fff; margin-top:0;">CONHECIMENTO</h2>
+            <div class="scroll-content" id="cards-list-ui">
+                </div>
+            <center><button class="cyber-btn secondary" style="margin-top:20px;" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button></center>
+        </div>
+    </div>
+
+    <div id="screen-credits" class="screen hidden">
+        <div class="cyber-panel">
+            <h2 style="color:#fff; margin-top:0;">CRÉDITOS</h2>
+            <div style="color:#ccc; text-align:center;">
+                DESENVOLVIDO POR:
+                <span class="credits-name">Guilherme Otávio<br>Xavier de Souza</span>
+                <hr style="border-color:#333; margin: 20px 0;">
+                <p>Engine: Three.js WebGL</p>
+                <p>Network: PeerJS P2P</p>
+                <p>Backend: Firebase Auth & Firestore</p>
+                <p>Audio: WebAudio API Synth</p>
+            </div>
+            <center><button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button></center>
+        </div>
+    </div>
+
+    <div id="screen-updates" class="screen hidden">
+        <div class="cyber-panel">
+            <h2 style="color:#fff; margin-top:0;">SYSTEM LOG</h2>
+            <div class="scroll-content">
+                <div class="update-block">
+                    <div class="update-title">v0.9.25 - Security & Bot Fix</div>
+                    <span class="update-item">Fix: Bot agora usa as cartas corretamente.</span>
+                    <span class="update-item">Security: Validação de cartas no servidor.</span>
+                    <span class="update-item">System: Limpeza de código morto.</span>
+                </div>
+                <div class="update-block">
+                    <div class="update-title">v0.9.24 - Fixes & Logs</div>
+                    <span class="update-item">UI: Correção de alinhamento central dos painéis.</span>
+                    <span class="update-item">Sistema: Adicionados logs de debug para Busca e Ranking.</span>
+                    <span class="update-item">UX: Loaders visuais nas áreas de dados.</span>
+                </div>
+                </div>
+            <center><button class="cyber-btn secondary" style="margin-top:20px;" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button></center>
+        </div>
+    </div>
+
+    <div id="screen-lobby-custom" class="screen hidden">
+        <h2 style="color:#fff;">MODO PRIVADO</h2>
+        <button class="cyber-btn" onclick="openLobby('host')"><span>CRIAR SALA</span></button>
+        <button class="cyber-btn" onclick="openLobby('join')"><span>ENTRAR COM CÓDIGO</span></button>
+        <br><br>
+        <button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button>
+    </div>
+
+    <div id="screen-lobby-wait" class="screen hidden">
+        <h2 style="color:#fff;">LOBBY</h2>
+        <div id="lobby-host-ui" class="hidden" style="text-align:center;">
+            <p style="color:#aaa;">PARTILHE ESTE CÓDIGO</p>
+            <div id="display-code" class="input-code" style="border:none; cursor:pointer;" onclick="copyCode()">...</div>
+            <p style="color:var(--o-color); animation: pulse-border 1s infinite; padding: 5px;">Aguardando oponente...</p>
+        </div>
+        <div id="lobby-client-ui" class="hidden" style="text-align:center;">
+            <p style="color:#aaa;">DIGITE O CÓDIGO</p>
+            <input type="text" id="input-code" class="input-code" maxlength="6" placeholder="XXXXXX">
+            <br><button id="btn-connect" class="cyber-btn" onclick="connectToHost()"><span>CONECTAR</span></button>
+            <p id="client-status" class="match-log"></p>
+        </div>
+        <div id="lobby-quick-ui" class="hidden" style="text-align:center;">
+            <p style="color:#00ff88; font-weight:bold;">BUSCANDO PARTIDA</p>
+            <div class="loader"></div>
+            <p id="quick-log" class="match-log">A iniciar...</p>
+        </div>
+        <button class="cyber-btn secondary" onclick="location.reload()" style="margin-top:30px;"><span>CANCELAR</span></button>
+    </div>
+
+    <div id="screen-gameover" class="screen hidden">
+        <h1 id="winner-text" class="title-glitch" style="font-size:3rem;">VENCEDOR</h1>
+        <div id="rematch-area"></div>
+        <button class="cyber-btn secondary" onclick="location.reload()" style="margin-top:20px;"><span>SAIR</span></button>
+    </div>
+
 <script>
-    // --- FIREBASE CONFIG ---
+    // --- CONFIG FIREBASE ---
     const firebaseConfig = {
-        apiKey: "AIzaSyCSkDG6kWhKcuK0bhzJU7HazHBwHtuQ9zo",
-        authDomain: "cartas-velhas-db.firebaseapp.com",
-        projectId: "cartas-velhas-db",
-        storageBucket: "cartas-velhas-db.firebasestorage.app",
-        messagingSenderId: "146756048632",
-        appId: "1:146756048632:web:efebe19fc28ef9f87c0d0d",
-        measurementId: "G-H70FLB4DB4"
+    apiKey: "AIzaSyCSkDG6kWhKcuK0bhzJU7HazHBwHtuQ9zo",
+    authDomain: "cartas-velhas-db.firebaseapp.com",
+    projectId: "cartas-velhas-db",
+    storageBucket: "cartas-velhas-db.firebasestorage.app",
+    messagingSenderId: "146756048632",
+    appId: "1:146756048632:web:efebe19fc28ef9f87c0d0d",
+    measurementId: "G-H70FLB4DB4"
     };
 
+
+    // INICIALIZAR FIREBASE
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
-    const db = firebase.firestore();
+    const db = firebase.firestore(); // BANCO DE DADOS ATIVO
     let currentUser = null;
-    let userStats = { wins: 0, losses: 0, rank: 1000, displayName: "Agente", hasSetNick: false };
-    let opponentStats = { rank: '?', wins: '?' };
+    let userStats = { wins: 0, losses: 0, rank: 1000, displayName: "Player" };
+    let opponentStats = { rank: '?', wins: '?' }; 
 
     // --- CONFIG E DADOS ---
-    const APP_ID = "cv-tactics-final-v6-"; 
+    const APP_ID = "cv-tactics-final-v5-"; 
     const MAX_PUB_ROOMS = 20;
     const BOT_TIMEOUT = 10000; 
 
     const CARDS = {
-        'PLACE': { name: 'Básica', icon: '♟️', rarity: 'common', weight: 40, desc: 'Coloca uma peça. 3 máx.' },
-        'BOMB': { name: 'Bomba', icon: '💣', rarity: 'rare', weight: 15, desc: 'Destrói peça sem escudo.' },
-        'SHIELD': { name: 'Escudo', icon: '🛡️', rarity: 'rare', weight: 15, desc: 'Protege contra efeitos.' },
-        'MOVE': { name: 'Mover', icon: '🔄', rarity: 'rare', weight: 10, desc: 'Move sua peça.' },
-        'PUSH': { name: 'Empurrar', icon: '✋', rarity: 'rare', weight: 10, desc: 'Move peça inimiga.' },
-        'SWAP': { name: 'Trocar', icon: '🔁', rarity: 'legendary', weight: 10, desc: 'Troca de lugar.' }
+        'PLACE': { name: 'Básica', icon: '♟️', rarity: 'common', weight: 40, desc: 'Coloca uma peça no tabuleiro. Se tiveres 3, a mais velha some.' },
+        'BOMB': { name: 'Bomba', icon: '💣', rarity: 'rare', weight: 15, desc: 'Destrói uma peça do inimigo (se não tiver escudo).' },
+        'SHIELD': { name: 'Escudo', icon: '🛡️', rarity: 'rare', weight: 15, desc: 'Coloca uma peça protegida contra Bombas e Trocas.' },
+        'MOVE': { name: 'Mover', icon: '🔄', rarity: 'rare', weight: 10, desc: 'Move uma peça TUA para um espaço vazio.' },
+        'PUSH': { name: 'Empurrar', icon: '✋', rarity: 'rare', weight: 10, desc: 'Move uma peça INIMIGA para um espaço vazio.' },
+        'SWAP': { name: 'Trocar', icon: '🔁', rarity: 'legendary', weight: 10, desc: 'Troca a posição de uma peça tua com uma do inimigo.' }
     };
 
-    const GameState = { board: Array(9).fill(null), history: { 'X': [], 'O': [] }, hands: { 'X': [], 'O': [] }, shields: {}, scores: { 'X': 0, 'O': 0 }, names: { 'X': 'P1', 'O': 'P2' }, turn: 'X', winner: null, targetWins: 3, winningLine: null };
+    const GameState = {
+        board: Array(9).fill(null),
+        history: { 'X': [], 'O': [] },
+        hands: { 'X': [], 'O': [] },
+        shields: {},
+        scores: { 'X': 0, 'O': 0 },
+        names: { 'X': 'P1', 'O': 'P2' },
+        turn: 'X',
+        winner: null,
+        targetWins: 3,
+        winningLine: null
+    };
+
     let peer, conn, mySide = null, isHost = false, isBotMatch = false;
-    let timeLeft = 16, myName = "Agente", isQuickMatch = false;
+    let timeLeft = 16, myName = "PLAYER", isQuickMatch = false;
     let selectedHandIdx = null, activeCardType = null, stepSourceIdx = null;
     let particles = [], cameraShake = 0;
     let isInGame = false;
+    let botTimer = null;
 
-    // --- DB LOGIC ---
+    // --- DATABASE LOGIC (SALVAR E CARREGAR DADOS) ---
+
+    // Carrega dados do utilizador ao logar
     async function loadUserProfile(user) {
         try {
-            const doc = await db.collection('players').doc(user.uid).get();
+            const userRef = db.collection('players').doc(user.uid);
+            const doc = await userRef.get();
+
             if (doc.exists) {
+                // Jogador existe, carrega
                 userStats = doc.data();
+                
+                // VERIFICA SE JÁ TEM NICK PERSONALIZADO
                 if(userStats.hasSetNick) {
                     myName = userStats.displayName;
-                    openScreen('screen-menu'); // Vai direto para o menu
-                    showToast(`BEM-VINDO ${myName}`, "#00ff88");
+                    showToast(`WINS: ${userStats.wins}`, "#00ff88");
                 } else {
-                    openScreen('screen-nickname'); // Vai para cadastro de nick
+                    // SE NÃO TIVER, MOSTRA MODAL OBRIGATÓRIO
+                    document.getElementById('modal-nickname').classList.remove('hidden');
                 }
             } else {
-                userStats = { displayName: "Agente", photoURL: user.photoURL, wins: 0, losses: 0, rank: 1000, hasSetNick: false, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
-                await db.collection('players').doc(user.uid).set(userStats);
-                openScreen('screen-nickname');
+                // Cria novo e pede nick
+                userStats = {
+                    displayName: user.displayName, // Provisório
+                    photoURL: user.photoURL,
+                    wins: 0,
+                    losses: 0,
+                    rank: 1000,
+                    hasSetNick: false, // Flag para saber se escolheu o nick
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                await userRef.set(userStats);
+                document.getElementById('modal-nickname').classList.remove('hidden');
             }
             updateUIWithStats();
-        } catch (e) { console.error(e); showToast("ERRO DB", "#ff0000"); }
+        } catch (e) {
+            console.error("Erro no DB:", e);
+        }
     }
-
+    
+    // Salva o Nick Inicial (Obrigatório)
     function saveInitialNickname() {
         if(!currentUser) return;
-        const newNick = document.getElementById('initial-nick-input').value.trim();
+        const newNick = document.getElementById('permanent-nick-input').value.trim();
         if(newNick.length > 2 && newNick.length <= 10) {
-            db.collection('players').doc(currentUser.uid).update({ displayName: newNick, hasSetNick: true }).then(() => {
-                userStats.displayName = newNick; userStats.hasSetNick = true; myName = newNick;
+            db.collection('players').doc(currentUser.uid).update({ 
+                displayName: newNick,
+                hasSetNick: true
+            })
+            .then(() => {
+                userStats.displayName = newNick;
+                userStats.hasSetNick = true;
+                myName = newNick;
                 updateUIWithStats();
-                openScreen('screen-menu');
-            }).catch(e => showToast("ERRO", "#ff0000"));
-        } else showToast("INVÁLIDO (3-10)", "#ff3333");
+                document.getElementById('modal-nickname').classList.add('hidden');
+                showToast("BEM-VINDO " + newNick, "#00ff88");
+            })
+            .catch(err => { showToast("ERRO SALVAR", "#ff0000"); });
+        } else {
+            showToast("NOME INVÁLIDO (3-10 CARACTERES)", "#ff3333");
+        }
     }
-
+    
+    // Função para alterar nickname DEPOIS (Tela de Perfil) - COM LOGS
     function saveNewNickname() {
-        if(!currentUser) return;
+        if(!currentUser) {
+             console.error("Tentativa de salvar nick sem usuário logado.");
+             showToast("ERRO: NÃO LOGADO", "#ff0000");
+             return;
+        }
         const newNick = document.getElementById('edit-nick-input').value.trim();
-        if(newNick.length > 2 && newNick.length <= 10) {
-            db.collection('players').doc(currentUser.uid).update({ displayName: newNick }).then(() => {
-                userStats.displayName = newNick; myName = newNick; // Atualiza localmente
+        console.log("Tentando salvar novo nick:", newNick);
+
+        if(newNick.length > 0 && newNick.length <= 10) {
+            db.collection('players').doc(currentUser.uid).update({ displayName: newNick })
+            .then(() => {
+                console.log("Nick salvo com sucesso no Firestore.");
+                userStats.displayName = newNick;
+                myName = newNick;
                 updateUIWithStats();
-                showToast("NOME ATUALIZADO", "#00ff88");
-            }).catch(e => showToast("ERRO", "#ff0000"));
-        } else showToast("INVÁLIDO", "#ff3333");
-    }
-
-    function updateUIWithStats() {
-        // Menu HUD
-        document.getElementById('menu-avatar').src = currentUser ? currentUser.photoURL : '';
-        document.getElementById('menu-nick').innerText = userStats.displayName || "Agente";
-        document.getElementById('menu-status').innerText = `ELO: ${userStats.rank}`;
-        
-        // Perfil Modal
-        document.getElementById('detail-profile-img').src = currentUser ? currentUser.photoURL : '';
-        document.getElementById('edit-nick-input').value = userStats.displayName || "";
-        document.getElementById('stat-rank').innerText = userStats.rank;
-        document.getElementById('stat-wins').innerText = userStats.wins;
-        document.getElementById('stat-losses').innerText = userStats.losses;
-    }
-
-    async function searchPlayer() {
-        const query = document.getElementById('search-player-input').value.trim();
-        const area = document.getElementById('search-results-area');
-        area.innerHTML = '<div class="loader"></div>';
-        try {
-            const snap = await db.collection('players').where('displayName', '==', query).limit(5).get();
-            area.innerHTML = '';
-            if(snap.empty) { area.innerHTML = '<p style="color:#aaa; text-align:center;">NADA ENCONTRADO</p>'; return; }
-            snap.forEach(doc => {
-                const p = doc.data();
-                area.innerHTML += `<div style="background:rgba(0,0,0,0.5); padding:10px; margin-bottom:5px; border-left:2px solid var(--o-color); display:flex; align-items:center; gap:10px;">
-                    <img src="${p.photoURL}" style="width:30px; height:30px; border-radius:50%;">
-                    <div><div style="font-weight:bold;">${p.displayName}</div><div style="font-size:0.7rem; color:#bd00ff;">Rank: ${p.rank}</div></div>
-                </div>`;
+                showToast("NICK SALVO", "#00ff88");
+            })
+            .catch(err => { 
+                console.error("Erro ao salvar nick no Firestore:", err);
+                showToast("ERRO AO SALVAR", "#ff0000"); 
             });
-        } catch(e) { console.error(e); area.innerHTML = 'ERRO'; }
+        } else {
+            console.warn("Tentativa de salvar nick inválido:", newNick);
+            showToast("NOME INVÁLIDO", "#ff3333");
+        }
     }
+    
+    // BUSCAR JOGADORES (SOCIAL) - COM LOGS E LOADER
+    async function searchPlayer() {
+        const queryName = document.getElementById('search-player-input').value.trim();
+        const resultsArea = document.getElementById('search-results-area');
+        resultsArea.innerHTML = '<div class="loader"></div>';
+        console.log("Iniciando busca por:", queryName);
+        
+        if(queryName.length === 0) {
+            resultsArea.innerHTML = '<p style="color:#aaa;">DIGITE UM NOME</p>';
+            return;
+        }
 
+        try {
+            const snapshot = await db.collection('players').where('displayName', '==', queryName).limit(5).get();
+            console.log("Busca concluída. Resultados encontrados:", snapshot.size);
+            resultsArea.innerHTML = '';
+            
+            if(snapshot.empty) {
+                resultsArea.innerHTML = '<p style="color:#ff3333;">NENHUM AGENTE ENCONTRADO</p>';
+                return;
+            }
+
+            snapshot.forEach(doc => {
+                const p = doc.data();
+                const card = document.createElement('div');
+                card.className = 'search-result-card';
+                card.innerHTML = `
+                    <img src="${p.photoURL}" class="user-avatar">
+                    <div class="search-info">
+                        <div class="search-name">${p.displayName}</div>
+                        <div class="search-rank">RANK: ${p.rank || 1000}</div>
+                        <div style="color:#aaa; font-size:0.7rem;">VITÓRIAS: ${p.wins || 0}</div>
+                    </div>
+                `;
+                resultsArea.appendChild(card);
+            });
+        } catch(e) {
+            console.error("Erro na busca:", e);
+            resultsArea.innerHTML = '<p style="color:#ff3333;">ERRO DE REDE (VER CONSOLE)</p>';
+        }
+    }
+    
+    // CARREGAR RANKING GLOBAL (TOP 100) - COM LOGS E LOADER
     async function loadLeaderboard() {
         const list = document.getElementById('leaderboard-list');
         list.innerHTML = '<div class="loader"></div>';
+        console.log("Carregando leaderboard...");
+        
         try {
-            const snap = await db.collection('players').orderBy('rank', 'desc').limit(100).get();
+            // Ordena apenas por Rank para evitar erro de índice no início
+            const snapshot = await db.collection('players')
+                                     .orderBy('rank', 'desc')
+                                     .limit(100)
+                                     .get();
+                                     
+            console.log("Leaderboard carregado. Total de jogadores:", snapshot.size);
             list.innerHTML = '';
-            let i = 1;
-            snap.forEach(doc => {
+            if(snapshot.empty) {
+                list.innerHTML = '<p style="color:#aaa;">SEM DADOS DE RANKING</p>';
+                return;
+            }
+            
+            let rank = 1;
+            snapshot.forEach(doc => {
                 const p = doc.data();
-                const hl = (currentUser && doc.id === currentUser.uid) ? 'background:rgba(0,229,255,0.1);' : '';
-                list.innerHTML += `<div class="ranking-row" style="${hl}"><span style="width:30px;color:var(--o-color);">${i++}</span><span style="flex:1;">${p.displayName}</span><span style="color:#bd00ff;">${p.rank}</span></div>`;
+                const row = document.createElement('div');
+                row.className = 'ranking-row';
+                // Destaque para o próprio jogador
+                if(currentUser && doc.id === currentUser.uid) row.style.backgroundColor = "rgba(0, 229, 255, 0.1)";
+                
+                row.innerHTML = `
+                    <div class="rank-num">${rank++}</div>
+                    <div class="rank-name">${p.displayName || 'Anon'}</div>
+                    <div class="rank-elo">${p.rank || 1000}</div>
+                    <div class="rank-wl">${p.wins}/${p.losses}</div>
+                `;
+                list.appendChild(row);
             });
-        } catch(e) { list.innerHTML = 'ERRO CARREGAR'; }
+            
+        } catch(e) {
+            console.error("Erro ao carregar leaderboard:", e);
+            list.innerHTML = '<p style="color:#ff3333;">ERRO AO CARREGAR RANKING (VER CONSOLE)</p>';
+        }
     }
 
-    // --- AUTH ---
-    function loginGoogle() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e => console.error(e)); }
-    function logout() { auth.signOut().then(() => location.reload()); }
-    
-    auth.onAuthStateChanged(user => {
-        if(user) {
-            currentUser = user;
-            loadUserProfile(user);
+    // Atualiza a interface
+    function updateUIWithStats() {
+        // UI Menu Principal
+        const statusDiv = document.querySelector('.user-status');
+        const nameDiv = document.getElementById('profile-name');
+        if(statusDiv) statusDiv.innerHTML = `● Online | Rank: ${userStats.rank || 1000}`;
+        if(nameDiv) nameDiv.innerText = userStats.displayName || myName;
+        
+        // UI Tela de Perfil
+        document.getElementById('detail-profile-img').src = currentUser ? currentUser.photoURL : '';
+        document.getElementById('edit-nick-input').value = userStats.displayName || myName;
+        document.getElementById('stat-rank').innerText = userStats.rank || 1000;
+        document.getElementById('stat-wins').innerText = userStats.wins || 0;
+        document.getElementById('stat-losses').innerText = userStats.losses || 0;
+    }
+
+    // Salva o resultado final da partida
+    function saveGameResult(isWin) {
+        if (!currentUser) return; 
+        if (isBotMatch) return; // AGORA NÃO CONTA SE FOR BOT!
+        if (!userStats) return; // Proteção contra stats vazios
+
+        const userRef = db.collection('players').doc(currentUser.uid);
+        
+        if (isWin) {
+            userRef.update({
+                wins: firebase.firestore.FieldValue.increment(1),
+                rank: firebase.firestore.FieldValue.increment(25)
+            }).catch(e => console.log(e));
+            userStats.wins++;
+            userStats.rank += 25;
         } else {
+            userRef.update({
+                losses: firebase.firestore.FieldValue.increment(1),
+                rank: firebase.firestore.FieldValue.increment(-15)
+            }).catch(e => console.log(e));
+            userStats.losses++;
+            userStats.rank -= 15;
+        }
+        updateUIWithStats();
+    }
+    
+    // Mostra stats do jogador ao clicar no HUD
+    function showPlayerStats(side) {
+        if(side === mySide) {
+            showToast(`EU: RANK ${userStats.rank || 1000}`, "#fff");
+        } else {
+            if(isBotMatch) showToast("BOT T-800", "#ff0000");
+            else showToast(`OPONENTE: RANK ${opponentStats.rank}`, "#ffff00");
+        }
+    }
+
+    // --- LOGIN LOGIC ---
+    function loginGoogle() {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(provider)
+            .then((result) => {
+                showToast("LOGIN SUCESSO!", "#00ff88");
+            }).catch((error) => {
+                console.error(error);
+                showToast("ERRO LOGIN", "#ff0000");
+            });
+    }
+
+    function logout() {
+        auth.signOut().then(() => {
+            showToast("SAIU", "#ffffff");
+            // Volta para nome padrão
+            const savedName = localStorage.getItem('cv_username');
+            if(savedName) document.getElementById('my-name-input').value = savedName;
+        });
+    }
+
+    // OUVINTE DE ESTADO DE LOGIN
+    auth.onAuthStateChanged((user) => {
+        const guestArea = document.getElementById('guest-input-area');
+        const userArea = document.getElementById('user-profile-area');
+        
+        if (user) {
+            // Logado
+            currentUser = user;
+            guestArea.classList.add('hidden');
+            userArea.classList.remove('hidden');
+            
+            // Atualiza UI Básica (Foto)
+            document.getElementById('profile-img').src = user.photoURL;
+            
+            // CARREGA O PERFIL DA BASE DE DADOS E VERIFICA NICK
+            loadUserProfile(user);
+            
+        } else {
+            // Não logado
             currentUser = null;
-            openScreen('screen-login');
+            guestArea.classList.remove('hidden');
+            userArea.classList.add('hidden');
+            document.getElementById('modal-nickname').classList.add('hidden');
+            
+            // Recupera nome do localStorage
+            updateName();
         }
     });
 
     // --- UI HELPERS ---
-    function openScreen(id) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-        document.getElementById(id).classList.remove('hidden');
-        if(id === 'screen-leaderboard') loadLeaderboard();
-        if(id === 'screen-cards') renderCardsHelp();
+    function resetLobbyUI() {
+        document.getElementById('lobby-host-ui').classList.add('hidden');
+        document.getElementById('lobby-client-ui').classList.add('hidden');
+        document.getElementById('lobby-quick-ui').classList.add('hidden');
     }
-    function renderCardsHelp() {
-        const c = document.getElementById('cards-list-ui'); c.innerHTML='';
-        for(let k in CARDS) c.innerHTML+=`<div class="card-row"><div class="card-preview">${CARDS[k].icon}</div><div class="card-info"><div class="card-title">${CARDS[k].name} <span class="card-rarity rarity-${CARDS[k].rarity}">${CARDS[k].rarity}</span></div><div class="card-desc-text">${CARDS[k].desc}</div></div></div>`;
-    }
-    function resetLobbyUI() { ['lobby-host-ui','lobby-client-ui','lobby-quick-ui'].forEach(id => document.getElementById(id).classList.add('hidden')); }
 
-    // --- THREE.JS ---
+    function openScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+        const target = document.getElementById(screenId);
+        if(target) target.classList.remove('hidden');
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        if(screenId === 'screen-cards') renderCardsHelp();
+        if(screenId === 'screen-profile' && currentUser) updateUIWithStats();
+        if(screenId === 'screen-leaderboard') loadLeaderboard(); // Carrega ranking ao abrir
+    }
+
+    function renderCardsHelp() {
+        const container = document.getElementById('cards-list-ui');
+        container.innerHTML = '';
+        for (const key in CARDS) {
+            const c = CARDS[key];
+            container.innerHTML += `
+                <div class="card-row">
+                    <div class="card-preview">${c.icon}</div>
+                    <div class="card-info">
+                        <div class="card-title">${c.name} <span class="card-rarity rarity-${c.rarity}">${c.rarity}</span></div>
+                        <div class="card-desc-text">${c.desc}</div>
+                    </div>
+                </div>`;
+        }
+    }
+
+    // --- AUDIO ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const SoundFX = {
+        playTone: (freq, type, duration, vol=0.1) => {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+            osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + duration);
+        },
+        hover: () => SoundFX.playTone(400, 'sine', 0.1, 0.05),
+        click: () => SoundFX.playTone(800, 'triangle', 0.1, 0.1),
+        place: () => SoundFX.playTone(600, 'sine', 0.3, 0.2),
+        explode: () => { SoundFX.playTone(100, 'sawtooth', 0.4, 0.3); },
+        roundWin: () => { [440, 554, 659].forEach((f, i) => setTimeout(() => SoundFX.playTone(f, 'square', 0.4, 0.2), i*100)); },
+        matchWin: () => { [440, 554, 659, 880, 1100].forEach((f, i) => setTimeout(() => SoundFX.playTone(f, 'square', 0.6, 0.3), i*150)); },
+        error: () => { SoundFX.playTone(150, 'sawtooth', 0.2, 0.2); }
+    };
+
+    // --- NETWORKING ---
+    function initPeer(id = null) { return new Peer(id, { debug: 1 }); }
+    
+    function updateName() { 
+        if(currentUser) return; // Se estiver logado, não usa o input
+        
+        myName = document.getElementById('my-name-input').value.trim() || "PLAYER"; 
+        if(myName.length > 10) myName = myName.substr(0,10); 
+        localStorage.setItem('cv_username', myName); 
+    }
+
+    function openLobby(mode) {
+        if(!currentUser) updateName(); // Atualiza nome se for guest
+        openScreen('screen-lobby-wait'); resetLobbyUI();
+        if (mode === 'host') setupHostPrivate(); 
+        else if (mode === 'join') document.getElementById('lobby-client-ui').classList.remove('hidden');
+    }
+
+    function setupHostPrivate() {
+        isHost = true; mySide = 'X'; isBotMatch = false;
+        resetLobbyUI(); document.getElementById('lobby-host-ui').classList.remove('hidden');
+        const code = Math.random().toString(36).substr(2, 6).toUpperCase();
+        document.getElementById('display-code').innerText = code;
+        GameState.names['X'] = myName;
+        peer = initPeer(APP_ID + code);
+        peer.on('error', () => setupHostPrivate());
+        peer.on('connection', handleConnectionRequest);
+    }
+
+    function connectToHost() {
+        if(!currentUser) updateName();
+        isBotMatch = false;
+        isHost = false;
+        mySide = 'O'; 
+
+        const code = document.getElementById('input-code').value.trim().toUpperCase();
+        if (code.length < 4) return;
+        const btn = document.getElementById('btn-connect');
+        const stat = document.getElementById('client-status');
+        btn.disabled = true; btn.innerText = "..."; stat.innerText = "A conectar...";
+        if(peer) peer.destroy();
+        peer = initPeer();
+        peer.on('open', () => {
+            conn = peer.connect(APP_ID + code, { reliable: true });
+            configureConnection();
+            setTimeout(() => { if(!conn.open) { btn.disabled = false; btn.innerText = "CONECTAR"; stat.innerText = "Sala não encontrada."; } }, 5000);
+        });
+    }
+
+    // --- MATCHMAKING ---
+    function startQuickMatch() {
+        const btn = document.getElementById('btn-quick');
+        if(btn) btn.disabled = true;
+
+        if(!currentUser) updateName();
+        isBotMatch = false;
+        openScreen('screen-lobby-wait'); resetLobbyUI();
+        document.getElementById('lobby-quick-ui').classList.remove('hidden');
+        document.getElementById('quick-log').innerText = "Iniciando...";
+        const randomDelay = Math.floor(Math.random() * 1500);
+        setTimeout(() => findPublicMatch(0), randomDelay);
+    }
+
+    function findPublicMatch(roomIndex) {
+        if(isBotMatch) return;
+        if(roomIndex >= MAX_PUB_ROOMS) {
+            document.getElementById('quick-log').innerText = "Criando sala pública...";
+            setTimeout(() => setupHostPrivate(), 1000);
+            return;
+        }
+        const roomID = APP_ID + 'PUB-' + roomIndex;
+        document.getElementById('quick-log').innerText = `Verificando Sala ${roomIndex + 1}...`;
+        if(peer) peer.destroy();
+        peer = initPeer(roomID);
+
+        peer.on('open', () => {
+            document.getElementById('quick-log').innerText = "Sala criada! Aguardando...";
+            isHost = true; mySide = 'X'; GameState.names['X'] = myName;
+            peer.on('connection', (c) => {
+                if(conn && conn.open) { c.on('open', () => { c.send({type:'ROOM_FULL'}); setTimeout(()=>c.close(),500); }); return; }
+                handleConnectionRequest(c);
+            });
+        });
+
+        peer.on('error', (err) => {
+            if(err.type === 'unavailable-id') connectToPublicRoom(roomID, roomIndex);
+            else findPublicMatch(roomIndex + 1);
+        });
+    }
+
+    function connectToPublicRoom(roomID, currentIdx) {
+        const tempPeer = initPeer();
+        tempPeer.on('open', () => {
+            conn = tempPeer.connect(roomID, { reliable: true });
+            conn.on('open', () => {
+                isHost = false; mySide = 'O'; isBotMatch = false;
+                // Envia stats também
+                conn.send({ type: 'JOIN_HANDSHAKE', name: myName, rank: userStats.rank||1000 });
+                setupClientListener();
+            });
+            conn.on('data', (data) => {
+                if(data.type === 'ROOM_FULL') { conn.close(); tempPeer.destroy(); findPublicMatch(currentIdx + 1); } 
+                else handleData(data);
+            });
+            setTimeout(() => { if(!conn.open) { tempPeer.destroy(); findPublicMatch(currentIdx + 1); } }, 2000);
+        });
+    }
+
+    // --- BOT MODE (CORRIGIDO) ---
+    function startBotMatch() {
+        if(!currentUser) updateName();
+        if(peer) peer.destroy();
+        isBotMatch = true; isHost = true; mySide = 'X';
+        GameState.names['X'] = myName; GameState.names['O'] = "BOT-T800";
+        startGame();
+    }
+
+    function botTurn() {
+        if(GameState.winner || GameState.turn !== 'O') return;
+        setTimeout(() => {
+            const hand = GameState.hands['O'];
+            const availableMoves = [];
+            for(let i=0; i<9; i++) if(GameState.board[i] === null) availableMoves.push(i);
+            
+            let action = null;
+            // FIX: Procura a carta 'PLACE' na mão em vez de assumir index 0
+            const placeCardIdx = hand.indexOf('PLACE');
+
+            if(placeCardIdx !== -1 && availableMoves.length > 0) {
+                // Se tiver 'PLACE', usa ela
+                action = { type: 'PLACE', target: availableMoves[Math.floor(Math.random()*availableMoves.length)], cardIdx: placeCardIdx };
+            } else {
+                // Se não tiver 'PLACE' ou movimentos, passa a vez (TIMEOUT roda a mão)
+                action = { type: 'TIMEOUT' };
+            }
+            processAction(action, 'O');
+        }, 1500);
+    }
+
+    // --- HANDLERS ---
+    function handleConnectionRequest(c) {
+        conn = c;
+        conn.on('data', (data) => {
+            if(data.type === 'JOIN_HANDSHAKE') { 
+                let safeName = data.name || "PLAYER";
+                if(safeName.length > 10) safeName = safeName.substr(0,10);
+                
+                GameState.names['O'] = safeName;
+                
+                // Salva stats do oponente
+                opponentStats.rank = data.rank || '???';
+                
+                if(GameState.hands['X'].length === 0) {
+                    startGame(); 
+                } else {
+                    broadcastState(); 
+                }
+            }
+            else handleData(data);
+        });
+        conn.on('close', () => { showToast("OPONENTE SAIU", "#ff0000"); setTimeout(()=>location.reload(), 3000); });
+    }
+    function configureConnection() { 
+        conn.on('open', () => { 
+            // Envia stats no handshake
+            conn.send({ type: 'JOIN_HANDSHAKE', name: myName, rank: userStats.rank||1000 }); 
+            setupClientListener(); 
+        }); 
+    }
+    function setupClientListener() { conn.on('data', handleData); conn.on('close', () => { showToast("DESCONECTADO", "#ff0000"); setTimeout(()=>location.reload(), 3000); }); }
+    function handleData(data) {
+        if (data.type === 'STATE_UPDATE') {
+            // Se for a primeira vez e eu for O, capturar o Rank do Host (X) se ele enviar
+            if(data.hostRank) opponentStats.rank = data.hostRank;
+            syncState(data.state, data.serverTime);
+        }
+        else if (data.type === 'ACTION' && isHost) processAction(data.action, 'O');
+        else if (data.type === 'TOAST') showToast(data.msg, data.color);
+        else if (data.type === 'RESTART' && !isHost) {
+            GameState.scores = { 'X': 0, 'O': 0 };
+            openScreen('ui-layer');
+        }
+        else if (data.type === 'JOIN_HANDSHAKE') { // Recebe stats do oponente
+             let safeName = data.name || "PLAYER";
+             if(safeName.length > 10) safeName = safeName.substr(0,10);
+             if(!isHost) GameState.names['X'] = safeName; // Se sou client, o outro é X
+             opponentStats.rank = data.rank || '???';
+        }
+    }
+
+    // --- GAMEPLAY ---
+    function startGame() { 
+        GameState.scores = { 'X': 0, 'O': 0 }; 
+        resetMatch(); 
+    }
+    function resetMatch() { 
+        resetBoard(); 
+        GameState.winner = null; 
+        GameState.hands = { 'X': generateHand(), 'O': generateHand() }; 
+        GameState.turn = 'X'; 
+        broadcastState(); 
+        if(isHost && !isBotMatch) sendData({ type: 'RESTART' }); 
+    }
+    function resetBoard() { GameState.board.fill(null); GameState.history = { 'X': [], 'O': [] }; GameState.shields = {}; GameState.winningLine = null; timeLeft = 16; }
+
+    function generateHand() { const h = ['PLACE']; for(let i=0; i<2; i++) h.push(getRandomCard()); return h; }
+    function getRandomCard() { const r = Math.random() * 100; let s = 0; for (const [k, d] of Object.entries(CARDS)) { s += d.weight; if (r <= s) return k; } return 'PLACE'; }
+
+    function processAction(action, player) {
+        if (GameState.turn !== player || GameState.winningLine) return; 
+        
+        const { type, target, source, cardIdx } = action;
+
+        // --- SEGURANÇA: Validação da carta ---
+        // Verifica se o jogador realmente tem a carta que diz estar usando
+        if (type !== 'TIMEOUT') {
+             const cardInHand = GameState.hands[player][cardIdx];
+             if (cardInHand !== type) {
+                 console.warn(`CHEAT DETECTED: ${player} tentou usar ${type} mas tinha ${cardInHand} no slot ${cardIdx}`);
+                 return; // Bloqueia a ação inválida
+             }
+        }
+        // -------------------------------------
+
+        let success = false; 
+
+        if (type === 'PLACE' && GameState.board[target] === null) {
+            if (GameState.history[player].length >= 3) GameState.board[GameState.history[player].shift()] = null;
+            GameState.board[target] = player; GameState.history[player].push(target); success = true; SoundFX.place();
+        } 
+        else if (type === 'BOMB' && GameState.board[target] !== null && !isProtected(target)) {
+            const v = GameState.board[target]; GameState.board[target] = null; GameState.history[v] = GameState.history[v].filter(i => i !== target);
+            success = true; SoundFX.explode(); cameraShake = 0.5; spawnExplosion(target);
+        }
+        else if (type === 'MOVE' && GameState.board[target] === null) {
+            if(GameState.board[source] === player) {
+                GameState.board[source] = null; GameState.board[target] = player;
+                GameState.history[player] = GameState.history[player].filter(i => i !== source); GameState.history[player].push(target); success = true; SoundFX.place();
+            }
+        }
+        else if (type === 'PUSH' && GameState.board[target] === null) {
+             const enemy = player === 'X' ? 'O' : 'X';
+             if(GameState.board[source] === enemy && !isProtected(source)) {
+                GameState.board[source] = null; GameState.board[target] = enemy;
+                GameState.history[enemy] = GameState.history[enemy].filter(i => i !== source); GameState.history[enemy].push(target);
+                success = true; SoundFX.click();
+             }
+        }
+        else if (type === 'SHIELD' && GameState.board[target] === player) { GameState.shields[target] = 2; success = true; SoundFX.place(); }
+        else if (type === 'SWAP' && !isProtected(target) && !isProtected(source)) {
+            const enemy = player === 'X' ? 'O' : 'X';
+            if(GameState.board[source] === player && GameState.board[target] === enemy) {
+                GameState.board[source] = enemy; GameState.board[target] = player;
+                GameState.history[player] = GameState.history[player].map(i => i === source ? target : i);
+                GameState.history[enemy] = GameState.history[enemy].map(i => i === target ? source : i); success = true; SoundFX.click();
+            }
+        }
+        else if (type === 'TIMEOUT') { GameState.hands[player].shift(); GameState.hands[player].push('PLACE'); success = true; }
+
+        if (success) {
+            if(type !== 'TIMEOUT') { GameState.hands[player].splice(cardIdx, 1); GameState.hands[player].push(GameState.hands[player].includes('PLACE') ? getRandomCard() : 'PLACE'); }
+            
+            // CHECK WIN OR DRAW
+            const winLineX = checkLineWin('X');
+            const winLineO = checkLineWin('O');
+            
+            if(winLineX && winLineO) {
+                // EMPATE POR DUPLA VITÓRIA
+                showToast("EMPATE!", "#ffffff");
+                SoundFX.error();
+                setTimeout(() => { 
+                    resetBoard(); 
+                    broadcastState();
+                    if(isBotMatch && GameState.turn === 'O') botTurn();
+                }, 2500);
+            } else if (winLineX || winLineO) {
+                const winLine = winLineX || winLineO;
+                GameState.winningLine = winLine; 
+                const winner = GameState.board[winLine[0]]; 
+                GameState.scores[winner]++; 
+                SoundFX.roundWin(); cameraShake = 0.8;
+                
+                if (GameState.scores[winner] >= GameState.targetWins) { 
+                    setTimeout(() => { GameState.winner = winner; broadcastState(); }, 2000); 
+                } else { 
+                    setTimeout(() => { 
+                        resetBoard(); 
+                        GameState.turn = (winner === 'X' ? 'O' : 'X'); 
+                        broadcastState(); 
+                        if(isBotMatch && GameState.turn === 'O') botTurn(); 
+                    }, 2500); 
+                }
+            } else {
+                GameState.turn = GameState.turn === 'X' ? 'O' : 'X'; for (let k in GameState.shields) if (GameState.shields[k] > 0) GameState.shields[k]--; timeLeft = 15;
+            }
+            broadcastState();
+            if(isBotMatch && !winLineX && !winLineO && GameState.turn === 'O') botTurn();
+        }
+    }
+
+    function checkLineWin(player) {
+        const w = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+        for (let c of w) { 
+            if (GameState.board[c[0]] === player && GameState.board[c[1]] === player && GameState.board[c[2]] === player) return c; 
+        } 
+        return null;
+    }
+
+    // Função "Dead Code" - Comentada para evitar uso acidental, mas mantida no arquivo.
+    // function checkRoundWin() {
+    //    const w = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+    //    for (let c of w) { if (GameState.board[c[0]] && GameState.board[c[0]] === GameState.board[c[1]] && GameState.board[c[0]] === GameState.board[c[2]]) return c; } return null;
+    // }
+
+    function isProtected(idx) { return GameState.shields[idx] > 0; }
+    function broadcastState() { 
+        // Envia também o rank do host
+        if (!isBotMatch && conn && conn.open) conn.send({ type: 'STATE_UPDATE', state: GameState, serverTime: timeLeft, hostRank: userStats.rank||1000 }); 
+        syncState(GameState, timeLeft); 
+    }
+
+    function syncState(newState, serverTime) {
+        Object.assign(GameState, newState); 
+        
+        if (serverTime !== undefined) {
+             if(Math.abs(timeLeft - serverTime) > 0.5) timeLeft = serverTime;
+        }
+
+        document.getElementById('name-x').innerText = GameState.names.X; document.getElementById('name-o').innerText = GameState.names.O;
+        if(isQuickMatch) document.getElementById('room-code').innerText = "RÁPIDA";
+        if(isBotMatch) document.getElementById('room-code').innerText = "OFFLINE";
+        
+        updateVisuals();
+        if (GameState.winner) { showGameOver(); return; }
+        isInGame = true; openScreen('ui-layer');
+    }
+
+    function showGameOver() {
+        isInGame = false;
+        openScreen('screen-gameover');
+        const wName = GameState.names[GameState.winner];
+        document.getElementById('winner-text').innerText = wName + " VENCEU!";
+        document.getElementById('winner-text').style.color = (GameState.winner==='X'?'var(--x-color)':'var(--o-color)');
+        SoundFX.matchWin();
+        
+        // --- SALVA O RESULTADO NA BASE DE DADOS (SE NÃO FOR BOT) ---
+        if(currentUser && GameState.winner === mySide) {
+            saveGameResult(true);
+            showToast("RANK SUBIU!", "#00ff88");
+        } else if (currentUser && GameState.winner !== mySide) {
+            saveGameResult(false);
+        }
+        // ------------------------------------------
+
+        const area = document.getElementById('rematch-area'); area.innerHTML = '';
+        if(isHost) {
+            const btn = document.createElement('button'); btn.className = 'cyber-btn'; btn.innerHTML = '<span>REVANCHE</span>'; btn.onclick = () => { startGame(); }; area.appendChild(btn);
+        } else area.innerHTML = '<p style="color:#aaa;">Aguardando Host...</p>';
+    }
+
+    function sendData(data) { if (conn && conn.open) conn.send(data); }
+    function sendAction(a) { if(isHost) processAction(a, 'X'); else { conn.send({ type: 'ACTION', action: a }); } resetSelection(); }
+    function resetSelection() { selectedHandIdx=null; activeCardType=null; stepSourceIdx=null; updateHandUI(); document.getElementById('hint-pill').classList.remove('active'); }
+
+    /* =========================================
+       THREE.JS VISUALS
+       ========================================= */
     const scene = new THREE.Scene(); scene.fog = new THREE.FogExp2(0x050510, 0.02);
     const camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 0.1, 100);
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
@@ -467,14 +1147,28 @@
     document.getElementById('canvas-container').appendChild(renderer.domElement);
     const pieceGroup = new THREE.Group(); scene.add(pieceGroup);
     const particlesGroup = new THREE.Group(); scene.add(particlesGroup);
-    const grid = new THREE.GridHelper(100, 100, 0x111111, 0x0a0a0a); grid.position.y = -2; scene.add(grid);
-    const tiles=[]; const tileGeo=new THREE.BoxGeometry(2.8,0.2,2.8);
-    for(let i=0;i<9;i++){ const t=new THREE.Mesh(tileGeo,new THREE.MeshStandardMaterial({color:0x111116})); t.position.set((i%3-1)*3.1,0,(Math.floor(i/3)-1)*3.1); t.userData={id:i}; t.add(new THREE.LineSegments(new THREE.EdgesGeometry(tileGeo),new THREE.LineBasicMaterial({color:0x333344,transparent:true,opacity:0.3}))); scene.add(t); tiles.push(t); }
-    const lights=[new THREE.DirectionalLight(0xffffff,0.5), new THREE.PointLight(0xff0055,1,30), new THREE.PointLight(0x00e5ff,1,30)];
-    lights[0].position.set(5,10,5); lights[1].position.set(5,5,5); lights[2].position.set(-5,5,-5);
-    lights.forEach(l=>scene.add(l)); scene.add(new THREE.AmbientLight(0xffffff,0.3));
+    const gridHelper = new THREE.GridHelper(100, 100, 0x222222, 0x111111); gridHelper.position.y = -2; scene.add(gridHelper);
+    window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
+
+    const tileGeo = new THREE.BoxGeometry(2.8, 0.2, 2.8);
+    const tileMat = new THREE.MeshStandardMaterial({ color: 0x111116, roughness: 0.1, metalness: 0.8 });
+    const tiles = [];
+    for(let i=0; i<9; i++) {
+        const t = new THREE.Mesh(tileGeo, tileMat.clone()); t.position.set((i%3-1)*3.1, 0, (Math.floor(i/3)-1)*3.1); t.userData = { id: i };
+        const edges = new THREE.LineSegments(new THREE.EdgesGeometry(tileGeo), new THREE.LineBasicMaterial({color:0x333344, transparent:true, opacity:0.3}));
+        t.add(edges); scene.add(t); tiles.push(t);
+    }
+    const dl = new THREE.DirectionalLight(0xffffff, 0.5); dl.position.set(5, 10, 5); scene.add(dl);
+    const pl1 = new THREE.PointLight(0xff0055, 1, 30); pl1.position.set(5, 5, 5); scene.add(pl1);
+    const pl2 = new THREE.PointLight(0x00e5ff, 1, 30); pl2.position.set(-5, 5, -5); scene.add(pl2);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.3));
 
     const particleGeo = new THREE.BoxGeometry(0.1, 0.1, 0.1); 
+
+    function spawnExplosion(idx) {
+        const x = (idx%3-1)*3.1; const z = (Math.floor(idx/3)-1)*3.1;
+        for(let i=0; i<25; i++) particles.push({ pos: new THREE.Vector3(x, 1, z), vel: new THREE.Vector3((Math.random()-0.5)*0.6, Math.random()*0.6, (Math.random()-0.5)*0.6), life: 1.0, color: 0xffaa00 });
+    }
     function spawnWinParticles(idxList) {
         idxList.forEach(idx => {
             const x = (idx%3-1)*3.1; const z = (Math.floor(idx/3)-1)*3.1;
@@ -491,120 +1185,142 @@
                 const x = (i%3-1)*3.1; const z = (Math.floor(i/3)-1)*3.1;
                 const isWinner = GameState.winningLine && GameState.winningLine.includes(i);
                 let m;
-                if(c==='X') { const g=new THREE.Group(), mat=new THREE.MeshStandardMaterial({color:0xff0055,emissive:0xff0055,emissiveIntensity:isWin?5:1}); g.add(new THREE.Mesh(new THREE.BoxGeometry(2,0.4,0.4),mat)).rotation.y=Math.PI/4; g.children[0].add(new THREE.Mesh(new THREE.BoxGeometry(2,0.4,0.4),mat)).rotation.y=-Math.PI/2; m=g; }
-                else { m=new THREE.Mesh(new THREE.TorusGeometry(0.8,0.2,16,32),new THREE.MeshStandardMaterial({color:0x00e5ff,emissive:0x00e5ff,emissiveIntensity:isWin?5:1})); m.rotation.x=Math.PI/2; }
-                m.position.set(x,1,z); if(isWin) m.userData.spin=0.2;
-                if(GameState.history[c][0]===i && GameState.history[c].length===3 && !isWin) m.userData.glitch=true;
-                if(GameState.shields[i]) m.add(new THREE.Mesh(new THREE.IcosahedronGeometry(1.2),new THREE.MeshBasicMaterial({color:0x0088ff,wireframe:true})));
+                if(c==='X') {
+                    const g = new THREE.Group();
+                    const mat = new THREE.MeshStandardMaterial({ color: 0xff0055, emissive: 0xff0055, emissiveIntensity: isWinner ? 5.0 : 1.5 });
+                    const b1=new THREE.Mesh(new THREE.BoxGeometry(2,0.4,0.4), mat); b1.rotation.y=Math.PI/4;
+                    const b2=new THREE.Mesh(new THREE.BoxGeometry(2,0.4,0.4), mat); b2.rotation.y=-Math.PI/4; g.add(b1); g.add(b2); m=g;
+                } else {
+                    const mat = new THREE.MeshStandardMaterial({ color: 0x00e5ff, emissive: 0x00e5ff, emissiveIntensity: isWinner ? 5.0 : 1.5 });
+                    m=new THREE.Mesh(new THREE.TorusGeometry(0.8, 0.2, 16, 32), mat); m.rotation.x=Math.PI/2;
+                }
+                m.position.set(x, 1, z);
+                if(isWinner) m.userData.spinSpeed = 0.2;
+                const isOldest = GameState.history[c][0]===i && GameState.history[c].length===3;
+                if(!isWinner && isOldest) m.userData.isGlitching=true; else { m.userData.isGlitching=false; m.visible=true; m.scale.setScalar(1); }
+                if(GameState.shields[i]>0) {
+                    const s = new THREE.Mesh(new THREE.IcosahedronGeometry(1.2), new THREE.MeshBasicMaterial({color:0x0088ff, wireframe:true, transparent:true, opacity:0.5}));
+                    s.userData.anim='shield'; m.add(s);
+                }
                 pieceGroup.add(m);
             }
         });
-        document.getElementById('p1-score').innerHTML=`<div class="score-val" style="color:var(--x-color)">${GameState.scores.X}</div><div class="player-name">${GameState.names.X}</div>`;
-        document.getElementById('p2-score').innerHTML=`<div class="score-val" style="color:var(--o-color)">${GameState.scores.O}</div><div class="player-name">${GameState.names.O}</div>`;
+        document.getElementById('p1-score').querySelector('.score-val').innerText = GameState.scores.X;
+        document.getElementById('p2-score').querySelector('.score-val').innerText = GameState.scores.O;
+        const isTurnX = GameState.turn === 'X';
+        document.getElementById('p1-score').className = `player-score ${isTurnX?'active-turn':''}`;
+        document.getElementById('p2-score').className = `player-score ${!isTurnX?'active-turn':''}`;
         updateHandUI();
     }
 
+    const raycaster = new THREE.Raycaster(); const mouse = new THREE.Vector2(); let menuTime = 0;
     function animate() {
         requestAnimationFrame(animate);
-        const tr = isInGame ? (camera.userData.targetRot||0) : 0; 
         if(isInGame) {
-            camera.position.x = Math.sin(THREE.MathUtils.lerp(Math.asin(camera.position.x/14)||0, tr, 0.05))*14;
-            camera.position.z = Math.cos(THREE.MathUtils.lerp(Math.acos(camera.position.z/14)||0, tr, 0.05))*14;
-            camera.position.y = 15; camera.lookAt(0,0,0);
-        } else {
-            camera.position.x = Math.sin(Date.now()*.0005)*18; camera.position.z = Math.cos(Date.now()*.0005)*18; camera.position.y=12; camera.lookAt(0,0,0);
-        }
-        pieceGroup.children.forEach(p=>{ if(p.userData.spin) p.rotation.y+=p.userData.spin; if(p.userData.glitch) p.visible=Math.random()>0.2; });
+            if(cameraShake > 0) { cameraShake -= 0.05; if(cameraShake < 0) cameraShake = 0; camera.position.x += (Math.random()-0.5) * cameraShake; camera.position.y += (Math.random()-0.5) * cameraShake; camera.position.z += (Math.random()-0.5) * cameraShake; }
+            const targetRot = camera.userData.targetRot || 0; const angle = THREE.MathUtils.lerp(Math.atan2(camera.position.x, camera.position.z), targetRot, 0.05);
+            if(cameraShake < 0.1) { camera.position.x = Math.sin(angle) * 14; camera.position.z = Math.cos(angle) * 14; camera.position.y = THREE.MathUtils.lerp(camera.position.y, 15, 0.1); camera.lookAt(0,0,0); }
+        } else { menuTime += 0.005; camera.position.x = Math.sin(menuTime) * 18; camera.position.z = Math.cos(menuTime) * 18; camera.position.y = 12; camera.lookAt(0,0,0); }
+        gridHelper.position.z = (Date.now() * 0.002) % 2;
+        pieceGroup.children.forEach(p => { p.rotation.y += p.userData.spinSpeed || 0.01; if(p.userData.isGlitching) { p.visible = Math.random()>0.1; p.scale.setScalar(0.9+Math.random()*0.2); } p.children.forEach(c => { if(c.userData.anim='shield') c.rotation.z-=0.05; }); });
         particlesGroup.clear();
-        for(let i=particles.length-1; i>=0; i--) { const p=particles[i]; p.life-=0.02; p.pos.add(p.vel); if(p.gravity) p.vel.y+=p.gravity; if(p.life<=0) { particles.splice(i,1); continue; } 
-            const m=new THREE.Mesh(particleGeo, new THREE.MeshBasicMaterial({color:p.color})); m.position.copy(p.pos); particlesGroup.add(m); 
+        for(let i=particles.length-1; i>=0; i--) { const p = particles[i]; p.life -= 0.02; p.pos.add(p.vel); if(p.gravity) p.vel.y += p.gravity; if(p.life <= 0) { particles.splice(i,1); continue; } 
+            const mesh = new THREE.Mesh(particleGeo, new THREE.MeshBasicMaterial({color:p.color})); 
+            mesh.position.copy(p.pos); mesh.rotation.x = Math.random()*Math.PI; particlesGroup.add(mesh); 
         }
         renderer.render(scene, camera);
     }
     animate();
-    window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
 
-    // --- LOGICA JOGO (Mantida) ---
-    function initPeer(id) { return new Peer(id, { debug: 1 }); }
-    function openLobby(mode) { openScreen('screen-lobby-wait'); resetLobbyUI(); if (mode === 'host') setupHost(); else document.getElementById('lobby-client-ui').classList.remove('hidden'); }
-    function setupHost() { isHost=true; mySide='X'; isBotMatch=false; resetLobbyUI(); document.getElementById('lobby-host-ui').classList.remove('hidden'); const code=Math.random().toString(36).substr(2, 6).toUpperCase(); document.getElementById('display-code').innerText=code; GameState.names['X']=myName; peer=initPeer(APP_ID+code); peer.on('connection', handleConn); }
-    function connectToHost() { const code=document.getElementById('input-code').value.trim().toUpperCase(); if(code.length<4)return; isHost=false; mySide='O'; isBotMatch=false; document.getElementById('btn-connect').innerText="..."; peer=initPeer(); peer.on('open', ()=>{ conn=peer.connect(APP_ID+code); handleConn(); }); }
-    function handleConn(c) { if(c) conn=c; conn.on('open', ()=>{ conn.send({type:'JOIN', name:myName, rank:userStats.rank}); if(isHost&&GameState.hands.X.length===0) startGame(); }); conn.on('data', handleData); }
-    function startQuickMatch() { openScreen('screen-lobby-wait'); resetLobbyUI(); document.getElementById('lobby-quick-ui').classList.remove('hidden'); findPub(0); }
-    function findPub(i) { if(i>=MAX_PUB_ROOMS) { setupHost(); return; } const p=initPeer(APP_ID+'PUB-'+i); p.on('error', ()=>connectPub(i)); p.on('open', ()=>{ isHost=true; mySide='X'; GameState.names.X=myName; peer=p; peer.on('connection', handleConn); }); }
-    function connectPub(i) { const p=initPeer(); p.on('open', ()=>{ conn=p.connect(APP_ID+'PUB-'+i); handleConn(); setTimeout(()=>{ if(!conn.open) findPub(i+1); }, 2000); }); }
-    function startBotMatch() { isBotMatch=true; isHost=true; mySide='X'; GameState.names.X=myName; GameState.names.O="BOT"; startGame(); }
-    
-    function startGame() { GameState.board.fill(null); GameState.history={X:[],O:[]}; GameState.hands={X:genHand(),O:genHand()}; GameState.scores={X:0,O:0}; GameState.turn='X'; GameState.winner=null; broadcast(); }
-    function genHand() { const h=['PLACE']; for(let i=0; i<2; i++) h.push(rndCard()); return h; }
-    function rndCard() { const r=Math.random()*100; let s=0; for (const [k, d] of Object.entries(CARDS)) { s += d.weight; if (r <= s) return k; } return 'PLACE'; }
-    
-    function handleData(d) {
-        if(d.type==='UPDATE') { Object.assign(GameState, d.state); if(d.hostRank) opponentStats.rank=d.hostRank; timeLeft=d.time; updateVisuals(); if(GameState.winner) gameOver(); else { isInGame=true; openScreen('ui-layer'); } }
-        else if(d.type==='JOIN') { GameState.names[isHost?'O':'X']=d.name; opponentStats.rank=d.rank; if(isHost) broadcast(); }
-        else if(d.type==='ACTION' && isHost) processAction(d.act, 'O');
+    setInterval(() => { if(!GameState.winner && document.getElementById('screen-lobby-wait').classList.contains('hidden')) { if(timeLeft > 0) timeLeft -= 0.1; if(isHost && timeLeft <= 0) processAction({ type: 'TIMEOUT' }, GameState.turn); const pct = Math.max(0, (timeLeft/15)*100); document.getElementById('timer-bar').style.width = pct + '%'; } }, 100);
+
+    function handleCardClick(idx, type) {
+        if(GameState.turn !== mySide) return; if(selectedHandIdx === idx) { resetSelection(); return; }
+        selectedHandIdx=idx; activeCardType=type; stepSourceIdx=null; SoundFX.click(); updateHandUI();
+        const hint = { 'PLACE':'Espaço vazio', 'BOMB':'Inimigo', 'SHIELD':'Sua peça', 'MOVE':'1. Sua peça', 'PUSH':'1. Peça Inimiga', 'SWAP':'1. Inimigo' };
+        document.getElementById('hint-pill').innerText = hint[type] || ''; document.getElementById('hint-pill').classList.add('active');
     }
-    function broadcast() { if(!isBotMatch && conn && conn.open) conn.send({type:'UPDATE', state:GameState, time:timeLeft, hostRank:userStats.rank}); updateVisuals(); if(GameState.winner) gameOver(); else { isInGame=true; openScreen('ui-layer'); } }
-    
-    function processAction(act, p) {
-        if(GameState.turn!==p || GameState.winner) return;
-        let ok=false; const {type,t,s,cIdx}=act;
-        if(type==='PLACE' && !GameState.board[t]) { if(GameState.history[p].length>=3) GameState.board[GameState.history[p].shift()]=null; GameState.board[t]=p; GameState.history[p].push(t); ok=true; }
-        else if(type==='BOMB' && GameState.board[t] && !GameState.shields[t]) { const v=GameState.board[t]; GameState.board[t]=null; GameState.history[v]=GameState.history[v].filter(x=>x!==t); ok=true; }
-        else if(type==='SHIELD' && GameState.board[t]===p) { GameState.shields[t]=2; ok=true; }
-        else if(type==='TIMEOUT') { GameState.hands[p].shift(); GameState.hands[p].push('PLACE'); ok=true; }
-        // Simple Move/Push/Swap logic
-        if(type==='MOVE' && GameState.board[s]===p && !GameState.board[t]) { GameState.board[s]=null; GameState.board[t]=p; GameState.history[p]=GameState.history[p].filter(x=>x!==s); GameState.history[p].push(t); ok=true; }
-        if(type==='PUSH' && GameState.board[s]!==p && GameState.board[s] && !GameState.shields[s] && !GameState.board[t]) { const en=GameState.board[s]; GameState.board[s]=null; GameState.board[t]=en; GameState.history[en]=GameState.history[en].filter(x=>x!==s); GameState.history[en].push(t); ok=true; }
-        if(type==='SWAP' && GameState.board[s]===p && GameState.board[t]!==p && GameState.board[t] && !GameState.shields[t]) { const en=GameState.board[t]; GameState.board[s]=en; GameState.board[t]=p; GameState.history[p]=GameState.history[p].map(x=>x===s?t:x); GameState.history[en]=GameState.history[en].map(x=>x===t?s:x); ok=true; }
 
-        if(ok) {
-            if(type!=='TIMEOUT') { GameState.hands[p].splice(cIdx,1); GameState.hands[p].push(rndCard()); }
-            const win = checkWin();
-            if(win) { GameState.winner=win; GameState.scores[win]++; if(GameState.scores[win]>=3) setTimeout(()=>{ GameState.winner=win; broadcast(); },2000); else setTimeout(startGame, 2500); }
-            else { GameState.turn = p==='X'?'O':'X'; for(let k in GameState.shields)if(GameState.shields[k]>0)GameState.shields[k]--; timeLeft=16; }
-            broadcast(); if(isBotMatch && GameState.turn==='O') setTimeout(botTurn, 1000);
+    function updateHandUI() {
+        const c = document.getElementById('hand-container'); c.innerHTML='';
+        if(!GameState.hands[mySide]) return;
+        GameState.hands[mySide].forEach((k,i)=>{
+            const d=CARDS[k]; const el=document.createElement('div'); el.className=`card ${d.rarity}`;
+            if(i===selectedHandIdx) el.classList.add('selected');
+            el.innerHTML=`<div class="card-icon">${d.icon}</div><div class="card-name">${d.name}</div>`;
+            el.onclick=()=>handleCardClick(i,k); c.appendChild(el);
+        });
+    }
+
+    // --- INPUT HANDLING (LIVRE SELEÇÃO) ---
+    function onInput(x, y) {
+        mouse.x=(x/window.innerWidth)*2-1; mouse.y=-(y/window.innerHeight)*2+1;
+        raycaster.setFromCamera(mouse, camera);
+        const ints=raycaster.intersectObjects(tiles);
+        
+        if(ints.length && activeCardType && GameState.turn===mySide && !GameState.winningLine) {
+            const idx=ints[0].object.userData.id;
+            const my=GameState.board[idx]===mySide, en=GameState.board[idx]&&!my, emp=!GameState.board[idx];
+
+            // Ações Simples
+            if(activeCardType==='PLACE' && emp) sendAction({type:'PLACE', target:idx, cardIdx:selectedHandIdx});
+            else if(activeCardType==='BOMB' && en) sendAction({type:'BOMB', target:idx, cardIdx:selectedHandIdx});
+            else if(activeCardType==='SHIELD' && my) sendAction({type:'SHIELD', target:idx, cardIdx:selectedHandIdx});
+            
+            // Ações Compostas (Livre Seleção)
+            else if(activeCardType==='MOVE' || activeCardType==='PUSH' || activeCardType==='SWAP') {
+                if(stepSourceIdx === null) {
+                    // Validação do Primeiro Clique
+                    let isValidFirstClick = false;
+                    if (activeCardType === 'MOVE') { if (my || emp) isValidFirstClick = true; }
+                    else if (activeCardType === 'PUSH') { if (en || emp) isValidFirstClick = true; } 
+                    else if (activeCardType === 'SWAP') { if (my || en) isValidFirstClick = true; }
+
+                    if (isValidFirstClick) {
+                        stepSourceIdx = idx;
+                        document.getElementById('hint-pill').innerText = "2. Selecione o destino";
+                        SoundFX.hover();
+                    } else {
+                        showToast("ALVO INVÁLIDO", "#ff3333");
+                        SoundFX.error(); 
+                    }
+                } else {
+                    // Segundo Clique
+                    let s = stepSourceIdx; let t = idx;
+                    
+                    if(activeCardType==='MOVE') {
+                        if(GameState.board[t]===mySide && GameState.board[s]===null) { let tmp=s;s=t;t=tmp; }
+                        if(GameState.board[s]===mySide && GameState.board[t]===null) sendAction({type:'MOVE', source:s, target:t, cardIdx:selectedHandIdx});
+                        else { stepSourceIdx = idx; SoundFX.error(); } 
+                    }
+                    else if(activeCardType==='PUSH') {
+                         const enemy = mySide==='X'?'O':'X';
+                         if(GameState.board[t]===enemy && GameState.board[s]===null) { let tmp=s;s=t;t=tmp; }
+                         if(GameState.board[s]===enemy && GameState.board[t]===null) sendAction({type:'PUSH', source:s, target:t, cardIdx:selectedHandIdx});
+                         else { stepSourceIdx = idx; SoundFX.error(); }
+                    }
+                    else if(activeCardType==='SWAP') {
+                         if(GameState.board[s]!==mySide) { let tmp=s;s=t;t=tmp; }
+                         const enemy = mySide==='X'?'O':'X';
+                         if(GameState.board[s]===mySide && GameState.board[t]===enemy) sendAction({type:'SWAP', source:s, target:t, cardIdx:selectedHandIdx});
+                         else { stepSourceIdx = idx; SoundFX.error(); }
+                    }
+                }
+            }
         }
     }
-    function checkWin() { const w=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]; for(let c of w) if(GameState.board[c[0]] && GameState.board[c[0]]===GameState.board[c[1]] && GameState.board[c[0]]===GameState.board[c[2]]) { GameState.winningLine=c; return GameState.board[c[0]]; } return null; }
-    
-    function botTurn() {
-        const e=GameState.board.map((v,i)=>v===null?i:-1).filter(i=>i!==-1);
-        if(e.length) processAction({type:'PLACE', t:e[Math.floor(Math.random()*e.length)], cIdx:0}, 'O'); else processAction({type:'TIMEOUT'}, 'O');
-    }
 
-    function gameOver() { isInGame=false; openScreen('screen-gameover'); if(currentUser && GameState.winner===mySide) saveGameResult(true); else if(currentUser && GameState.winner!==mySide) saveGameResult(false); }
-    function saveGameResult(w) { if(isBotMatch) return; const r=db.collection('players').doc(currentUser.uid); if(w) { r.update({wins:firebase.firestore.FieldValue.increment(1), rank:firebase.firestore.FieldValue.increment(25)}); userStats.wins++; userStats.rank+=25; } else { r.update({losses:firebase.firestore.FieldValue.increment(1), rank:firebase.firestore.FieldValue.increment(-15)}); userStats.losses++; userStats.rank-=15; } updateUIWithStats(); }
-
-    // Input
-    const ray=new THREE.Raycaster(); const mouse=new THREE.Vector2();
-    window.onmousedown = e => { if(e.button===0) onInput(e.clientX, e.clientY); else resetSelection(); };
-    function onInput(x,y) {
-        if(!isInGame || GameState.turn!==mySide) return;
-        mouse.x=(x/window.innerWidth)*2-1; mouse.y=-(y/window.innerHeight)*2+1; ray.setFromCamera(mouse, camera);
-        const ints=ray.intersectObjects(tiles);
-        if(ints.length && activeCardType) {
-            const id=ints[0].object.userData.id;
-            if(['PLACE','BOMB','SHIELD'].includes(activeCardType)) sendAct({type:activeCardType, t:id, cIdx:selectedHandIdx});
-            else { if(stepSourceIdx===null) { stepSourceIdx=id; document.getElementById('hint-pill').innerText="DESTINO"; document.getElementById('hint-pill').classList.add('active'); } else { sendAct({type:activeCardType, s:stepSourceIdx, t:id, cIdx:selectedHandIdx}); } }
-        }
-    }
-    function sendAct(a) { if(isHost) processAction(a, 'X'); else conn.send({type:'ACTION', act:a}); resetSelection(); }
-    function handleCardClick(i,k) { if(GameState.turn===mySide) { selectedHandIdx=i; activeCardType=k; stepSourceIdx=null; updateHandUI(); document.getElementById('hint-pill').innerText="ALVO"; document.getElementById('hint-pill').classList.add('active'); } }
-    function updateHandUI() { const c=document.getElementById('hand-container'); c.innerHTML=''; GameState.hands[mySide].forEach((k,i)=>{ const d=CARDS[k]; c.innerHTML+=`<div class="card ${d.rarity} ${i===selectedHandIdx?'selected':''}" onclick="handleCardClick(${i},'${k}')"><div class="card-icon">${d.icon}</div><div class="card-name">${d.name}</div></div>`; }); }
-    function resetSelection() { selectedHandIdx=null; activeCardType=null; stepSourceIdx=null; updateHandUI(); document.getElementById('hint-pill').classList.remove('active'); }
-
-    // Utils
-    const SoundFX = { 
-        playTone: (f,t,d,v=0.1)=>{ if(audioCtx.state==='suspended')audioCtx.resume(); const o=audioCtx.createOscillator(),g=audioCtx.createGain(); o.type=t; o.frequency.setValueAtTime(f,audioCtx.currentTime); g.gain.setValueAtTime(v,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+d); o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+d); },
-        hover: ()=>SoundFX.playTone(400,'sine',0.1,0.05), click: ()=>SoundFX.playTone(800,'triangle',0.1), place: ()=>SoundFX.playTone(600,'sine',0.3), explode: ()=>SoundFX.playTone(100,'sawtooth',0.4), win: ()=>SoundFX.playTone(440,'square',0.6), matchWin: ()=>[440,554,660].forEach((f,i)=>setTimeout(()=>SoundFX.playTone(f,'square',0.4),i*150))
-    };
-    const audioCtx = new (window.AudioContext||window.webkitAudioContext)();
-    function showToast(m,c) { const t=document.getElementById('toast-msg'); t.innerText=m; t.style.textShadow=`0 0 30px ${c}`; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000); }
+    window.addEventListener('mousedown', e => { if(e.button===0) onInput(e.clientX, e.clientY); else resetSelection(); });
+    window.addEventListener('touchstart', e => { if(e.touches.length > 0 && e.target.tagName === 'CANVAS') { e.preventDefault(); onInput(e.touches[0].clientX, e.touches[0].clientY); } }, {passive: false});
     function copyCode() { navigator.clipboard.writeText(document.getElementById('display-code').innerText); showToast("COPIADO", "#fff"); }
+    function showToast(m,c) { const t=document.getElementById('toast-msg'); t.innerText=m; t.style.textShadow=`0 0 50px ${c}`; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000); }
     function quitGame() { if(conn) conn.close(); location.reload(); }
-    function showPlayerStats(s) { if(s===mySide) showToast(`EU: ${userStats.rank}`, "#fff"); else showToast(isBotMatch?"BOT":`OPONENTE: ${opponentStats.rank}`, "#ffff00"); }
-    setInterval(()=>{ if(isInGame && !GameState.winner){ if(timeLeft>0) timeLeft-=0.1; document.getElementById('timer-bar').style.width=(timeLeft/16)*100+'%'; if(isHost && timeLeft<=0) processAction({type:'TIMEOUT'}, GameState.turn); } }, 100);
+
+    const savedName = localStorage.getItem('cv_username');
+    if(savedName) {
+        document.getElementById('my-name-input').value = savedName;
+        myName = savedName;
+    }
 </script>
 </body>
 </html>
