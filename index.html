@@ -13,7 +13,7 @@
     <meta property="og:description" content="Desafia os teus amigos neste jogo tático 3D. Regra do Infinito, Cartas Especiais e Multiplayer em tempo real.">
     <meta property="og:type" content="website">
     
-    <title>Cartas Velhas: Cyberpunk Tactics v0.9.27 (RANK FIX)</title>
+    <title>Cartas Velhas: Cyberpunk Tactics v0.9.28 (ULTIMATE)</title>
     <style>
         /* --- CORE STYLES --- */
         body { margin: 0; overflow: hidden; background-color: #050510; font-family: 'Segoe UI', Tahoma, monospace; user-select: none; touch-action: none; }
@@ -88,7 +88,7 @@
         .update-item { color: #ccc; font-size: 0.85rem; margin-bottom: 3px; display: block; }
         .update-item::before { content: "> "; color: #666; }
 
-        .hud-top { padding: 10px; display: flex; flex-direction: column; align-items: center; background: linear-gradient(to bottom, rgba(0,0,0,0.95), transparent); width: 100%; }
+        .hud-top { padding: 10px; display: flex; flex-direction: column; align-items: center; background: linear-gradient(to bottom, rgba(0,0,0,0.95), transparent); width: 100%; position: relative;}
         .scores { display: flex; gap: 30px; margin-top: 5px; align-items: center; justify-content: center; width: 100%; }
         .player-score { transition: 0.3s; opacity: 0.4; transform: scale(0.9); display: flex; flex-direction: column; align-items: center; cursor: pointer; } 
         .player-score.active-turn { opacity: 1; transform: scale(1.1); text-shadow: 0 0 10px currentColor; }
@@ -152,6 +152,19 @@
         .rank-wl { width: 80px; text-align: right; color: #888; font-size: 0.7rem; }
 
         #modal-nickname { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+
+        /* NOVAS FUNCIONALIDADES */
+        .chat-bar { position: absolute; bottom: 140px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; pointer-events: auto; }
+        .emoji-btn { background: rgba(0,0,0,0.5); border: 1px solid #444; color: #fff; font-size: 1.2rem; padding: 5px; border-radius: 50%; cursor: pointer; transition: 0.2s; }
+        .emoji-btn:hover { transform: scale(1.2); background: var(--o-color); border-color: #fff; }
+        
+        .mute-btn { position: absolute; top: 10px; left: 10px; background: none; border: none; color: #666; font-size: 1.5rem; cursor: pointer; pointer-events: auto; z-index: 50; }
+        .mute-btn.active { color: #ff3333; }
+
+        .history-list { margin-top: 15px; text-align: left; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 5px; font-size: 0.8rem; color: #aaa; height: 100px; overflow-y: auto; }
+        .history-item { border-bottom: 1px solid #333; padding: 3px 0; }
+        .win-tag { color: #00ff88; font-weight: bold; }
+        .lose-tag { color: #ff0055; font-weight: bold; }
     </style>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -177,6 +190,7 @@
 
     <div id="ui-layer" class="hidden">
         <div class="hud-top pointer-events-auto">
+            <button class="mute-btn" id="btn-mute" onclick="toggleMute()">🔊</button>
             <div style="font-size:0.7rem; color:#666; letter-spacing:2px; cursor:pointer;" onclick="copyCode()">SALA: <span id="room-code" style="color:#fff;">---</span></div>
             <div id="hint-pill">Sua Vez</div>
             <div class="scores">
@@ -186,7 +200,16 @@
             </div>
             <div class="timer-container"><div id="timer-bar" class="timer-bar"></div></div>
         </div>
+        
         <div id="toast-msg">TOAST</div>
+        
+        <div class="chat-bar">
+            <button class="emoji-btn" onclick="sendChat('👋')">👋</button>
+            <button class="emoji-btn" onclick="sendChat('😂')">😂</button>
+            <button class="emoji-btn" onclick="sendChat('😡')">😡</button>
+            <button class="emoji-btn" onclick="sendChat('👏')">👏</button>
+        </div>
+
         <div class="hand-wrapper"><div id="hand-container" class="hand-container pointer-events-auto"></div></div>
         <button onclick="quitGame()" class="cyber-btn secondary pointer-events-auto" style="position:absolute; top:10px; right:10px; min-width:auto; padding:5px 15px; font-size:0.7rem;"><span>SAIR</span></button>
     </div>
@@ -195,7 +218,7 @@
         <div class="cyber-panel">
             <div class="title-glitch">CARTAS<br>VELHAS</div>
             
-            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 30px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.27 (RANK FIX)</p>
+            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 30px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.28 (ULTIMATE)</p>
             
             <div id="guest-input-area">
                 <p style="color:#aaa; font-size:0.8rem;">ACESSO RESTRITO A OPERADORES LOGADOS</p>
@@ -259,7 +282,14 @@
                 </div>
             </div>
             
-            <br><br>
+            <div style="margin-top: 20px;">
+                <label style="color:#aaa; font-size:0.7rem;">HISTÓRICO RECENTE (LOCAL)</label>
+                <div id="match-history-list" class="history-list">
+                    <div style="text-align:center; padding-top:20px;">Sem dados recentes.</div>
+                </div>
+            </div>
+            
+            <br>
             <button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button>
         </div>
     </div>
@@ -328,16 +358,21 @@
             <h2 style="color:#fff; margin-top:0;">SYSTEM LOG</h2>
             <div class="scroll-content">
                 <div class="update-block">
+                    <div class="update-title">v0.9.28 - Ultimate Update</div>
+                    <span class="update-item">Feature: Chat Rápido (Emojis).</span>
+                    <span class="update-item">Feature: Botão Mute & Histórico de Partidas.</span>
+                    <span class="update-item">Fix: Empate justo (Swap) & Conexão Timeout.</span>
+                    <span class="update-item">UX: Bot Inteligente & Câmera Mobile.</span>
+                </div>
+                <div class="update-block">
                     <div class="update-title">v0.9.27 - Rank & Nick Fix</div>
                     <span class="update-item">Fix: Input de nome agora carrega o valor correto.</span>
                     <span class="update-item">Fix: Usuários sem Rank agora são corrigidos ao logar.</span>
-                    <span class="update-item">Fix: Feedback de lista vazia no Ranking.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.26 - Login & Anim Fix</div>
                     <span class="update-item">Sistema: Jogo permitido apenas após Login.</span>
                     <span class="update-item">Fix: Correção visual na animação das peças.</span>
-                    <span class="update-item">Fix: Salvar nome atualiza menu instantaneamente.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.25 - Security & Bot Fix</div>
@@ -348,115 +383,11 @@
                     <div class="update-title">v0.9.24 - Fixes & Logs</div>
                     <span class="update-item">UI: Correção de alinhamento central dos painéis.</span>
                     <span class="update-item">Sistema: Adicionados logs de debug para Busca e Ranking.</span>
-                    <span class="update-item">UX: Loaders visuais nas áreas de dados.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.23 - Fixes Finais</div>
-                    <span class="update-item">Profile: Mudança de nome liberada.</span>
-                    <span class="update-item">Rank: Correção na listagem do Top 100.</span>
-                    <span class="update-item">UI: Créditos restaurados.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.22 - Identidade & Ranking</div>
                     <span class="update-item">Sistema: Ranking Global (Top 100) por ELO.</span>
                     <span class="update-item">Login: Escolha obrigatória de Nickname permanente.</span>
-                    <span class="update-item">Histórico: Log completo restaurado.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.21 - Social & Fair Play</div>
-                    <span class="update-item">Feature: Busca de Amigos (Tela Social).</span>
-                    <span class="update-item">Fair Play: Partidas contra BOT não contam Rank.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.20 - Perfil Avançado</div>
-                    <span class="update-item">Feature: Tela de Perfil completa (Wins/Losses/Rank).</span>
-                    <span class="update-item">Feature: Edição de Nickname com salvamento.</span>
-                    <span class="update-item">Feature: Ver perfil do oponente (clique no nome).</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.19 - Persistência Total</div>
-                    <span class="update-item">Database: Firestore conectado para salvar vitórias.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.17 - Login System</div>
-                    <span class="update-item">Backend: Integração com Firebase (Google).</span>
-                    <span class="update-item">UI: Perfil de jogador com foto e nome real.</span>
-                    <span class="update-item">Persistência: Login automático ao voltar.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.16 - Stability Patch</div>
-                    <span class="update-item">Segurança: Proteção contra nomes inválidos/longos.</span>
-                    <span class="update-item">Rede: Suavização do timer (anti-jitter).</span>
-                    <span class="update-item">Performance: Otimização de partículas.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.15 - Quality of Life</div>
-                    <span class="update-item">Correção: Jogador 2 recebe cartas.</span>
-                    <span class="update-item">Sistema: Nickname local salvo.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.13 - Sync Fix</div>
-                    <span class="update-item">Correção: Distribuição de cartas no modo "Criar Sala" corrigida.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.12 - Empate & Fixes</div>
-                    <span class="update-item">Nova Regra: EMPATE se ambos vencerem na mesma jogada (Troca).</span>
-                    <span class="update-item">Partida reinicia sem pontos em caso de empate.</span>
-                    <span class="update-item">Correção: Placar zera na Revanche.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.10 - Bot Update</div>
-                    <span class="update-item">Modo VS Bot Disponível.</span>
-                    <span class="update-item">Nova Carta: Empurrar (Mover Inimigo).</span>
-                    <span class="update-item">Correção: Placar zera ao reiniciar.</span>
-                    <span class="update-item">Seleção livre (Origem/Destino).</span>
-                    <span class="update-item">Menu de explicação das cartas.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.9 - Restauração</div>
-                    <span class="update-item">Correção Crítica: Matchmaking revertido para lógica estável.</span>
-                    <span class="update-item">Implementado Jitter (atraso aleatório) para evitar conflitos.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.8.0 - Cyber Polish</div>
-                    <span class="update-item">Menu Principal estilo "Terminal Hacker".</span>
-                    <span class="update-item">Efeitos visuais (Scanlines, Iluminação Volumétrica).</span>
-                    <span class="update-item">Câmara orbital no menu principal.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.7.0 - Expansão Mobile & Matchmaking</div>
-                    <span class="update-item">Partida Rápida: Algoritmo automático de busca de salas.</span>
-                    <span class="update-item">Suporte Mobile Real.</span>
-                    <span class="update-item">Resiliência: Tratamento de desconexões.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.6.0 - Polimento de Jogabilidade</div>
-                    <span class="update-item">Handshake Robusto.</span>
-                    <span class="update-item">Feedback Visual: Glitch na peça mais antiga.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.5.0 - Multiplayer P2P</div>
-                    <span class="update-item">Conexão Direta via PeerJS.</span>
-                    <span class="update-item">Sistema de Salas Privadas.</span>
-                    <span class="update-item">Sincronização Total em tempo real.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.4.0 - Sistema de Cartas</div>
-                    <span class="update-item">Introdução do Deck Building.</span>
-                    <span class="update-item">Novas Cartas: Escudo, Mover e Trocar.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.3.0 - A Revolução 3D</div>
-                    <span class="update-item">Migração para Three.js (WebGL).</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.2.0 - Ação e "Sumo"</div>
-                    <span class="update-item">Poderes Iniciais, Screen shake e Áudio.</span>
-                </div>
-                <div class="update-block" style="border:none;">
-                    <div class="update-title">v0.1.0 - A Base</div>
-                    <span class="update-item">Mecânica Principal: Regra do Infinito.</span>
-                    <span class="update-item">Visual 2D Inicial.</span>
                 </div>
             </div>
             <center><button class="cyber-btn secondary" style="margin-top:20px;" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button></center>
@@ -552,217 +483,129 @@
     let particles = [], cameraShake = 0;
     let isInGame = false;
     let botTimer = null;
+    let isMuted = false;
 
-    // --- DATABASE LOGIC (SALVAR E CARREGAR DADOS) ---
+    // --- DATABASE LOGIC ---
 
-    // Carrega dados do utilizador ao logar
     async function loadUserProfile(user) {
         try {
             const userRef = db.collection('players').doc(user.uid);
             const doc = await userRef.get();
 
             if (doc.exists) {
-                // Jogador existe, carrega
                 userStats = doc.data();
-                
-                // CORREÇÃO: Se usuário existe mas Rank é undefined (versão antiga), conserta
                 if (userStats.rank === undefined || userStats.rank === null) {
-                    userStats.rank = 1000;
-                    userStats.wins = userStats.wins || 0;
-                    userStats.losses = userStats.losses || 0;
-                    userRef.update({ rank: 1000, wins: 0, losses: 0 }); // Atualiza no DB
+                    userStats.rank = 1000; userStats.wins = userStats.wins || 0; userStats.losses = userStats.losses || 0;
+                    userRef.update({ rank: 1000, wins: 0, losses: 0 }); 
                 }
-                
-                // VERIFICA SE JÁ TEM NICK PERSONALIZADO
                 if(userStats.hasSetNick) {
                     myName = userStats.displayName;
                     showToast(`WINS: ${userStats.wins}`, "#00ff88");
                 } else {
-                    // SE NÃO TIVER, MOSTRA MODAL OBRIGATÓRIO
                     document.getElementById('modal-nickname').classList.remove('hidden');
                 }
             } else {
-                // Cria novo e pede nick
                 userStats = {
                     displayName: user.displayName || "Agente", 
                     photoURL: user.photoURL,
                     wins: 0,
                     losses: 0,
-                    rank: 1000, // IMPORTANTE PARA O RANKING
-                    hasSetNick: false, // Flag para saber se escolheu o nick
+                    rank: 1000, 
+                    hasSetNick: false,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
                 await userRef.set(userStats);
                 document.getElementById('modal-nickname').classList.remove('hidden');
             }
             updateUIWithStats();
+            loadMatchHistory();
         } catch (e) {
             console.error("Erro no DB:", e);
         }
     }
     
-    // Salva o Nick Inicial (Obrigatório)
     function saveInitialNickname() {
         if(!currentUser) return;
         const newNick = document.getElementById('permanent-nick-input').value.trim();
         if(newNick.length > 2 && newNick.length <= 10) {
-            db.collection('players').doc(currentUser.uid).update({ 
-                displayName: newNick,
-                hasSetNick: true
-            })
+            db.collection('players').doc(currentUser.uid).update({ displayName: newNick, hasSetNick: true })
             .then(() => {
-                userStats.displayName = newNick;
-                userStats.hasSetNick = true;
-                myName = newNick;
-                updateUIWithStats();
-                document.getElementById('modal-nickname').classList.add('hidden');
+                userStats.displayName = newNick; userStats.hasSetNick = true; myName = newNick;
+                updateUIWithStats(); document.getElementById('modal-nickname').classList.add('hidden');
                 showToast("BEM-VINDO " + newNick, "#00ff88");
             })
             .catch(err => { showToast("ERRO SALVAR", "#ff0000"); });
-        } else {
-            showToast("NOME INVÁLIDO (3-10 CARACTERES)", "#ff3333");
-        }
+        } else { showToast("NOME INVÁLIDO (3-10 CARACTERES)", "#ff3333"); }
     }
     
-    // Função para alterar nickname DEPOIS (Tela de Perfil) - CORRIGIDA
     function saveNewNickname() {
-        if(!currentUser) {
-             console.error("Tentativa de salvar nick sem usuário logado.");
-             showToast("ERRO: NÃO LOGADO", "#ff0000");
-             return;
-        }
+        if(!currentUser) { showToast("ERRO: NÃO LOGADO", "#ff0000"); return; }
         const newNick = document.getElementById('edit-nick-input').value.trim();
-        console.log("Tentando salvar novo nick:", newNick);
-
         if(newNick.length > 0 && newNick.length <= 10) {
             db.collection('players').doc(currentUser.uid).update({ displayName: newNick })
             .then(() => {
-                console.log("Nick salvo com sucesso no Firestore.");
-                userStats.displayName = newNick;
-                myName = newNick; 
-                updateUIWithStats(); 
-                showToast("NICK SALVO", "#00ff88");
+                userStats.displayName = newNick; myName = newNick; 
+                updateUIWithStats(); showToast("NICK SALVO", "#00ff88");
             })
-            .catch(err => { 
-                console.error("Erro ao salvar nick no Firestore:", err);
-                showToast("ERRO AO SALVAR", "#ff0000"); 
-            });
-        } else {
-            console.warn("Tentativa de salvar nick inválido:", newNick);
-            showToast("NOME INVÁLIDO", "#ff3333");
-        }
+            .catch(err => { showToast("ERRO AO SALVAR", "#ff0000"); });
+        } else { showToast("NOME INVÁLIDO", "#ff3333"); }
     }
     
-    // BUSCAR JOGADORES (SOCIAL)
     async function searchPlayer() {
         const queryName = document.getElementById('search-player-input').value.trim();
         const resultsArea = document.getElementById('search-results-area');
         resultsArea.innerHTML = '<div class="loader"></div>';
-        
-        if(queryName.length === 0) {
-            resultsArea.innerHTML = '<p style="color:#aaa;">DIGITE UM NOME</p>';
-            return;
-        }
-
+        if(queryName.length === 0) { resultsArea.innerHTML = '<p style="color:#aaa;">DIGITE UM NOME</p>'; return; }
         try {
             const snapshot = await db.collection('players').where('displayName', '==', queryName).limit(5).get();
             resultsArea.innerHTML = '';
-            
-            if(snapshot.empty) {
-                resultsArea.innerHTML = '<p style="color:#ff3333;">NENHUM AGENTE ENCONTRADO</p>';
-                return;
-            }
-
+            if(snapshot.empty) { resultsArea.innerHTML = '<p style="color:#ff3333;">NENHUM AGENTE ENCONTRADO</p>'; return; }
             snapshot.forEach(doc => {
                 const p = doc.data();
-                const card = document.createElement('div');
-                card.className = 'search-result-card';
-                card.innerHTML = `
-                    <img src="${p.photoURL}" class="user-avatar">
-                    <div class="search-info">
-                        <div class="search-name">${p.displayName}</div>
-                        <div class="search-rank">RANK: ${p.rank || 1000}</div>
-                        <div style="color:#aaa; font-size:0.7rem;">VITÓRIAS: ${p.wins || 0}</div>
-                    </div>
-                `;
-                resultsArea.appendChild(card);
+                resultsArea.innerHTML += `
+                    <div class="search-result-card">
+                        <img src="${p.photoURL}" class="user-avatar">
+                        <div class="search-info">
+                            <div class="search-name">${p.displayName}</div>
+                            <div class="search-rank">RANK: ${p.rank || 1000}</div>
+                            <div style="color:#aaa; font-size:0.7rem;">VITÓRIAS: ${p.wins || 0}</div>
+                        </div>
+                    </div>`;
             });
-        } catch(e) {
-            console.error("Erro na busca:", e);
-            resultsArea.innerHTML = '<p style="color:#ff3333;">ERRO DE REDE (VER CONSOLE)</p>';
-        }
+        } catch(e) { resultsArea.innerHTML = '<p style="color:#ff3333;">ERRO DE REDE</p>'; }
     }
     
-    // CARREGAR RANKING GLOBAL (TOP 100)
     async function loadLeaderboard() {
         const list = document.getElementById('leaderboard-list');
         list.innerHTML = '<div class="loader"></div>';
-        
         try {
-            const snapshot = await db.collection('players')
-                                     .orderBy('rank', 'desc')
-                                     .limit(100)
-                                     .get();
-                                     
+            const snapshot = await db.collection('players').orderBy('rank', 'desc').limit(100).get();
             list.innerHTML = '';
             if(snapshot.empty) {
-                // Se estiver vazio, mas o usuário atual existe, mostra ele
                 if (currentUser) {
-                     list.innerHTML = `
-                        <div class="ranking-row" style="background:rgba(0, 229, 255, 0.1);">
-                            <div class="rank-num">1</div>
-                            <div class="rank-name">${userStats.displayName}</div>
-                            <div class="rank-elo">${userStats.rank || 1000}</div>
-                            <div class="rank-wl">${userStats.wins}/${userStats.losses}</div>
-                        </div>
-                        <p style="color:#aaa; text-align:center; margin-top:10px;">Você é o primeiro Operador!</p>
-                     `;
-                } else {
-                     list.innerHTML = '<p style="color:#aaa;">SEM DADOS DE RANKING</p>';
-                }
+                     list.innerHTML = `<div class="ranking-row" style="background:rgba(0, 229, 255, 0.1);"><div class="rank-num">1</div><div class="rank-name">${userStats.displayName}</div><div class="rank-elo">${userStats.rank || 1000}</div><div class="rank-wl">${userStats.wins}/${userStats.losses}</div></div><p style="color:#aaa; text-align:center; margin-top:10px;">Você é o primeiro Operador!</p>`;
+                } else { list.innerHTML = '<p style="color:#aaa;">SEM DADOS DE RANKING</p>'; }
                 return;
             }
-            
             let rank = 1;
             snapshot.forEach(doc => {
                 const p = doc.data();
-                const row = document.createElement('div');
-                row.className = 'ranking-row';
-                if(currentUser && doc.id === currentUser.uid) row.style.backgroundColor = "rgba(0, 229, 255, 0.1)";
-                
-                row.innerHTML = `
-                    <div class="rank-num">${rank++}</div>
-                    <div class="rank-name">${p.displayName || 'Anon'}</div>
-                    <div class="rank-elo">${p.rank || 1000}</div>
-                    <div class="rank-wl">${p.wins}/${p.losses}</div>
-                `;
-                list.appendChild(row);
+                const hl = (currentUser && doc.id === currentUser.uid) ? "rgba(0, 229, 255, 0.1)" : "transparent";
+                list.innerHTML += `<div class="ranking-row" style="background:${hl}"><div class="rank-num">${rank++}</div><div class="rank-name">${p.displayName || 'Anon'}</div><div class="rank-elo">${p.rank || 1000}</div><div class="rank-wl">${p.wins}/${p.losses}</div></div>`;
             });
-            
         } catch(e) {
-            console.error("Erro ao carregar leaderboard:", e);
-            // Mensagem de ajuda caso falte índice
-            if(e.message.includes("index")) {
-                list.innerHTML = '<p style="color:#ff3333;">ERRO: ADMIN PRECISA CRIAR ÍNDICE (F12)</p>';
-            } else {
-                list.innerHTML = '<p style="color:#ff3333;">ERRO AO CARREGAR RANKING</p>';
-            }
+            if(e.message.includes("index")) list.innerHTML = '<p style="color:#ff3333;">ERRO: ÍNDICE FALTANTE NO FIREBASE</p>';
+            else list.innerHTML = '<p style="color:#ff3333;">ERRO AO CARREGAR RANKING</p>';
         }
     }
 
-    // Atualiza a interface
     function updateUIWithStats() {
-        // UI Menu Principal
         const statusDiv = document.querySelector('.user-status');
         const nameDiv = document.getElementById('profile-name');
         if(statusDiv) statusDiv.innerHTML = `● Online | Rank: ${userStats.rank || 1000}`;
         if(nameDiv) nameDiv.innerText = userStats.displayName || myName;
-        
-        // UI Tela de Perfil
         document.getElementById('detail-profile-img').src = currentUser ? currentUser.photoURL : '';
-        // CORREÇÃO: Força o input a ter o valor do nome atual
         document.getElementById('edit-nick-input').value = userStats.displayName || myName;
-        
         document.getElementById('stat-rank').innerText = userStats.rank || 1000;
         document.getElementById('stat-wins').innerText = userStats.wins || 0;
         document.getElementById('stat-losses').innerText = userStats.losses || 0;
@@ -770,78 +613,65 @@
 
     function saveGameResult(isWin) {
         if (!currentUser) return; 
-        if (isBotMatch) return; 
+        if (isBotMatch) { saveLocalHistory(isWin ? "Vitória vs BOT" : "Derrota vs BOT", isWin); return; }
         if (!userStats) return;
 
         const userRef = db.collection('players').doc(currentUser.uid);
-        
         if (isWin) {
-            userRef.update({
-                wins: firebase.firestore.FieldValue.increment(1),
-                rank: firebase.firestore.FieldValue.increment(25)
-            }).catch(e => console.log(e));
-            userStats.wins++;
-            userStats.rank += 25;
+            userRef.update({ wins: firebase.firestore.FieldValue.increment(1), rank: firebase.firestore.FieldValue.increment(25) }).catch(e => console.log(e));
+            userStats.wins++; userStats.rank += 25;
+            saveLocalHistory(`Vitória vs ${GameState.names[mySide==='X'?'O':'X']}`, true);
         } else {
-            userRef.update({
-                losses: firebase.firestore.FieldValue.increment(1),
-                rank: firebase.firestore.FieldValue.increment(-15)
-            }).catch(e => console.log(e));
-            userStats.losses++;
-            userStats.rank -= 15;
+            userRef.update({ losses: firebase.firestore.FieldValue.increment(1), rank: firebase.firestore.FieldValue.increment(-15) }).catch(e => console.log(e));
+            userStats.losses++; userStats.rank -= 15;
+            saveLocalHistory(`Derrota vs ${GameState.names[mySide==='X'?'O':'X']}`, false);
         }
         updateUIWithStats();
     }
     
-    function showPlayerStats(side) {
-        if(side === mySide) {
-            showToast(`EU: RANK ${userStats.rank || 1000}`, "#fff");
-        } else {
-            if(isBotMatch) showToast("BOT T-800", "#ff0000");
-            else showToast(`OPONENTE: RANK ${opponentStats.rank}`, "#ffff00");
-        }
+    // --- LOCAL HISTORY ---
+    function saveLocalHistory(text, isWin) {
+        let hist = JSON.parse(localStorage.getItem('cv_history') || '[]');
+        hist.unshift({ text: text, win: isWin, date: new Date().toLocaleTimeString() });
+        if(hist.length > 5) hist.pop();
+        localStorage.setItem('cv_history', JSON.stringify(hist));
+        loadMatchHistory();
     }
-
-    // --- LOGIN LOGIC ---
-    function loginGoogle() {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithPopup(provider)
-            .then((result) => {
-                showToast("LOGIN SUCESSO!", "#00ff88");
-            }).catch((error) => {
-                console.error(error);
-                showToast("ERRO LOGIN", "#ff0000");
-            });
-    }
-
-    function logout() {
-        auth.signOut().then(() => {
-            showToast("SAIU", "#ffffff");
+    
+    function loadMatchHistory() {
+        const div = document.getElementById('match-history-list');
+        const hist = JSON.parse(localStorage.getItem('cv_history') || '[]');
+        div.innerHTML = '';
+        if(hist.length === 0) div.innerHTML = '<div style="text-align:center; padding-top:20px;">Sem dados recentes.</div>';
+        hist.forEach(h => {
+            div.innerHTML += `<div class="history-item"><span class="${h.win?'win-tag':'lose-tag'}">${h.win?'WIN':'LOSE'}</span> ${h.text} <span style="float:right; font-size:0.7rem;">${h.date}</span></div>`;
         });
     }
 
-    // OUVINTE DE ESTADO DE LOGIN
+    function showPlayerStats(side) {
+        if(side === mySide) showToast(`EU: RANK ${userStats.rank || 1000}`, "#fff");
+        else showToast(isBotMatch ? "BOT T-800" : `OPONENTE: RANK ${opponentStats.rank}`, "#ffff00");
+    }
+
+    // --- LOGIN ---
+    function loginGoogle() {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(provider).then((result) => { showToast("LOGIN SUCESSO!", "#00ff88"); }).catch((error) => { showToast("ERRO LOGIN", "#ff0000"); });
+    }
+    function logout() { auth.signOut().then(() => { showToast("SAIU", "#ffffff"); }); }
+
     auth.onAuthStateChanged((user) => {
         const guestArea = document.getElementById('guest-input-area');
         const userArea = document.getElementById('user-profile-area');
         const gameControls = document.getElementById('game-controls');
-        
         if (user) {
-            // Logado
             currentUser = user;
-            guestArea.classList.add('hidden');
-            userArea.classList.remove('hidden');
-            gameControls.classList.remove('hidden'); // Exibe botões de jogo
-            
+            guestArea.classList.add('hidden'); userArea.classList.remove('hidden'); gameControls.classList.remove('hidden');
             document.getElementById('profile-img').src = user.photoURL;
             loadUserProfile(user);
-            
         } else {
-            // Não logado
             currentUser = null;
-            guestArea.classList.remove('hidden');
-            userArea.classList.add('hidden');
-            gameControls.classList.add('hidden'); // Oculta botões de jogo
+            guestArea.classList.remove('hidden'); userArea.classList.add('hidden'); gameControls.classList.add('hidden');
             document.getElementById('modal-nickname').classList.add('hidden');
         }
     });
@@ -852,37 +682,45 @@
         document.getElementById('lobby-client-ui').classList.add('hidden');
         document.getElementById('lobby-quick-ui').classList.add('hidden');
     }
-
     function openScreen(screenId) {
         document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
         const target = document.getElementById(screenId);
         if(target) target.classList.remove('hidden');
         if(audioCtx.state === 'suspended') audioCtx.resume();
         if(screenId === 'screen-cards') renderCardsHelp();
-        if(screenId === 'screen-profile' && currentUser) updateUIWithStats();
-        if(screenId === 'screen-leaderboard') loadLeaderboard(); // Carrega ranking ao abrir
+        if(screenId === 'screen-profile' && currentUser) { updateUIWithStats(); loadMatchHistory(); }
+        if(screenId === 'screen-leaderboard') loadLeaderboard();
     }
-
     function renderCardsHelp() {
         const container = document.getElementById('cards-list-ui');
         container.innerHTML = '';
         for (const key in CARDS) {
             const c = CARDS[key];
-            container.innerHTML += `
-                <div class="card-row">
-                    <div class="card-preview">${c.icon}</div>
-                    <div class="card-info">
-                        <div class="card-title">${c.name} <span class="card-rarity rarity-${c.rarity}">${c.rarity}</span></div>
-                        <div class="card-desc-text">${c.desc}</div>
-                    </div>
-                </div>`;
+            container.innerHTML += `<div class="card-row"><div class="card-preview">${c.icon}</div><div class="card-info"><div class="card-title">${c.name} <span class="card-rarity rarity-${c.rarity}">${c.rarity}</span></div><div class="card-desc-text">${c.desc}</div></div></div>`;
         }
     }
 
-    // --- AUDIO ---
+    // --- AUDIO & CHAT ---
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    window.addEventListener('click', () => { if(audioCtx.state === 'suspended') audioCtx.resume(); }, {once:true});
+    window.addEventListener('touchstart', () => { if(audioCtx.state === 'suspended') audioCtx.resume(); }, {once:true});
+
+    function toggleMute() {
+        isMuted = !isMuted;
+        const btn = document.getElementById('btn-mute');
+        btn.innerHTML = isMuted ? '🔇' : '🔊';
+        btn.classList.toggle('active');
+    }
+
+    function sendChat(emoji) {
+        if(!isInGame) return;
+        showToast(emoji, "#fff"); // Mostra pra mim
+        if(conn && conn.open && !isBotMatch) conn.send({ type: 'CHAT', msg: emoji });
+    }
+
     const SoundFX = {
         playTone: (freq, type, duration, vol=0.1) => {
+            if(isMuted) return;
             if(audioCtx.state === 'suspended') audioCtx.resume();
             const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
             osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
@@ -902,7 +740,6 @@
 
     // --- NETWORKING ---
     function initPeer(id = null) { return new Peer(id, { debug: 1 }); }
-    
     function copyCode() { navigator.clipboard.writeText(document.getElementById('display-code').innerText); showToast("COPIADO", "#fff"); }
 
     function openLobby(mode) {
@@ -923,10 +760,7 @@
     }
 
     function connectToHost() {
-        isBotMatch = false;
-        isHost = false;
-        mySide = 'O'; 
-
+        isBotMatch = false; isHost = false; mySide = 'O'; 
         const code = document.getElementById('input-code').value.trim().toUpperCase();
         if (code.length < 4) return;
         const btn = document.getElementById('btn-connect');
@@ -937,21 +771,18 @@
         peer.on('open', () => {
             conn = peer.connect(APP_ID + code, { reliable: true });
             configureConnection();
+            // TIMEOUT FIX
             setTimeout(() => { if(!conn.open) { btn.disabled = false; btn.innerText = "CONECTAR"; stat.innerText = "Sala não encontrada."; } }, 5000);
         });
     }
 
     // --- MATCHMAKING ---
     function startQuickMatch() {
-        const btn = document.getElementById('btn-quick');
-        if(btn) btn.disabled = true;
-
-        isBotMatch = false;
-        openScreen('screen-lobby-wait'); resetLobbyUI();
+        const btn = document.getElementById('btn-quick'); if(btn) btn.disabled = true;
+        isBotMatch = false; openScreen('screen-lobby-wait'); resetLobbyUI();
         document.getElementById('lobby-quick-ui').classList.remove('hidden');
         document.getElementById('quick-log').innerText = "Iniciando...";
-        const randomDelay = Math.floor(Math.random() * 1500);
-        setTimeout(() => findPublicMatch(0), randomDelay);
+        setTimeout(() => findPublicMatch(0), Math.random() * 1500);
     }
 
     function findPublicMatch(roomIndex) {
@@ -965,7 +796,6 @@
         document.getElementById('quick-log').innerText = `Verificando Sala ${roomIndex + 1}...`;
         if(peer) peer.destroy();
         peer = initPeer(roomID);
-
         peer.on('open', () => {
             document.getElementById('quick-log').innerText = "Sala criada! Aguardando...";
             isHost = true; mySide = 'X'; GameState.names['X'] = myName;
@@ -974,7 +804,6 @@
                 handleConnectionRequest(c);
             });
         });
-
         peer.on('error', (err) => {
             if(err.type === 'unavailable-id') connectToPublicRoom(roomID, roomIndex);
             else findPublicMatch(roomIndex + 1);
@@ -994,11 +823,12 @@
                 if(data.type === 'ROOM_FULL') { conn.close(); tempPeer.destroy(); findPublicMatch(currentIdx + 1); } 
                 else handleData(data);
             });
-            setTimeout(() => { if(!conn.open) { tempPeer.destroy(); findPublicMatch(currentIdx + 1); } }, 2000);
+            // TIMEOUT FIX
+            setTimeout(() => { if(!conn.open) { tempPeer.destroy(); findPublicMatch(currentIdx + 1); } }, 3000);
         });
     }
 
-    // --- BOT MODE ---
+    // --- BOT MODE INTELIGENTE ---
     function startBotMatch() {
         if(peer) peer.destroy();
         isBotMatch = true; isHost = true; mySide = 'X';
@@ -1017,7 +847,29 @@
             const placeCardIdx = hand.indexOf('PLACE');
 
             if(placeCardIdx !== -1 && availableMoves.length > 0) {
-                action = { type: 'PLACE', target: availableMoves[Math.floor(Math.random()*availableMoves.length)], cardIdx: placeCardIdx };
+                // 1. TENTAR GANHAR
+                let bestMove = -1;
+                for(let move of availableMoves) {
+                    GameState.board[move] = 'O'; // Simula
+                    if(checkLineWin('O')) bestMove = move;
+                    GameState.board[move] = null; // Desfaz
+                    if(bestMove !== -1) break;
+                }
+                
+                // 2. BLOQUEAR
+                if(bestMove === -1) {
+                    for(let move of availableMoves) {
+                        GameState.board[move] = 'X'; // Simula oponente ganhando
+                        if(checkLineWin('X')) bestMove = move;
+                        GameState.board[move] = null;
+                        if(bestMove !== -1) break;
+                    }
+                }
+
+                // 3. ALEATÓRIO ESTRATÉGICO
+                if(bestMove === -1) bestMove = availableMoves[Math.floor(Math.random()*availableMoves.length)];
+
+                action = { type: 'PLACE', target: bestMove, cardIdx: placeCardIdx };
             } else {
                 action = { type: 'TIMEOUT' };
             }
@@ -1030,81 +882,41 @@
         conn = c;
         conn.on('data', (data) => {
             if(data.type === 'JOIN_HANDSHAKE') { 
-                let safeName = data.name || "PLAYER";
-                if(safeName.length > 10) safeName = safeName.substr(0,10);
-                
-                GameState.names['O'] = safeName;
-                opponentStats.rank = data.rank || '???';
-                
-                if(GameState.hands['X'].length === 0) {
-                    startGame(); 
-                } else {
-                    broadcastState(); 
-                }
+                let safeName = data.name || "PLAYER"; if(safeName.length > 10) safeName = safeName.substr(0,10);
+                GameState.names['O'] = safeName; opponentStats.rank = data.rank || '???';
+                if(GameState.hands['X'].length === 0) startGame(); else broadcastState();
             }
             else handleData(data);
         });
         conn.on('close', () => { showToast("OPONENTE SAIU", "#ff0000"); setTimeout(()=>location.reload(), 3000); });
     }
-    function configureConnection() { 
-        conn.on('open', () => { 
-            conn.send({ type: 'JOIN_HANDSHAKE', name: myName, rank: userStats.rank||1000 }); 
-            setupClientListener(); 
-        }); 
-    }
+    function configureConnection() { conn.on('open', () => { conn.send({ type: 'JOIN_HANDSHAKE', name: myName, rank: userStats.rank||1000 }); setupClientListener(); }); }
     function setupClientListener() { conn.on('data', handleData); conn.on('close', () => { showToast("DESCONECTADO", "#ff0000"); setTimeout(()=>location.reload(), 3000); }); }
     function handleData(data) {
-        if (data.type === 'STATE_UPDATE') {
-            if(data.hostRank) opponentStats.rank = data.hostRank;
-            syncState(data.state, data.serverTime);
-        }
+        if (data.type === 'STATE_UPDATE') { if(data.hostRank) opponentStats.rank = data.hostRank; syncState(data.state, data.serverTime); }
         else if (data.type === 'ACTION' && isHost) processAction(data.action, 'O');
         else if (data.type === 'TOAST') showToast(data.msg, data.color);
-        else if (data.type === 'RESTART' && !isHost) {
-            GameState.scores = { 'X': 0, 'O': 0 };
-            openScreen('ui-layer');
-        }
-        else if (data.type === 'JOIN_HANDSHAKE') {
-             let safeName = data.name || "PLAYER";
-             if(safeName.length > 10) safeName = safeName.substr(0,10);
-             if(!isHost) GameState.names['X'] = safeName;
-             opponentStats.rank = data.rank || '???';
-        }
+        else if (data.type === 'CHAT') showToast(data.msg, "#00e5ff");
+        else if (data.type === 'RESTART' && !isHost) { GameState.scores = { 'X': 0, 'O': 0 }; openScreen('ui-layer'); }
+        else if (data.type === 'JOIN_HANDSHAKE') { let safeName = data.name || "PLAYER"; if(safeName.length > 10) safeName = safeName.substr(0,10); if(!isHost) GameState.names['X'] = safeName; opponentStats.rank = data.rank || '???'; }
     }
 
     // --- GAMEPLAY ---
-    function startGame() { 
-        GameState.scores = { 'X': 0, 'O': 0 }; 
-        resetMatch(); 
-    }
-    function resetMatch() { 
-        resetBoard(); 
-        GameState.winner = null; 
-        GameState.hands = { 'X': generateHand(), 'O': generateHand() }; 
-        GameState.turn = 'X'; 
-        broadcastState(); 
-        if(isHost && !isBotMatch) sendData({ type: 'RESTART' }); 
-    }
+    function startGame() { GameState.scores = { 'X': 0, 'O': 0 }; resetMatch(); }
+    function resetMatch() { resetBoard(); GameState.winner = null; GameState.hands = { 'X': generateHand(), 'O': generateHand() }; GameState.turn = 'X'; broadcastState(); if(isHost && !isBotMatch) sendData({ type: 'RESTART' }); }
     function resetBoard() { GameState.board.fill(null); GameState.history = { 'X': [], 'O': [] }; GameState.shields = {}; GameState.winningLine = null; timeLeft = 16; }
-
     function generateHand() { const h = ['PLACE']; for(let i=0; i<2; i++) h.push(getRandomCard()); return h; }
     function getRandomCard() { const r = Math.random() * 100; let s = 0; for (const [k, d] of Object.entries(CARDS)) { s += d.weight; if (r <= s) return k; } return 'PLACE'; }
 
     function processAction(action, player) {
         if (GameState.turn !== player || GameState.winningLine) return; 
-        
         const { type, target, source, cardIdx } = action;
-
         if (type !== 'TIMEOUT') {
              const cardInHand = GameState.hands[player][cardIdx];
-             if (cardInHand !== type) {
-                 console.warn(`CHEAT DETECTED: ${player} tentou usar ${type} mas tinha ${cardInHand} no slot ${cardIdx}`);
-                 return;
-             }
+             if (cardInHand !== type) { console.warn("CHEAT DETECTED"); return; }
         }
 
         let success = false; 
-
         if (type === 'PLACE' && GameState.board[target] === null) {
             if (GameState.history[player].length >= 3) GameState.board[GameState.history[player].shift()] = null;
             GameState.board[target] = player; GameState.history[player].push(target); success = true; SoundFX.place();
@@ -1141,17 +953,13 @@
         if (success) {
             if(type !== 'TIMEOUT') { GameState.hands[player].splice(cardIdx, 1); GameState.hands[player].push(GameState.hands[player].includes('PLACE') ? getRandomCard() : 'PLACE'); }
             
+            // --- LÓGICA DE EMPATE JUSTO ---
             const winLineX = checkLineWin('X');
             const winLineO = checkLineWin('O');
             
             if(winLineX && winLineO) {
-                showToast("EMPATE!", "#ffffff");
-                SoundFX.error();
-                setTimeout(() => { 
-                    resetBoard(); 
-                    broadcastState();
-                    if(isBotMatch && GameState.turn === 'O') botTurn();
-                }, 2500);
+                showToast("EMPATE!", "#ffffff"); SoundFX.error();
+                setTimeout(() => { resetBoard(); broadcastState(); if(isBotMatch && GameState.turn === 'O') botTurn(); }, 2500);
             } else if (winLineX || winLineO) {
                 const winLine = winLineX || winLineO;
                 GameState.winningLine = winLine; 
@@ -1159,16 +967,8 @@
                 GameState.scores[winner]++; 
                 SoundFX.roundWin(); cameraShake = 0.8;
                 
-                if (GameState.scores[winner] >= GameState.targetWins) { 
-                    setTimeout(() => { GameState.winner = winner; broadcastState(); }, 2000); 
-                } else { 
-                    setTimeout(() => { 
-                        resetBoard(); 
-                        GameState.turn = (winner === 'X' ? 'O' : 'X'); 
-                        broadcastState(); 
-                        if(isBotMatch && GameState.turn === 'O') botTurn(); 
-                    }, 2500); 
-                }
+                if (GameState.scores[winner] >= GameState.targetWins) { setTimeout(() => { GameState.winner = winner; broadcastState(); }, 2000); } 
+                else { setTimeout(() => { resetBoard(); GameState.turn = (winner === 'X' ? 'O' : 'X'); broadcastState(); if(isBotMatch && GameState.turn === 'O') botTurn(); }, 2500); }
             } else {
                 GameState.turn = GameState.turn === 'X' ? 'O' : 'X'; for (let k in GameState.shields) if (GameState.shields[k] > 0) GameState.shields[k]--; timeLeft = 15;
             }
@@ -1179,53 +979,33 @@
 
     function checkLineWin(player) {
         const w = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-        for (let c of w) { 
-            if (GameState.board[c[0]] === player && GameState.board[c[1]] === player && GameState.board[c[2]] === player) return c; 
-        } 
-        return null;
+        for (let c of w) { if (GameState.board[c[0]] === player && GameState.board[c[1]] === player && GameState.board[c[2]] === player) return c; } return null;
     }
 
     function isProtected(idx) { return GameState.shields[idx] > 0; }
-    function broadcastState() { 
-        if (!isBotMatch && conn && conn.open) conn.send({ type: 'STATE_UPDATE', state: GameState, serverTime: timeLeft, hostRank: userStats.rank||1000 }); 
-        syncState(GameState, timeLeft); 
-    }
+    function broadcastState() { if (!isBotMatch && conn && conn.open) conn.send({ type: 'STATE_UPDATE', state: GameState, serverTime: timeLeft, hostRank: userStats.rank||1000 }); syncState(GameState, timeLeft); }
 
     function syncState(newState, serverTime) {
         Object.assign(GameState, newState); 
-        
-        if (serverTime !== undefined) {
-             if(Math.abs(timeLeft - serverTime) > 0.5) timeLeft = serverTime;
-        }
-
+        if (serverTime !== undefined) { if(Math.abs(timeLeft - serverTime) > 0.5) timeLeft = serverTime; }
         document.getElementById('name-x').innerText = GameState.names.X; document.getElementById('name-o').innerText = GameState.names.O;
-        if(isQuickMatch) document.getElementById('room-code').innerText = "RÁPIDA";
-        if(isBotMatch) document.getElementById('room-code').innerText = "OFFLINE";
-        
+        if(isQuickMatch) document.getElementById('room-code').innerText = "RÁPIDA"; if(isBotMatch) document.getElementById('room-code').innerText = "OFFLINE";
         updateVisuals();
         if (GameState.winner) { showGameOver(); return; }
         isInGame = true; openScreen('ui-layer');
     }
 
     function showGameOver() {
-        isInGame = false;
-        openScreen('screen-gameover');
+        isInGame = false; openScreen('screen-gameover');
         const wName = GameState.names[GameState.winner];
         document.getElementById('winner-text').innerText = wName + " VENCEU!";
         document.getElementById('winner-text').style.color = (GameState.winner==='X'?'var(--x-color)':'var(--o-color)');
         SoundFX.matchWin();
-        
-        if(currentUser && GameState.winner === mySide) {
-            saveGameResult(true);
-            showToast("RANK SUBIU!", "#00ff88");
-        } else if (currentUser && GameState.winner !== mySide) {
-            saveGameResult(false);
-        }
-
+        if(currentUser && GameState.winner === mySide) { saveGameResult(true); showToast("RANK SUBIU!", "#00ff88"); } 
+        else if (currentUser && GameState.winner !== mySide) { saveGameResult(false); }
         const area = document.getElementById('rematch-area'); area.innerHTML = '';
-        if(isHost) {
-            const btn = document.createElement('button'); btn.className = 'cyber-btn'; btn.innerHTML = '<span>REVANCHE</span>'; btn.onclick = () => { startGame(); }; area.appendChild(btn);
-        } else area.innerHTML = '<p style="color:#aaa;">Aguardando Host...</p>';
+        if(isHost) { const btn = document.createElement('button'); btn.className = 'cyber-btn'; btn.innerHTML = '<span>REVANCHE</span>'; btn.onclick = () => { startGame(); }; area.appendChild(btn); } 
+        else area.innerHTML = '<p style="color:#aaa;">Aguardando Host...</p>';
     }
 
     function sendData(data) { if (conn && conn.open) conn.send(data); }
@@ -1273,26 +1053,34 @@
     }
 
     function updateVisuals() {
-        camera.userData.targetRot = (mySide==='X') ? 0 : Math.PI; pieceGroup.clear();
+        if(!isUserInteracting) camera.userData.targetRot = (mySide==='X') ? 0 : Math.PI; 
+        pieceGroup.clear();
         if(GameState.winningLine) spawnWinParticles(GameState.winningLine);
         GameState.board.forEach((c, i) => {
             if(c) {
                 const x = (i%3-1)*3.1; const z = (Math.floor(i/3)-1)*3.1;
                 const isWinner = GameState.winningLine && GameState.winningLine.includes(i);
                 let m;
+                // FEEDBACK INFINITO: Se a história tem 3, o índice 0 vai sumir.
+                const isOldest = GameState.history[c].length === 3 && GameState.history[c][0] === i;
+                
                 if(c==='X') {
                     const g = new THREE.Group();
-                    const mat = new THREE.MeshStandardMaterial({ color: 0xff0055, emissive: 0xff0055, emissiveIntensity: isWinner ? 5.0 : 1.5 });
+                    const mat = new THREE.MeshStandardMaterial({ color: 0xff0055, emissive: isOldest ? 0xff0000 : 0xff0055, emissiveIntensity: isWinner ? 5.0 : (isOldest ? 3.0 : 1.5) });
                     const b1=new THREE.Mesh(new THREE.BoxGeometry(2,0.4,0.4), mat); b1.rotation.y=Math.PI/4;
                     const b2=new THREE.Mesh(new THREE.BoxGeometry(2,0.4,0.4), mat); b2.rotation.y=-Math.PI/4; g.add(b1); g.add(b2); m=g;
                 } else {
-                    const mat = new THREE.MeshStandardMaterial({ color: 0x00e5ff, emissive: 0x00e5ff, emissiveIntensity: isWinner ? 5.0 : 1.5 });
+                    const mat = new THREE.MeshStandardMaterial({ color: 0x00e5ff, emissive: isOldest ? 0xff0000 : 0x00e5ff, emissiveIntensity: isWinner ? 5.0 : (isOldest ? 3.0 : 1.5) });
                     m=new THREE.Mesh(new THREE.TorusGeometry(0.8, 0.2, 16, 32), mat); m.rotation.x=Math.PI/2;
                 }
                 m.position.set(x, 1, z);
                 if(isWinner) m.userData.spinSpeed = 0.2;
-                const isOldest = GameState.history[c][0]===i && GameState.history[c].length===3;
-                if(!isWinner && isOldest) m.userData.isGlitching=true; else { m.userData.isGlitching=false; m.visible=true; m.scale.setScalar(1); }
+                if(!isWinner && isOldest) {
+                     m.userData.isGlitching = true; // Pisca
+                } else {
+                     m.userData.isGlitching = false;
+                     m.visible=true; m.scale.setScalar(1);
+                }
                 if(GameState.shields[i]>0) {
                     const s = new THREE.Mesh(new THREE.IcosahedronGeometry(1.2), new THREE.MeshBasicMaterial({color:0x0088ff, wireframe:true, transparent:true, opacity:0.5}));
                     s.userData.anim='shield'; m.add(s);
@@ -1309,22 +1097,50 @@
     }
 
     const raycaster = new THREE.Raycaster(); const mouse = new THREE.Vector2(); let menuTime = 0;
+    
+    // CAMERA TOUCH CONTROLS
+    let isUserInteracting = false, onMouseDownMouseX = 0, onMouseDownMouseY = 0, lon = 0, onMouseDownLon = 0, lat = 0, onMouseDownLat = 0;
+    
+    document.addEventListener('touchstart', (e) => {
+        if(e.touches.length === 1 && !e.target.closest('.card') && !e.target.closest('button')) {
+            isUserInteracting = true;
+            onMouseDownMouseX = e.touches[0].clientX;
+            onMouseDownLon = lon;
+        }
+    }, {passive: false});
+    
+    document.addEventListener('touchmove', (e) => {
+        if(isUserInteracting) {
+            lon = (onMouseDownMouseX - e.touches[0].clientX) * 0.5 + onMouseDownLon;
+        }
+    }, {passive: false});
+    
+    document.addEventListener('touchend', () => { isUserInteracting = false; });
+
     function animate() {
         requestAnimationFrame(animate);
         if(isInGame) {
             if(cameraShake > 0) { cameraShake -= 0.05; if(cameraShake < 0) cameraShake = 0; camera.position.x += (Math.random()-0.5) * cameraShake; camera.position.y += (Math.random()-0.5) * cameraShake; camera.position.z += (Math.random()-0.5) * cameraShake; }
-            const targetRot = camera.userData.targetRot || 0; const angle = THREE.MathUtils.lerp(Math.atan2(camera.position.x, camera.position.z), targetRot, 0.05);
+            
+            // CAMERA LOGIC
+            let targetRot = camera.userData.targetRot || 0;
+            if(isUserInteracting) {
+                targetRot = THREE.MathUtils.degToRad(lon);
+            }
+            const angle = THREE.MathUtils.lerp(Math.atan2(camera.position.x, camera.position.z), targetRot, 0.05);
+            
             if(cameraShake < 0.1) { camera.position.x = Math.sin(angle) * 14; camera.position.z = Math.cos(angle) * 14; camera.position.y = THREE.MathUtils.lerp(camera.position.y, 15, 0.1); camera.lookAt(0,0,0); }
         } else { menuTime += 0.005; camera.position.x = Math.sin(menuTime) * 18; camera.position.z = Math.cos(menuTime) * 18; camera.position.y = 12; camera.lookAt(0,0,0); }
         gridHelper.position.z = (Date.now() * 0.002) % 2;
         
         pieceGroup.children.forEach(p => { 
             p.rotation.y += p.userData.spinSpeed || 0.01; 
-            if(p.userData.isGlitching) { p.visible = Math.random()>0.1; p.scale.setScalar(0.9+Math.random()*0.2); } 
-            
-            p.children.forEach(c => { 
-                if(c.userData.anim === 'shield') c.rotation.z -= 0.05; 
-            }); 
+            if(p.userData.isGlitching) { 
+                // Feedback visual de "Infinito" (pisca)
+                const scale = 0.9 + Math.sin(Date.now() * 0.01) * 0.1;
+                p.scale.setScalar(scale); 
+            } 
+            p.children.forEach(c => { if(c.userData.anim === 'shield') c.rotation.z -= 0.05; }); 
         });
         
         particlesGroup.clear();
@@ -1411,7 +1227,7 @@
     }
 
     window.addEventListener('mousedown', e => { if(e.button===0) onInput(e.clientX, e.clientY); else resetSelection(); });
-    window.addEventListener('touchstart', e => { if(e.touches.length > 0 && e.target.tagName === 'CANVAS') { e.preventDefault(); onInput(e.touches[0].clientX, e.touches[0].clientY); } }, {passive: false});
+    // Touchstart já gerenciado no controle de câmera
     function showToast(m,c) { const t=document.getElementById('toast-msg'); t.innerText=m; t.style.textShadow=`0 0 50px ${c}`; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000); }
     function quitGame() { if(conn) conn.close(); location.reload(); }
 
