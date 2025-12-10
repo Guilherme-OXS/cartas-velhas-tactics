@@ -13,7 +13,7 @@
     <meta property="og:description" content="Desafia os teus amigos neste jogo tático 3D. Regra do Infinito, Cartas Especiais e Multiplayer em tempo real.">
     <meta property="og:type" content="website">
     
-    <title>Cartas Velhas: Cyberpunk Tactics v0.9.22</title>
+    <title>Cartas Velhas: Cyberpunk Tactics v0.9.23</title>
     <style>
         /* --- CORE STYLES --- */
         body { margin: 0; overflow: hidden; background-color: #050510; font-family: 'Segoe UI', Tahoma, monospace; user-select: none; touch-action: none; }
@@ -194,7 +194,7 @@
         <div class="cyber-panel" style="text-align: center; border:none; background:transparent; box-shadow:none;">
             <div class="title-glitch">CARTAS<br>VELHAS</div>
             
-            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 30px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.22 (RANKING)</p>
+            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 30px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.23 (RANKING FIX)</p>
             
             <div id="guest-input-area">
                 <input type="text" id="my-name-input" class="input-code" style="width: 200px; border-color: var(--o-color);" maxlength="10" placeholder="SEU NICKNAME" value="PLAYER">
@@ -222,6 +222,7 @@
             <div style="margin-top: 10px;">
                 <button class="cyber-btn secondary" onclick="openScreen('screen-lobby-custom')"><span>SALAS</span></button>
                 <button class="cyber-btn secondary" style="min-width: 80px; font-size: 0.7rem;" onclick="openScreen('screen-cards')"><span>CARTAS</span></button>
+                <button class="cyber-btn secondary" style="min-width: 80px; font-size: 0.7rem;" onclick="openScreen('screen-credits')"><span>CRÉDITOS</span></button>
                 <button class="cyber-btn secondary" style="min-width: 80px; font-size: 0.7rem;" onclick="openScreen('screen-updates')"><span>UPDATES</span></button>
             </div>
         </div>
@@ -233,9 +234,11 @@
             <img id="detail-profile-img" class="big-avatar" src="" alt="Avatar">
             <br>
             <div style="margin-bottom: 20px;">
-                <label style="color:#aaa; font-size:0.7rem;">NICKNAME</label><br>
-                <h2 id="display-nick-profile" style="color:var(--o-color); margin:5px 0;">PLAYER</h2>
-                <p style="color:#666; font-size:0.6rem;">(Alterações no Nickname podem afetar seu Rank)</p>
+                <label style="color:#aaa; font-size:0.7rem;">NICKNAME (EDITÁVEL)</label><br>
+                <div style="display:flex; justify-content:center; align-items:center; gap:5px;">
+                    <input type="text" id="edit-nick-input" class="input-code" style="width: 200px; font-size:1rem; border-color: #555;" maxlength="10">
+                    <button class="cyber-btn secondary" style="min-width: auto; padding: 10px;" onclick="saveNewNickname()">💾</button>
+                </div>
             </div>
 
             <div class="stats-grid">
@@ -321,6 +324,12 @@
         <div class="cyber-panel">
             <h2 style="color:#fff; margin-top:0;">SYSTEM LOG</h2>
             <div class="scroll-content">
+                <div class="update-block">
+                    <div class="update-title">v0.9.23 - Fixes Finais</div>
+                    <span class="update-item">Profile: Mudança de nome liberada.</span>
+                    <span class="update-item">Rank: Correção na listagem do Top 100.</span>
+                    <span class="update-item">UI: Créditos restaurados.</span>
+                </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.22 - Identidade & Ranking</div>
                     <span class="update-item">Sistema: Ranking Global (Top 100) por ELO.</span>
@@ -581,6 +590,24 @@
         }
     }
     
+    // Função para alterar nickname DEPOIS (Tela de Perfil)
+    function saveNewNickname() {
+        if(!currentUser) return;
+        const newNick = document.getElementById('edit-nick-input').value.trim();
+        if(newNick.length > 0 && newNick.length <= 10) {
+            db.collection('players').doc(currentUser.uid).update({ displayName: newNick })
+            .then(() => {
+                userStats.displayName = newNick;
+                myName = newNick;
+                updateUIWithStats();
+                showToast("NICK SALVO", "#00ff88");
+            })
+            .catch(err => { showToast("ERRO SALVAR", "#ff0000"); });
+        } else {
+            showToast("NOME INVÁLIDO", "#ff3333");
+        }
+    }
+    
     // BUSCAR JOGADORES (SOCIAL)
     async function searchPlayer() {
         const queryName = document.getElementById('search-player-input').value.trim();
@@ -627,6 +654,7 @@
         list.innerHTML = '<div class="loader"></div>';
         
         try {
+            // Ordena apenas por Rank para evitar erro de índice no início
             const snapshot = await db.collection('players')
                                      .orderBy('rank', 'desc')
                                      .limit(100)
@@ -634,7 +662,7 @@
                                      
             list.innerHTML = '';
             if(snapshot.empty) {
-                list.innerHTML = '<p>SEM DADOS</p>';
+                list.innerHTML = '<p style="color:#aaa;">SEM DADOS</p>';
                 return;
             }
             
@@ -671,7 +699,7 @@
         
         // UI Tela de Perfil
         document.getElementById('detail-profile-img').src = currentUser ? currentUser.photoURL : '';
-        document.getElementById('display-nick-profile').innerText = userStats.displayName || "DESCONHECIDO";
+        document.getElementById('edit-nick-input').value = userStats.displayName || myName;
         document.getElementById('stat-rank').innerText = userStats.rank || 1000;
         document.getElementById('stat-wins').innerText = userStats.wins || 0;
         document.getElementById('stat-losses').innerText = userStats.losses || 0;
