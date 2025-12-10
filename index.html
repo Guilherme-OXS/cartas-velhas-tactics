@@ -3,99 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cartas Velhas: Cyberpunk Tactics v0.9.25 (Clean)</title>
+    <title>Cartas Velhas: Cyberpunk Tactics v0.9.26</title>
     <style>
-        /* --- ESTILOS GERAIS --- */
-        body { margin: 0; overflow: hidden; background-color: #050510; font-family: 'Segoe UI', Tahoma, monospace; user-select: none; touch-action: none; color: white; }
-        
-        /* Variáveis de Cores */
-        :root { --x-color: #ff0055; --o-color: #00e5ff; --card-bg: rgba(10, 10, 20, 0.90); }
+        /* --- ESTÉTICA CYBERPUNK PESADA --- */
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
 
-        /* Camadas e Paineis */
+        body { 
+            margin: 0; overflow: hidden; background-color: #020205; 
+            font-family: 'Share Tech Mono', monospace; 
+            user-select: none; touch-action: none; color: #e0e0e0;
+        }
+        
+        /* Scanlines & CRT Effect */
+        body::before {
+            content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 900; background-size: 100% 2px, 3px 100%; pointer-events: none;
+        }
+        body::after {
+            content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
+            background: rgba(18, 16, 16, 0.1); opacity: 0; z-index: 900; pointer-events: none;
+            animation: flicker 0.15s infinite;
+        }
+        @keyframes flicker { 0% { opacity: 0.02; } 50% { opacity: 0.05; } 100% { opacity: 0.02; } }
+
+        /* Variáveis Neon */
+        :root { --x-color: #ff0055; --o-color: #00f3ff; --ui-bg: rgba(5, 5, 10, 0.85); --border: 1px solid rgba(0, 243, 255, 0.3); }
+
+        /* Estrutura de Telas */
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; z-index: 10; }
         .pointer-events-auto { pointer-events: auto; }
 
         .screen { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: radial-gradient(circle at center, rgba(26,26,46,0.9) 0%, #000 100%); 
+            background: radial-gradient(circle at center, rgba(10,10,20,0.8) 0%, #000 100%); 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            z-index: 100; transition: opacity 0.3s; opacity: 1; visibility: visible; 
+            z-index: 100; transition: opacity 0.5s; opacity: 1; visibility: visible; 
         }
-        .hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .hidden { opacity: 0; visibility: hidden; pointer-events: none; transition: 0.3s; }
 
+        /* Paineis Cyberpunk */
         .cyber-panel {
-            background: rgba(0, 0, 0, 0.9); border: 1px solid #333; border-left: 4px solid var(--o-color);
-            padding: 30px; max-width: 600px; width: 90%; text-align: center;
-            box-shadow: 0 0 20px rgba(0, 229, 255, 0.1); backdrop-filter: blur(5px);
-            transform: skewX(-2deg); margin: auto;
+            background: var(--ui-bg); 
+            border: 1px solid var(--o-color); 
+            border-left: 5px solid var(--o-color);
+            padding: 30px; max-width: 500px; width: 90%; text-align: center;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.15), inset 0 0 30px rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            transform: skewX(-2deg); margin: auto; position: relative;
         }
-        
-        .title-glitch { 
-            font-size: 3rem; font-weight: 900; line-height: 0.9; margin-bottom: 20px; text-transform: uppercase;
-            text-shadow: 3px 3px 0px var(--x-color); 
-        }
+        /* Cantos decorativos */
+        .cyber-panel::before { content: ''; position: absolute; top:-1px; right:-1px; width: 20px; height: 20px; border-top: 2px solid var(--x-color); border-right: 2px solid var(--x-color); }
+        .cyber-panel::after { content: ''; position: absolute; bottom:-1px; left:-1px; width: 20px; height: 20px; border-bottom: 2px solid var(--x-color); border-left: 2px solid var(--x-color); }
 
-        /* Botões */
+        .title-glitch { 
+            font-size: 3.5rem; font-weight: 900; line-height: 0.9; margin-bottom: 30px; text-transform: uppercase;
+            color: #fff; text-shadow: 2px 2px 0px var(--x-color), -2px -2px 0 var(--o-color);
+            letter-spacing: 5px; animation: glitch-text 2s infinite;
+        }
+        @keyframes glitch-text { 0% { text-shadow: 2px 2px 0px var(--x-color); } 20% { text-shadow: -2px -2px 0 var(--o-color); } 40% { text-shadow: 2px 2px 0 var(--x-color); } 100% { text-shadow: 2px 2px 0px var(--x-color); } }
+
+        /* Botões Holográficos */
         .cyber-btn { 
-            background: transparent; border: 1px solid var(--o-color); color: var(--o-color); 
-            padding: 10px 20px; font-size: 0.9rem; font-weight: bold; letter-spacing: 2px; cursor: pointer; 
-            margin: 5px; transition: 0.2s; text-transform: uppercase; min-width: 180px; 
-            display: inline-block; transform: skewX(-10deg);
+            background: rgba(0, 243, 255, 0.05); border: 1px solid var(--o-color); color: var(--o-color); 
+            padding: 12px 25px; font-size: 1rem; font-weight: bold; letter-spacing: 2px; cursor: pointer; 
+            margin: 8px; transition: 0.3s; text-transform: uppercase; min-width: 200px; 
+            display: inline-block; transform: skewX(-10deg); position: relative; overflow: hidden;
+            font-family: 'Share Tech Mono', monospace;
         }
+        .cyber-btn::before { content:''; position: absolute; top:0; left:-100%; width:100%; height:100%; background: linear-gradient(90deg, transparent, rgba(0,243,255,0.4), transparent); transition: 0.5s; }
+        .cyber-btn:hover::before { left: 100%; }
         .cyber-btn span { display: block; transform: skewX(10deg); }
-        .cyber-btn:hover { background: var(--o-color); color: #000; box-shadow: 0 0 15px var(--o-color); }
-        .cyber-btn.secondary { border-color: #666; color: #aaa; }
-        .cyber-btn.secondary:hover { border-color: #fff; color: #fff; background: #222; }
-        .cyber-btn:disabled { border-color: #333; color: #555; cursor: not-allowed; box-shadow: none; }
+        .cyber-btn:hover { background: var(--o-color); color: #000; box-shadow: 0 0 25px var(--o-color); text-shadow: none; }
         
-        /* Scroll e Listas */
-        .scroll-content {
-            max-height: 50vh; overflow-y: auto; padding-right: 10px; text-align: left;
-            scrollbar-width: thin; scrollbar-color: var(--o-color) #111; pointer-events: auto;
+        .cyber-btn.secondary { border-color: #666; color: #888; }
+        .cyber-btn.secondary:hover { border-color: #fff; color: #fff; background: #222; box-shadow: 0 0 15px #fff; }
+        
+        .cyber-btn.google-btn { border-color: #4285F4; color: #4285F4; box-shadow: 0 0 10px rgba(66, 133, 244, 0.2); }
+        .cyber-btn.google-btn:hover { background: #4285F4; color: #fff; box-shadow: 0 0 30px #4285F4; }
+
+        /* Inputs e Feedback */
+        .input-code { 
+            background: rgba(0,0,0,0.7); border: 1px solid #444; border-bottom: 2px solid var(--o-color);
+            padding: 10px; font-size: 1.2rem; color: #fff; text-align: center; letter-spacing: 3px; 
+            text-transform: uppercase; width: 220px; outline: none; font-family: 'Share Tech Mono', monospace; 
+            transition: 0.3s;
         }
+        .input-code:focus { border-color: var(--x-color); box-shadow: 0 0 15px rgba(255, 0, 85, 0.3); }
+
+        #hint-pill { position: absolute; top: 120px; background: rgba(0,0,0,0.9); border: 1px solid var(--o-color); color: var(--o-color); padding: 5px 15px; border-radius: 0; font-size: 0.9rem; transform: translateY(-20px); opacity: 0; transition: 0.3s; pointer-events: none; letter-spacing: 1px; box-shadow: 0 0 10px var(--o-color); }
+        #hint-pill.active { transform: translateY(0); opacity: 1; }
         
-        /* Cartas UI */
+        #toast-msg { position: absolute; top: 40%; width: 100%; text-align: center; font-size: 3rem; font-weight: 900; text-shadow: 0 0 20px var(--x-color); color: #fff; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 200; transform: scale(0.5); }
+        #toast-msg.show { transform: scale(1); opacity: 1; }
+        
+        .loader { border: 4px solid rgba(0,0,0,0.5); border-top: 4px solid var(--o-color); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* Scrollbars */
+        .scroll-content { max-height: 50vh; overflow-y: auto; padding-right: 10px; text-align: left; scrollbar-width: thin; scrollbar-color: var(--o-color) #111; pointer-events: auto; }
+        .scroll-content::-webkit-scrollbar { width: 6px; }
+        .scroll-content::-webkit-scrollbar-track { background: #050510; }
+        .scroll-content::-webkit-scrollbar-thumb { background-color: var(--o-color); }
+
+        /* HUD Jogo */
+        .scores { display: flex; gap: 30px; margin-top: 5px; align-items: center; justify-content: center; width: 100%; text-shadow: 0 0 10px rgba(0,0,0,0.8); }
+        .player-score { transition: 0.3s; opacity: 0.5; transform: scale(0.9); text-align: center; cursor: pointer; }
+        .player-score.active-turn { opacity: 1; transform: scale(1.1); text-shadow: 0 0 20px currentColor; }
+        .score-val { font-size: 3rem; font-weight: 900; }
+        .player-name { font-size: 0.8rem; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; }
+        .timer-bar { width: 100%; height: 6px; background: var(--o-color); transition: width 0.1s linear; margin-top: 10px; max-width: 300px; box-shadow: 0 0 15px var(--o-color); }
+
+        /* Cartas */
         .hand-wrapper { position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: center; perspective: 1000px; z-index: 10; }
-        .hand-container { display: flex; gap: 10px; padding: 10px; }
+        .hand-container { display: flex; gap: 15px; padding: 10px; }
         .card { 
-            width: 80px; height: 110px; background: var(--card-bg); border: 1px solid #444; border-top: 2px solid #666;
+            width: 85px; height: 120px; background: rgba(5, 5, 10, 0.9); border: 1px solid #444; border-top: 3px solid #666;
             display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;
-            transition: all 0.2s; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.6); 
+            transition: all 0.2s; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.8); clip-path: polygon(10% 0, 100% 0, 100% 90%, 90% 100%, 0 100%, 0 10%);
         }
-        .card:hover { transform: translateY(-15px); border-color: #fff; z-index: 50; }
-        .card.selected { transform: translateY(-25px); border-color: var(--o-color); box-shadow: 0 0 15px var(--o-color); }
+        .card:hover { transform: translateY(-20px) scale(1.1); border-color: #fff; z-index: 50; box-shadow: 0 0 20px rgba(255,255,255,0.3); }
+        .card.selected { transform: translateY(-30px) scale(1.1); border-color: var(--o-color); box-shadow: 0 0 25px var(--o-color); }
         .card.common { border-bottom: 3px solid #888; }
         .card.rare { border-bottom: 3px solid #00ff88; }
         .card.legendary { border-bottom: 3px solid #bd00ff; border-color: #bd00ff; }
-        .card-icon { font-size: 2rem; margin-bottom: 5px; }
-        .card-name { font-size: 0.6rem; font-weight: 800; text-transform: uppercase; }
+        .card-icon { font-size: 2.5rem; margin-bottom: 5px; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
+        .card-name { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
 
-        /* Inputs e Feedback */
-        .input-code { background: rgba(0,0,0,0.5); border: 1px solid #555; padding: 10px; font-size: 1.2rem; color: #fff; text-align: center; letter-spacing: 3px; text-transform: uppercase; width: 220px; margin-bottom: 15px; outline: none; font-family: monospace; }
-        #hint-pill { position: absolute; top: 120px; background: rgba(0,0,0,0.8); border: 1px solid var(--o-color); padding: 5px 15px; border-radius: 4px; font-size: 0.8rem; transform: translateY(-20px); opacity: 0; transition: 0.3s; pointer-events: none; }
-        #hint-pill.active { transform: translateY(0); opacity: 1; }
-        #toast-msg { position: absolute; top: 40%; width: 100%; text-align: center; font-size: 3rem; font-weight: 900; text-shadow: 0 0 20px var(--x-color); opacity: 0; pointer-events: none; transition: 0.3s; z-index: 200; transform: scale(0.5); }
-        #toast-msg.show { transform: scale(1); opacity: 1; }
-        .loader { border: 4px solid #333; border-top: 4px solid var(--o-color); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-
-        /* HUD Jogo */
-        .scores { display: flex; gap: 30px; margin-top: 5px; align-items: center; justify-content: center; width: 100%; }
-        .player-score { transition: 0.3s; opacity: 0.5; transform: scale(0.9); text-align: center; cursor: pointer; }
-        .player-score.active-turn { opacity: 1; transform: scale(1.1); text-shadow: 0 0 10px currentColor; }
-        .score-val { font-size: 2.5rem; font-weight: 900; }
-        .player-name { font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
-        .timer-bar { width: 100%; height: 4px; background: var(--o-color); transition: width 0.1s linear; margin-top: 10px; max-width: 300px; }
-
-        /* Elementos de Perfil e Rank */
-        .user-profile-container { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 20px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; border: 1px solid #333; }
-        .user-avatar { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--o-color); object-fit: cover; }
+        /* Perfil & Listas */
+        .user-profile-container { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 20px; background: rgba(0, 243, 255, 0.05); padding: 15px; border: 1px solid rgba(0, 243, 255, 0.2); }
+        .user-avatar { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--o-color); object-fit: cover; box-shadow: 0 0 10px var(--o-color); }
         .stats-grid { display: flex; justify-content: space-around; width: 100%; margin-top: 20px; gap: 10px; }
-        .stat-box { background: rgba(255,255,255,0.05); border: 1px solid #333; padding: 10px; flex: 1; border-radius: 5px; }
-        .ranking-row { display: flex; align-items: center; padding: 8px; border-bottom: 1px solid #333; font-size: 0.8rem; }
-        .search-result-card { background: rgba(0,0,0,0.6); border: 1px solid #444; border-left: 2px solid var(--o-color); padding: 10px; margin-bottom: 10px; display: flex; align-items: center; gap: 15px; }
+        .stat-box { background: rgba(0,0,0,0.5); border: 1px solid #333; padding: 10px; flex: 1; border-radius: 0; box-shadow: inset 0 0 10px rgba(0,0,0,0.8); }
+        .stat-val { font-size: 1.8rem; font-weight: bold; color: #fff; text-shadow: 0 0 10px currentColor; }
+        .stat-label { font-size: 0.6rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
         
-        #modal-nickname { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .ranking-row { display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #333; font-size: 0.9rem; transition: 0.2s; }
+        .ranking-row:hover { background: rgba(255,255,255,0.05); padding-left: 15px; }
+        .search-result-card { background: rgba(0,0,0,0.8); border: 1px solid #444; border-left: 3px solid var(--o-color); padding: 15px; margin-bottom: 10px; display: flex; align-items: center; gap: 15px; box-shadow: 0 0 15px rgba(0,0,0,0.5); }
+
+        #modal-nickname { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(10px); }
     </style>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -108,25 +155,71 @@
 
     <div id="canvas-container" style="position: absolute; top:0; left:0; width:100%; height:100%;"></div>
 
+    <div id="screen-login" class="screen">
+        <div class="cyber-panel">
+            <div class="title-glitch">SYSTEM<br>ACCESS</div>
+            <p style="color:var(--o-color); letter-spacing:3px; margin-bottom:40px;">SECURE CONNECTION REQUIRED</p>
+            <button class="cyber-btn google-btn" onclick="loginGoogle()"><span>AUTENTICAR COM GOOGLE</span></button>
+            <p style="margin-top:20px; font-size:0.7rem; color:#666;">SERVER STATUS: ONLINE</p>
+        </div>
+    </div>
+
+    <div id="screen-menu" class="screen hidden">
+        <div class="cyber-panel">
+            <div class="title-glitch" style="font-size:2.5rem; margin-bottom:10px;">CARTAS VELHAS</div>
+            <p style="color:var(--x-color); font-size:0.7rem; letter-spacing:4px; margin-bottom:20px;">TACTICS v0.9.26 // ONLINE</p>
+
+            <div id="user-profile-area" class="user-profile-container">
+                <img id="profile-img" class="user-avatar" src="" alt="User">
+                <div class="user-info" style="text-align:left;">
+                    <div id="profile-name" class="user-nick" style="color:#fff; font-size:1.1rem; text-shadow:0 0 5px var(--o-color);">Player</div>
+                    <div class="user-status" style="font-size:0.7rem;">● AGENTE ATIVO</div>
+                </div>
+            </div>
+            
+            <div style="display:flex; justify-content:center; gap:5px; margin-bottom:20px;">
+                <button class="cyber-btn secondary" style="min-width:auto; padding:8px 15px; font-size:0.7rem;" onclick="openScreen('screen-profile')">PERFIL</button>
+                <button class="cyber-btn secondary" style="min-width:auto; padding:8px 15px; font-size:0.7rem;" onclick="logout()">LOGOUT</button>
+            </div>
+
+            <button class="cyber-btn" onclick="startQuickMatch()"><span>⚡ PARTIDA RÁPIDA</span></button>
+            <br>
+            <button class="cyber-btn" onclick="startBotMatch()"><span>🤖 TREINO VS BOT</span></button>
+            <br>
+            
+            <div style="display:flex; justify-content:center; flex-wrap:wrap;">
+                <button class="cyber-btn secondary" style="min-width:130px;" onclick="openScreen('screen-social')">🔍 SOCIAL</button>
+                <button class="cyber-btn secondary" style="min-width:130px;" onclick="openScreen('screen-leaderboard')">🏆 RANK</button>
+            </div>
+            
+            <div style="margin-top: 20px; border-top:1px dashed #333; padding-top:10px;">
+                <button class="cyber-btn secondary" style="min-width:80px; font-size:0.6rem; border:none;" onclick="openScreen('screen-lobby-custom')">SALAS</button>
+                <button class="cyber-btn secondary" style="min-width:80px; font-size:0.6rem; border:none;" onclick="openScreen('screen-cards')">CARTAS</button>
+                <button class="cyber-btn secondary" style="min-width:80px; font-size:0.6rem; border:none;" onclick="openScreen('screen-credits')">CRÉDITOS</button>
+            </div>
+        </div>
+    </div>
+
     <div id="modal-nickname" class="hidden">
         <div class="cyber-panel">
-            <h2 style="color:var(--o-color);">IDENTIFICAÇÃO</h2>
-            <p>ESCOLHA SEU NICKNAME</p>
+            <h2 style="color:var(--o-color);">REGISTO DE AGENTE</h2>
+            <p style="color:#aaa;">DEFINA SEU CODINOME PERMANENTE</p>
             <input type="text" id="permanent-nick-input" class="input-code" maxlength="10" placeholder="NICKNAME" style="border-color: var(--o-color);">
-            <br><button class="cyber-btn" onclick="saveInitialNickname()"><span>CONFIRMAR</span></button>
+            <br><br>
+            <button class="cyber-btn" onclick="saveInitialNickname()"><span>CONFIRMAR IDENTIDADE</span></button>
         </div>
     </div>
 
     <div id="ui-layer" class="hidden">
         <div class="hud-top pointer-events-auto">
-            <div style="font-size:0.7rem; color:#666; cursor:pointer;" onclick="copyCode()">SALA: <span id="room-code" style="color:#fff;">---</span></div>
+            <div style="font-size:0.8rem; color:#666; cursor:pointer; background:rgba(0,0,0,0.5); padding:5px;" onclick="copyCode()">CANAL: <span id="room-code" style="color:#fff;">---</span></div>
             <div id="hint-pill">Sua Vez</div>
             <div class="scores">
                 <div id="p1-score" class="player-score" onclick="showPlayerStats('X')">
                     <div class="score-val" style="color:var(--x-color)">0</div>
                     <div class="player-name" id="name-x">P1</div>
                 </div>
-                <div style="font-size:1.5rem; color:#444;">//</div>
+                <div style="font-size:2rem; color:#444;">//</div>
                 <div id="p2-score" class="player-score" onclick="showPlayerStats('O')">
                     <div class="score-val" style="color:var(--o-color)">0</div>
                     <div class="player-name" id="name-o">P2</div>
@@ -136,57 +229,26 @@
         </div>
         <div id="toast-msg">TOAST</div>
         <div class="hand-wrapper"><div id="hand-container" class="hand-container pointer-events-auto"></div></div>
-        <button onclick="quitGame()" class="cyber-btn secondary pointer-events-auto" style="position:absolute; top:10px; right:10px; min-width:auto; padding:5px 15px; font-size:0.7rem;"><span>SAIR</span></button>
-    </div>
-
-    <div id="screen-menu" class="screen">
-        <div class="cyber-panel">
-            <div class="title-glitch">CARTAS<br>VELHAS</div>
-            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 30px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.25</p>
-            
-            <div id="guest-input-area">
-                <button class="cyber-btn google-btn" onclick="loginGoogle()"><span>ENTRAR COM GOOGLE</span></button>
-            </div>
-
-            <div id="user-profile-area" class="user-profile-container hidden">
-                <img id="profile-img" class="user-avatar" src="" alt="User">
-                <div class="user-info" style="text-align:left;">
-                    <div id="profile-name" class="user-nick">Player</div>
-                    <div class="user-status">● Online</div>
-                </div>
-                <button class="cyber-btn" style="min-width:auto; padding:5px 10px; font-size:0.6rem; margin-left:10px;" onclick="openScreen('screen-profile')">PERFIL</button>
-                <button class="cyber-btn secondary" style="min-width:auto; padding:5px 10px; font-size:0.6rem; margin-left:5px;" onclick="logout()">SAIR</button>
-            </div>
-            <br>
-            <button class="cyber-btn" onclick="startQuickMatch()"><span>⚡ PARTIDA RÁPIDA</span></button>
-            <button class="cyber-btn" onclick="startBotMatch()"><span>🤖 VS BOT</span></button>
-            <br>
-            <button class="cyber-btn secondary" onclick="openScreen('screen-social')"><span>🔍 SOCIAL</span></button>
-            <button class="cyber-btn secondary" onclick="openScreen('screen-leaderboard')"><span>🏆 RANK</span></button>
-            <br>
-            <div style="margin-top: 10px;">
-                <button class="cyber-btn secondary" style="min-width:80px; font-size:0.7rem;" onclick="openScreen('screen-lobby-custom')">SALAS</button>
-                <button class="cyber-btn secondary" style="min-width:80px; font-size:0.7rem;" onclick="openScreen('screen-cards')">CARTAS</button>
-                <button class="cyber-btn secondary" style="min-width:80px; font-size:0.7rem;" onclick="openScreen('screen-credits')">CRÉDITOS</button>
-            </div>
-        </div>
+        <button onclick="quitGame()" class="cyber-btn secondary pointer-events-auto" style="position:absolute; top:10px; right:10px; min-width:auto; padding:5px 15px; font-size:0.7rem;">ABORTAR</button>
     </div>
 
     <div id="screen-profile" class="screen hidden">
         <div class="cyber-panel">
-            <h2 style="color:#fff;">DADOS DO OPERADOR</h2>
-            <img id="detail-profile-img" class="user-avatar" style="width:80px; height:80px; margin-bottom:10px;" src="" alt="Avatar">
-            <div style="margin-bottom: 20px;">
-                <label style="color:#aaa; font-size:0.7rem;">NICKNAME</label><br>
-                <div style="display:flex; justify-content:center; gap:5px;">
-                    <input type="text" id="edit-nick-input" class="input-code" style="width: 150px; font-size:1rem;" maxlength="10">
-                    <button class="cyber-btn secondary" style="min-width: auto; padding: 10px;" onclick="saveNewNickname()">💾</button>
+            <h2 style="color:#fff; margin-top:0;">FICHA TÉCNICA</h2>
+            <img id="detail-profile-img" class="user-avatar" style="width:100px; height:100px; margin-bottom:15px; border-width:4px;" src="" alt="Avatar">
+            
+            <div style="margin-bottom: 25px; background:rgba(0,0,0,0.3); padding:10px; border:1px solid #333;">
+                <label style="color:#var(--o-color); font-size:0.7rem; letter-spacing:2px;">CODINOME</label><br>
+                <div style="display:flex; justify-content:center; gap:10px; margin-top:5px;">
+                    <input type="text" id="edit-nick-input" class="input-code" style="width: 180px; font-size:1.2rem;" maxlength="10">
+                    <button class="cyber-btn" style="min-width: auto; padding: 10px 15px;" onclick="saveNewNickname()">💾</button>
                 </div>
             </div>
+
             <div class="stats-grid">
-                <div class="stat-box" style="border-color:#bd00ff;"><div class="stat-val" id="stat-rank" style="color:#bd00ff;">-</div><div class="stat-label">ELO</div></div>
-                <div class="stat-box" style="border-color:#00ff88;"><div class="stat-val" id="stat-wins" style="color:#00ff88;">-</div><div class="stat-label">VITÓRIAS</div></div>
-                <div class="stat-box" style="border-color:#ff0055;"><div class="stat-val" id="stat-losses" style="color:#ff0055;">-</div><div class="stat-label">DERROTAS</div></div>
+                <div class="stat-box" style="border-bottom: 2px solid #bd00ff;"><div class="stat-val" id="stat-rank" style="color:#bd00ff;">-</div><div class="stat-label">ELO RATING</div></div>
+                <div class="stat-box" style="border-bottom: 2px solid #00ff88;"><div class="stat-val" id="stat-wins" style="color:#00ff88;">-</div><div class="stat-label">SUCESSOS</div></div>
+                <div class="stat-box" style="border-bottom: 2px solid #ff0055;"><div class="stat-val" id="stat-losses" style="color:#ff0055;">-</div><div class="stat-label">FALHAS</div></div>
             </div>
             <br><button class="cyber-btn secondary" onclick="openScreen('screen-menu')">VOLTAR</button>
         </div>
@@ -195,16 +257,22 @@
     <div id="screen-social" class="screen hidden">
         <div class="cyber-panel">
             <h2 style="color:#fff;">REDE NEURAL</h2>
-            <input type="text" id="search-player-input" class="input-code" placeholder="NICK EXATO">
-            <button class="cyber-btn" onclick="searchPlayer()">BUSCAR</button>
-            <div id="search-results-area" class="scroll-content" style="margin-top:20px; height: 250px;"></div>
+            <p style="color:#aaa; font-size:0.8rem;">LOCALIZAR AGENTE</p>
+            <div style="display:flex; justify-content:center; gap:5px;">
+                <input type="text" id="search-player-input" class="input-code" placeholder="NICK EXATO" style="width:180px;">
+                <button class="cyber-btn" style="min-width:auto;" onclick="searchPlayer()">BUSCAR</button>
+            </div>
+            <div id="search-results-area" class="scroll-content" style="margin-top:20px; height: 250px; background:rgba(0,0,0,0.2);"></div>
             <br><button class="cyber-btn secondary" onclick="openScreen('screen-menu')">VOLTAR</button>
         </div>
     </div>
 
     <div id="screen-leaderboard" class="screen hidden">
         <div class="cyber-panel">
-            <h2 style="color:#bd00ff;">TOP 100 ELITE</h2>
+            <h2 style="color:#bd00ff; text-shadow:0 0 10px #bd00ff;">TOP 100 ELITE</h2>
+            <div style="display:flex; color:#666; font-size:0.7rem; border-bottom:1px solid #444; padding:5px;">
+                <span style="width:30px;">#</span><span style="flex:1;">AGENTE</span><span style="width:50px;">ELO</span>
+            </div>
             <div id="leaderboard-list" class="scroll-content" style="height: 350px;"></div>
             <br><button class="cyber-btn secondary" onclick="openScreen('screen-menu')">VOLTAR</button>
         </div>
@@ -244,18 +312,18 @@
         <div class="cyber-panel">
             <h2>LOBBY</h2>
             <div id="lobby-host-ui" class="hidden">
-                <p>CÓDIGO DA SALA</p>
-                <div id="display-code" class="input-code" style="border:none; cursor:pointer;" onclick="copyCode()">...</div>
-                <p style="color:var(--o-color);">Aguardando oponente...</p>
+                <p style="color:#aaa;">FREQUÊNCIA DE CANAL</p>
+                <div id="display-code" class="input-code" style="border:none; cursor:pointer; color:var(--o-color); font-size:2rem;" onclick="copyCode()">...</div>
+                <p class="loader" style="border:none; animation:none; color:#666;">AGUARDANDO CONEXÃO...</p>
             </div>
             <div id="lobby-client-ui" class="hidden">
-                <p>DIGITE O CÓDIGO</p>
+                <p>INSIRA CÓDIGO</p>
                 <input type="text" id="input-code" class="input-code" maxlength="6" placeholder="XXXXXX">
                 <br><button id="btn-connect" class="cyber-btn" onclick="connectToHost()">CONECTAR</button>
                 <p id="client-status" class="match-log"></p>
             </div>
             <div id="lobby-quick-ui" class="hidden">
-                <p style="color:#00ff88;">BUSCANDO PARTIDA</p>
+                <p style="color:#00ff88;">RASTREANDO SINAL...</p>
                 <div class="loader"></div>
                 <p id="quick-log" class="match-log">...</p>
             </div>
@@ -267,7 +335,7 @@
         <div class="cyber-panel">
             <h1 id="winner-text" class="title-glitch">VENCEDOR</h1>
             <div id="rematch-area"></div>
-            <br><button class="cyber-btn secondary" onclick="location.reload()">SAIR</button>
+            <br><button class="cyber-btn secondary" onclick="location.reload()">MENU</button>
         </div>
     </div>
 
@@ -287,11 +355,11 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
     let currentUser = null;
-    let userStats = { wins: 0, losses: 0, rank: 1000, displayName: "Player" };
+    let userStats = { wins: 0, losses: 0, rank: 1000, displayName: "Agente" };
     let opponentStats = { rank: '?', wins: '?' };
 
     // --- GAME DATA ---
-    const APP_ID = "cv-tactics-clean-v1-"; 
+    const APP_ID = "cv-cyber-v1-"; 
     const MAX_PUB_ROOMS = 20;
     const BOT_TIMEOUT = 10000; 
 
@@ -304,21 +372,9 @@
         'SWAP': { name: 'Trocar', icon: '🔁', rarity: 'legendary', weight: 10, desc: 'Troca posição com inimigo.' }
     };
 
-    const GameState = {
-        board: Array(9).fill(null),
-        history: { 'X': [], 'O': [] },
-        hands: { 'X': [], 'O': [] },
-        shields: {},
-        scores: { 'X': 0, 'O': 0 },
-        names: { 'X': 'P1', 'O': 'P2' },
-        turn: 'X',
-        winner: null,
-        targetWins: 3,
-        winningLine: null
-    };
-
+    const GameState = { board: Array(9).fill(null), history: { 'X': [], 'O': [] }, hands: { 'X': [], 'O': [] }, shields: {}, scores: { 'X': 0, 'O': 0 }, names: { 'X': 'P1', 'O': 'P2' }, turn: 'X', winner: null, targetWins: 3, winningLine: null };
     let peer, conn, mySide = null, isHost = false, isBotMatch = false;
-    let timeLeft = 16, myName = "PLAYER", isQuickMatch = false;
+    let timeLeft = 16, myName = "AGENTE", isQuickMatch = false;
     let selectedHandIdx = null, activeCardType = null, stepSourceIdx = null;
     let particles = [], cameraShake = 0;
     let isInGame = false;
@@ -331,7 +387,7 @@
                 userStats = doc.data();
                 if(userStats.hasSetNick) {
                     myName = userStats.displayName;
-                    showToast(`W: ${userStats.wins} | R: ${userStats.rank}`, "#00ff88");
+                    showToast(`LOGIN: ${userStats.displayName}`, "#00ff88");
                 } else {
                     document.getElementById('modal-nickname').classList.remove('hidden');
                 }
@@ -346,42 +402,43 @@
 
     function saveInitialNickname() {
         if(!currentUser) return;
-        const newNick = document.getElementById('permanent-nick-input').value.trim().toUpperCase();
+        const newNick = document.getElementById('permanent-nick-input').value.trim();
         if(newNick.length > 2 && newNick.length <= 10) {
             db.collection('players').doc(currentUser.uid).update({ displayName: newNick, hasSetNick: true }).then(() => {
                 userStats.displayName = newNick; userStats.hasSetNick = true; myName = newNick;
                 updateUIWithStats();
                 document.getElementById('modal-nickname').classList.add('hidden');
+                showToast("IDENTIDADE CONFIRMADA", "#00ff88");
             });
         } else showToast("NOME INVÁLIDO", "#ff3333");
     }
 
     function saveNewNickname() {
         if(!currentUser) return;
-        const newNick = document.getElementById('edit-nick-input').value.trim().toUpperCase();
+        const newNick = document.getElementById('edit-nick-input').value.trim();
         if(newNick.length > 2 && newNick.length <= 10) {
             db.collection('players').doc(currentUser.uid).update({ displayName: newNick }).then(() => {
                 userStats.displayName = newNick; myName = newNick;
-                updateUIWithStats(); showToast("SALVO", "#00ff88");
-            }).catch(() => showToast("ERRO", "#ff0000"));
-        } else showToast("INVÁLIDO", "#ff3333");
+                updateUIWithStats(); showToast("PERFIL ATUALIZADO", "#00ff88");
+            }).catch(e => { console.error(e); showToast("ERRO DB", "#ff0000"); });
+        } else showToast("3-10 CARACTERES", "#ff3333");
     }
 
     async function searchPlayer() {
-        const queryName = document.getElementById('search-player-input').value.trim().toUpperCase();
+        const queryName = document.getElementById('search-player-input').value.trim();
         const area = document.getElementById('search-results-area');
         area.innerHTML = '<div class="loader"></div>';
-        if(!queryName) { area.innerHTML = 'DIGITE ALGO'; return; }
+        if(!queryName) { area.innerHTML = 'DIGITE O CODINOME'; return; }
         
         try {
             const snap = await db.collection('players').where('displayName', '==', queryName).limit(5).get();
             area.innerHTML = '';
-            if(snap.empty) { area.innerHTML = 'NADA ENCONTRADO'; return; }
+            if(snap.empty) { area.innerHTML = '<p style="color:#666;">AGENTE NÃO LOCALIZADO</p>'; return; }
             snap.forEach(doc => {
                 const p = doc.data();
-                area.innerHTML += `<div class="search-result-card"><img src="${p.photoURL}" class="user-avatar" style="width:30px;height:30px;"><div style="text-align:left;flex:1;"><div>${p.displayName}</div><div style="font-size:0.7rem;color:#aaa;">Rank: ${p.rank}</div></div></div>`;
+                area.innerHTML += `<div class="search-result-card"><img src="${p.photoURL}" class="user-avatar" style="width:40px;height:40px;"><div style="text-align:left;flex:1;"><div style="color:#fff;font-weight:bold;">${p.displayName}</div><div style="font-size:0.7rem;color:var(--o-color);">RANK: ${p.rank} | VITÓRIAS: ${p.wins}</div></div></div>`;
             });
-        } catch(e) { console.error(e); area.innerHTML = 'ERRO'; }
+        } catch(e) { console.error(e); area.innerHTML = 'ERRO DE REDE'; }
     }
 
     async function loadLeaderboard() {
@@ -393,18 +450,17 @@
             let i = 1;
             snap.forEach(doc => {
                 const p = doc.data();
-                const hl = (currentUser && doc.id === currentUser.uid) ? 'background:rgba(0,255,255,0.1);' : '';
-                list.innerHTML += `<div class="ranking-row" style="${hl}"><span style="width:30px;color:var(--o-color);font-weight:bold;">${i++}</span><span style="flex:1;text-align:left;font-weight:bold;">${p.displayName}</span><span style="color:#bd00ff;font-weight:bold;">${p.rank}</span></div>`;
+                const hl = (currentUser && doc.id === currentUser.uid) ? 'background:rgba(0,243,255,0.1); border:1px solid var(--o-color);' : '';
+                list.innerHTML += `<div class="ranking-row" style="${hl}"><span style="width:30px;color:var(--o-color);font-weight:bold;">${i++}</span><span style="flex:1;text-align:left;font-weight:bold;color:#fff;">${p.displayName}</span><span style="color:#bd00ff;font-weight:bold;">${p.rank}</span></div>`;
             });
-        } catch(e) { console.error(e); list.innerHTML = 'ERRO CARREGAR'; }
+        } catch(e) { console.error(e); list.innerHTML = 'FALHA NA CONEXÃO'; }
     }
 
     function updateUIWithStats() {
-        const s = document.querySelector('.user-status');
-        const n = document.getElementById('profile-name');
-        if(s) s.innerHTML = `● Online | Rank: ${userStats.rank}`;
-        if(n) n.innerText = userStats.displayName;
+        // Atualiza Menu Principal
+        document.getElementById('profile-name').innerText = userStats.displayName;
         
+        // Atualiza Tela de Perfil
         document.getElementById('detail-profile-img').src = currentUser ? currentUser.photoURL : '';
         document.getElementById('edit-nick-input').value = userStats.displayName;
         document.getElementById('stat-rank').innerText = userStats.rank;
@@ -426,19 +482,21 @@
     }
 
     // --- AUTH ---
-    function loginGoogle() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e => console.error(e)); }
+    function loginGoogle() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e => { console.error(e); showToast("FALHA LOGIN", "#ff0000"); }); }
     function logout() { auth.signOut().then(() => location.reload()); }
+    
+    // SISTEMA DE BLOQUEIO DE TELA
     auth.onAuthStateChanged(u => {
         if(u) {
             currentUser = u;
-            document.getElementById('guest-input-area').classList.add('hidden');
-            document.getElementById('user-profile-area').classList.remove('hidden');
+            document.getElementById('screen-login').classList.add('hidden'); // Esconde login
+            document.getElementById('screen-menu').classList.remove('hidden'); // Mostra menu
             document.getElementById('profile-img').src = u.photoURL;
             loadUserProfile(u);
         } else {
             currentUser = null;
-            document.getElementById('guest-input-area').classList.remove('hidden');
-            document.getElementById('user-profile-area').classList.add('hidden');
+            document.getElementById('screen-login').classList.remove('hidden'); // Mostra login
+            document.getElementById('screen-menu').classList.add('hidden'); // Esconde menu
         }
     });
 
@@ -447,10 +505,16 @@
         ['lobby-host-ui','lobby-client-ui','lobby-quick-ui'].forEach(id => document.getElementById(id).classList.add('hidden'));
     }
     function openScreen(id) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+        document.querySelectorAll('.screen').forEach(s => {
+            if(s.id !== 'screen-login') s.classList.add('hidden'); // Nunca esconde o login se não tiver logado
+        });
+        
+        if(!currentUser && id !== 'screen-login') return; // Segurança extra
+
         const el = document.getElementById(id);
         if(el) { el.classList.remove('hidden'); if(id==='screen-leaderboard') loadLeaderboard(); }
         if(id === 'screen-cards') renderCardsHelp();
+        if(id === 'screen-profile') updateUIWithStats();
     }
     function renderCardsHelp() {
         const c = document.getElementById('cards-list-ui'); c.innerHTML='';
@@ -460,23 +524,34 @@
     }
     function showPlayerStats(s) {
         if(s===mySide) showToast(`EU: ${userStats.rank}`, "#fff");
-        else showToast(isBotMatch ? "BOT" : `OPONENTE: ${opponentStats.rank}`, "#ffff00");
+        else showToast(isBotMatch ? "BOT T-800" : `OPONENTE: ${opponentStats.rank}`, "#ffff00");
     }
 
-    // --- THREE.JS ---
-    const scene = new THREE.Scene(); scene.fog = new THREE.FogExp2(0x050510, 0.02);
+    // --- THREE.JS VISUALS ---
+    const scene = new THREE.Scene(); scene.fog = new THREE.FogExp2(0x020205, 0.03);
     const camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 0.1, 100);
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.getElementById('canvas-container').appendChild(renderer.domElement);
     const pieceGroup = new THREE.Group(); scene.add(pieceGroup);
     const particleGroup = new THREE.Group(); scene.add(particleGroup);
-    const grid = new THREE.GridHelper(100, 100, 0x222222, 0x111111); grid.position.y = -2; scene.add(grid);
+    
+    // Grid Neon
+    const grid = new THREE.GridHelper(100, 50, 0x00f3ff, 0x111111); 
+    grid.position.y = -2; scene.add(grid);
+
     const tiles=[]; const tileGeo=new THREE.BoxGeometry(2.8,0.2,2.8);
-    for(let i=0;i<9;i++){ const t=new THREE.Mesh(tileGeo,new THREE.MeshStandardMaterial({color:0x111116})); t.position.set((i%3-1)*3.1,0,(Math.floor(i/3)-1)*3.1); t.userData={id:i}; t.add(new THREE.LineSegments(new THREE.EdgesGeometry(tileGeo),new THREE.LineBasicMaterial({color:0x333344,transparent:true,opacity:0.3}))); scene.add(t); tiles.push(t); }
-    const lights=[new THREE.DirectionalLight(0xffffff,0.5), new THREE.PointLight(0xff0055,1,30), new THREE.PointLight(0x00e5ff,1,30)];
-    lights[0].position.set(5,10,5); lights[1].position.set(5,5,5); lights[2].position.set(-5,5,-5);
-    lights.forEach(l=>scene.add(l)); scene.add(new THREE.AmbientLight(0xffffff,0.3));
+    for(let i=0;i<9;i++){ 
+        const t=new THREE.Mesh(tileGeo,new THREE.MeshStandardMaterial({color:0x050510, roughness:0.2, metalness:0.8})); 
+        t.position.set((i%3-1)*3.1,0,(Math.floor(i/3)-1)*3.1); t.userData={id:i}; 
+        const edges = new THREE.LineSegments(new THREE.EdgesGeometry(tileGeo),new THREE.LineBasicMaterial({color:0x00f3ff,transparent:true,opacity:0.2}));
+        t.add(edges); scene.add(t); tiles.push(t); 
+    }
+    
+    // Luzes Cyberpunk
+    const lights=[new THREE.DirectionalLight(0xffffff,0.5), new THREE.PointLight(0xff0055,2,20), new THREE.PointLight(0x00f3ff,2,20)];
+    lights[0].position.set(5,10,5); lights[1].position.set(5,2,5); lights[2].position.set(-5,2,-5);
+    lights.forEach(l=>scene.add(l)); scene.add(new THREE.AmbientLight(0xffffff,0.1));
 
     function updateVisuals() {
         camera.userData.targetRot = (mySide==='X') ? 0 : Math.PI;
@@ -485,12 +560,21 @@
             if(!c) return;
             const x=(i%3-1)*3.1, z=(Math.floor(i/3)-1)*3.1, isWin=GameState.winningLine?.includes(i);
             let m;
-            if(c==='X'){ const g=new THREE.Group(), mat=new THREE.MeshStandardMaterial({color:0xff0055,emissive:0xff0055,emissiveIntensity:isWin?5:1}); g.add(new THREE.Mesh(new THREE.BoxGeometry(2,0.4,0.4),mat)).rotation.y=Math.PI/4; g.children[0].add(new THREE.Mesh(new THREE.BoxGeometry(2,0.4,0.4),mat)).rotation.y=-Math.PI/2; m=g; }
-            else { m=new THREE.Mesh(new THREE.TorusGeometry(0.8,0.2,16,32),new THREE.MeshStandardMaterial({color:0x00e5ff,emissive:0x00e5ff,emissiveIntensity:isWin?5:1})); m.rotation.x=Math.PI/2; }
+            if(c==='X'){ 
+                const g=new THREE.Group(), mat=new THREE.MeshStandardMaterial({color:0xff0055,emissive:0xff0055,emissiveIntensity:isWin?3:1.5}); 
+                const b1=new THREE.Mesh(new THREE.BoxGeometry(2,0.4,0.4),mat); b1.rotation.y=Math.PI/4;
+                const b2=new THREE.Mesh(new THREE.BoxGeometry(2,0.4,0.4),mat); b2.rotation.y=-Math.PI/4; 
+                g.add(b1); g.add(b2); m=g; 
+            } else { 
+                m=new THREE.Mesh(new THREE.TorusGeometry(0.8,0.1,16,32),new THREE.MeshStandardMaterial({color:0x00f3ff,emissive:0x00f3ff,emissiveIntensity:isWin?3:1.5})); m.rotation.x=Math.PI/2; 
+            }
             m.position.set(x,1,z);
             if(isWin) { m.userData.spin=0.2; spawnWinParticles([i]); }
             if(GameState.history[c][0]===i && GameState.history[c].length===3 && !isWin) m.userData.glitch=true;
-            if(GameState.shields[i]) m.add(new THREE.Mesh(new THREE.IcosahedronGeometry(1.2),new THREE.MeshBasicMaterial({color:0x0088ff,wireframe:true})));
+            if(GameState.shields[i]) {
+                const s = new THREE.Mesh(new THREE.IcosahedronGeometry(1.2),new THREE.MeshBasicMaterial({color:0x00f3ff,wireframe:true,transparent:true,opacity:0.3}));
+                s.userData.spin=0.05; m.add(s);
+            }
             pieceGroup.add(m);
         });
         document.getElementById('p1-score').innerHTML=`<div class="score-val" style="color:var(--x-color)">${GameState.scores.X}</div><div class="player-name">${GameState.names.X}</div>`;
@@ -500,8 +584,8 @@
 
     function spawnWinParticles(idxs) {
         idxs.forEach(i=>{
-            const x=(i%3-1)*3.1, z=(Math.floor(i/3)-1)*3.1, c=GameState.board[i]==='X'?0xff0055:0x00e5ff;
-            for(let k=0;k<5;k++) particles.push({pos:new THREE.Vector3(x,2,z),vel:new THREE.Vector3((Math.random()-.5)*.5,Math.random()*.5,(Math.random()-.5)*.5),color:c,life:1});
+            const x=(i%3-1)*3.1, z=(Math.floor(i/3)-1)*3.1, c=GameState.board[i]==='X'?0xff0055:0x00f3ff;
+            for(let k=0;k<8;k++) particles.push({pos:new THREE.Vector3(x,1,z),vel:new THREE.Vector3((Math.random()-.5)*.3,Math.random()*.5,(Math.random()-.5)*.3),color:c,life:1.5});
         });
     }
 
@@ -513,17 +597,20 @@
             camera.position.z = Math.cos(THREE.MathUtils.lerp(Math.acos(camera.position.z/14)||0, tr, 0.05))*14;
             camera.position.y = 15; camera.lookAt(0,0,0);
         } else {
-            camera.position.x = Math.sin(Date.now()*.0005)*18; camera.position.z = Math.cos(Date.now()*.0005)*18; camera.position.y=12; camera.lookAt(0,0,0);
+            const time = Date.now()*.0005;
+            camera.position.x = Math.sin(time)*16; camera.position.z = Math.cos(time)*16; camera.position.y=10; camera.lookAt(0,0,0);
+            grid.position.z = (time * 2) % 2; // Grid movimento
         }
         pieceGroup.children.forEach(p=>{ 
             if(p.userData.spin) p.rotation.y+=p.userData.spin; 
-            if(p.userData.glitch) p.visible=Math.random()>0.2; 
+            if(p.userData.glitch) { p.visible=Math.random()>0.2; p.scale.setScalar(0.9+Math.random()*0.2); }
+            p.children.forEach(c=>{ if(c.userData.spin) c.rotation.z-=c.userData.spin; });
         });
         particleGroup.clear();
         for(let i=particles.length-1;i>=0;i--){
             const p=particles[i]; p.life-=0.02; p.pos.add(p.vel);
             if(p.life<=0){particles.splice(i,1);continue;}
-            const m=new THREE.Mesh(new THREE.BoxGeometry(0.1,0.1,0.1),new THREE.MeshBasicMaterial({color:p.color}));
+            const m=new THREE.Mesh(new THREE.BoxGeometry(0.1,0.1,0.1),new THREE.MeshBasicMaterial({color:p.color, transparent:true, opacity:p.life}));
             m.position.copy(p.pos); particleGroup.add(m);
         }
         renderer.render(scene,camera);
@@ -610,7 +697,21 @@
         }
         else if(type==='SHIELD' && GameState.board[t]===p) { GameState.shields[t]=2; ok=true; }
         else if(type==='TIMEOUT') { GameState.hands[p].shift(); GameState.hands[p].push('PLACE'); ok=true; }
-        // (Simplifiquei Move/Push/Swap para brevidade, mas lógica segue a mesma)
+        
+        if(type==='MOVE' && GameState.board[s]===p && !GameState.board[t]) {
+             GameState.board[s]=null; GameState.board[t]=p; 
+             GameState.history[p]=GameState.history[p].filter(x=>x!==s); GameState.history[p].push(t); ok=true;
+        }
+        if(type==='PUSH' && GameState.board[s]!==p && GameState.board[s] && !GameState.shields[s] && !GameState.board[t]) {
+             const en=GameState.board[s]; GameState.board[s]=null; GameState.board[t]=en;
+             GameState.history[en]=GameState.history[en].filter(x=>x!==s); GameState.history[en].push(t); ok=true;
+        }
+        if(type==='SWAP' && GameState.board[s]===p && GameState.board[t]!==p && GameState.board[t] && !GameState.shields[t]) {
+             const en=GameState.board[t]; GameState.board[s]=en; GameState.board[t]=p;
+             GameState.history[p]=GameState.history[p].map(x=>x===s?t:x);
+             GameState.history[en]=GameState.history[en].map(x=>x===t?s:x); ok=true;
+        }
+
         if(ok && type!=='TIMEOUT') { GameState.hands[p].splice(cIdx,1); GameState.hands[p].push(rndCard()); }
         
         if(ok) {
@@ -620,7 +721,7 @@
                 if(GameState.scores[win]>=3) setTimeout(()=>{ GameState.winner=win; broadcast(); },2000);
                 else setTimeout(startGame, 2000);
             } else {
-                GameState.turn = GameState.turn==='X'?'O':'X'; timeLeft=16;
+                GameState.turn = GameState.turn==='X'?'O':'X'; for(let k in GameState.shields)if(GameState.shields[k]>0)GameState.shields[k]--; timeLeft=16;
             }
             broadcast();
             if(isBotMatch && GameState.turn==='O') setTimeout(botMove,1000);
@@ -657,20 +758,37 @@
         mouse.x=(e.clientX/window.innerWidth)*2-1; mouse.y=-(e.clientY/window.innerHeight)*2+1;
         ray.setFromCamera(mouse,camera);
         const ints=ray.intersectObjects(tiles);
-        if(ints.length && activeCardType) {
+        
+        if(ints.length && activeCardType && GameState.turn===mySide) {
             const id=ints[0].object.userData.id;
-            if(isHost) processAction({type:activeCardType, t:id, cIdx:selectedHandIdx}, 'X');
-            else conn.send({type:'Action', act:{type:activeCardType, t:id, cIdx:selectedHandIdx}});
-            selectedHandIdx=null; activeCardType=null; updateHandUI();
+            
+            // Lógica unificada de clique único vs duplo
+            if(['PLACE','BOMB','SHIELD'].includes(activeCardType)) {
+                sendAct({type:activeCardType, t:id, cIdx:selectedHandIdx});
+            } else {
+                // MOVE, PUSH, SWAP
+                if(stepSourceIdx===null) {
+                    stepSourceIdx=id; document.getElementById('hint-pill').innerText="SELECIONE DESTINO";
+                } else {
+                    sendAct({type:activeCardType, s:stepSourceIdx, t:id, cIdx:selectedHandIdx});
+                    stepSourceIdx=null; 
+                }
+            }
         }
     };
+    
+    function sendAct(a) {
+        if(isHost) processAction(a, 'X'); else conn.send({type:'Action', act:a});
+        selectedHandIdx=null; activeCardType=null; stepSourceIdx=null; updateHandUI();
+        document.getElementById('hint-pill').classList.remove('active');
+    }
 
     function updateHandUI() {
         const c=document.getElementById('hand-container'); c.innerHTML='';
         GameState.hands[mySide].forEach((k,i)=>{
             const d=CARDS[k]; const el=document.createElement('div'); el.className=`card ${d.rarity} ${i===selectedHandIdx?'selected':''}`;
             el.innerHTML=`<div class="card-icon">${d.icon}</div><div class="card-name">${d.name}</div>`;
-            el.onclick=()=>{if(GameState.turn===mySide){selectedHandIdx=i; activeCardType=k; updateHandUI();}}; 
+            el.onclick=()=>{if(GameState.turn===mySide){selectedHandIdx=i; activeCardType=k; stepSourceIdx=null; updateHandUI(); document.getElementById('hint-pill').innerText="SELECIONE ALVO"; document.getElementById('hint-pill').classList.add('active');}}; 
             c.appendChild(el);
         });
     }
