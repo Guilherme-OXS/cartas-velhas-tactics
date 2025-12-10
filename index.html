@@ -13,7 +13,7 @@
     <meta property="og:description" content="Desafia os teus amigos neste jogo tático 3D. Regra do Infinito, Cartas Especiais e Multiplayer em tempo real.">
     <meta property="og:type" content="website">
     
-    <title>Cartas Velhas: Cyberpunk Tactics v0.9.23</title>
+    <title>Cartas Velhas: Cyberpunk Tactics v0.9.24 (FIXED)</title>
     <style>
         /* --- CORE STYLES --- */
         body { margin: 0; overflow: hidden; background-color: #050510; font-family: 'Segoe UI', Tahoma, monospace; user-select: none; touch-action: none; }
@@ -30,12 +30,22 @@
 
         :root { --x-color: #ff0055; --o-color: #00e5ff; --card-bg: rgba(10, 10, 20, 0.90); }
 
-        /* UI COMPONENTS */
+        /* UI COMPONENTS - CORREÇÃO DE ALINHAMENTO */
+        .screen { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: radial-gradient(circle at center, rgba(26,26,46,0.8) 0%, #000 100%); 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; /* Garante centralização */
+            z-index: 100; transition: opacity 0.5s; opacity: 1; visibility: visible; 
+        }
+        .hidden { opacity: 0; visibility: hidden; pointer-events: none; transition: 0.5s; }
+
         .cyber-panel {
             background: rgba(0, 0, 0, 0.9); border: 1px solid #333; border-left: 4px solid var(--o-color);
             padding: 30px; max-width: 600px; width: 90%; position: relative;
             box-shadow: 0 0 20px rgba(0, 229, 255, 0.1); backdrop-filter: blur(5px);
             transform: skewX(-2deg);
+            margin: auto; /* Reforça a centralização */
+            text-align: center; /* Centraliza o conteúdo interno */
         }
         
         .title-glitch { 
@@ -57,9 +67,6 @@
         .cyber-btn:disabled { border-color: #333; color: #555; cursor: not-allowed; box-shadow: none; }
         .cyber-btn.google-btn { border-color: #4285F4; color: #4285F4; }
         .cyber-btn.google-btn:hover { background: #4285F4; color: #fff; box-shadow: 0 0 15px #4285F4; }
-
-        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, rgba(26,26,46,0.8) 0%, #000 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; transition: opacity 0.5s; opacity: 1; visibility: visible; }
-        .hidden { opacity: 0; visibility: hidden; pointer-events: none; transition: 0.5s; }
 
         .scroll-content {
             max-height: 60vh; overflow-y: auto; padding-right: 15px; text-align: left;
@@ -116,8 +123,10 @@
         #toast-msg.show { transform: scale(1); opacity: 1; }
         
         @keyframes glitch-anim { 0% { text-shadow: 3px 3px 0px var(--x-color); } 20% { text-shadow: -3px -3px 0px var(--o-color); } 40% { text-shadow: 2px -2px 0px #fff; } 100% { text-shadow: 3px 3px 0px var(--x-color); } }
-        .loader { width: 30px; height: 30px; border: 2px solid #333; border-top: 2px solid var(--o-color); border-radius: 50%; animation: spin 0.8s infinite; margin: 10px auto; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+        
+        /* Loader para feedback visual */
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--o-color); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
         .credits-name { color: var(--o-color); font-weight: bold; font-size: 1.2rem; margin: 10px 0; display: block; text-shadow: 0 0 10px var(--o-color); }
         .match-log { color: #aaa; font-family: monospace; font-size: 0.8rem; margin-top: 10px; height: 20px; }
@@ -191,10 +200,10 @@
     </div>
 
     <div id="screen-menu" class="screen">
-        <div class="cyber-panel" style="text-align: center; border:none; background:transparent; box-shadow:none;">
+        <div class="cyber-panel">
             <div class="title-glitch">CARTAS<br>VELHAS</div>
             
-            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 30px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.23 (RANKING FIX)</p>
+            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 30px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.24 (FIXED)</p>
             
             <div id="guest-input-area">
                 <input type="text" id="my-name-input" class="input-code" style="width: 200px; border-color: var(--o-color);" maxlength="10" placeholder="SEU NICKNAME" value="PLAYER">
@@ -229,7 +238,7 @@
     </div>
 
     <div id="screen-profile" class="screen hidden">
-        <div class="cyber-panel" style="text-align:center;">
+        <div class="cyber-panel">
             <h2 style="color:#fff; margin-top:0;">DADOS DO OPERADOR</h2>
             <img id="detail-profile-img" class="big-avatar" src="" alt="Avatar">
             <br>
@@ -262,7 +271,7 @@
     </div>
     
     <div id="screen-social" class="screen hidden">
-        <div class="cyber-panel" style="text-align:center;">
+        <div class="cyber-panel">
             <h2 style="color:#fff; margin-top:0;">REDE NEURAL</h2>
             <p style="color:#aaa; font-size:0.8rem;">BUSCAR AGENTES ATIVOS</p>
             <input type="text" id="search-player-input" class="input-code" placeholder="NICK DO JOGADOR">
@@ -277,7 +286,7 @@
     </div>
 
     <div id="screen-leaderboard" class="screen hidden">
-        <div class="cyber-panel" style="text-align:center;">
+        <div class="cyber-panel">
             <h2 style="color:#bd00ff; margin-top:0;">TOP 100 ELITE</h2>
             <div style="border-bottom: 2px solid #333; padding-bottom: 5px; margin-bottom: 10px; display:flex; color:#666; font-size:0.7rem; font-weight:bold;">
                 <span style="width:30px;">#</span>
@@ -324,6 +333,12 @@
         <div class="cyber-panel">
             <h2 style="color:#fff; margin-top:0;">SYSTEM LOG</h2>
             <div class="scroll-content">
+                <div class="update-block">
+                    <div class="update-title">v0.9.24 - Fixes & Logs</div>
+                    <span class="update-item">UI: Correção de alinhamento central dos painéis.</span>
+                    <span class="update-item">Sistema: Adicionados logs de debug para Busca e Ranking.</span>
+                    <span class="update-item">UX: Loaders visuais nas áreas de dados.</span>
+                </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.23 - Fixes Finais</div>
                     <span class="update-item">Profile: Mudança de nome liberada.</span>
@@ -590,29 +605,41 @@
         }
     }
     
-    // Função para alterar nickname DEPOIS (Tela de Perfil)
+    // Função para alterar nickname DEPOIS (Tela de Perfil) - COM LOGS
     function saveNewNickname() {
-        if(!currentUser) return;
+        if(!currentUser) {
+             console.error("Tentativa de salvar nick sem usuário logado.");
+             showToast("ERRO: NÃO LOGADO", "#ff0000");
+             return;
+        }
         const newNick = document.getElementById('edit-nick-input').value.trim();
+        console.log("Tentando salvar novo nick:", newNick);
+
         if(newNick.length > 0 && newNick.length <= 10) {
             db.collection('players').doc(currentUser.uid).update({ displayName: newNick })
             .then(() => {
+                console.log("Nick salvo com sucesso no Firestore.");
                 userStats.displayName = newNick;
                 myName = newNick;
                 updateUIWithStats();
                 showToast("NICK SALVO", "#00ff88");
             })
-            .catch(err => { showToast("ERRO SALVAR", "#ff0000"); });
+            .catch(err => { 
+                console.error("Erro ao salvar nick no Firestore:", err);
+                showToast("ERRO AO SALVAR", "#ff0000"); 
+            });
         } else {
+            console.warn("Tentativa de salvar nick inválido:", newNick);
             showToast("NOME INVÁLIDO", "#ff3333");
         }
     }
     
-    // BUSCAR JOGADORES (SOCIAL)
+    // BUSCAR JOGADORES (SOCIAL) - COM LOGS E LOADER
     async function searchPlayer() {
         const queryName = document.getElementById('search-player-input').value.trim();
         const resultsArea = document.getElementById('search-results-area');
         resultsArea.innerHTML = '<div class="loader"></div>';
+        console.log("Iniciando busca por:", queryName);
         
         if(queryName.length === 0) {
             resultsArea.innerHTML = '<p style="color:#aaa;">DIGITE UM NOME</p>';
@@ -621,6 +648,7 @@
 
         try {
             const snapshot = await db.collection('players').where('displayName', '==', queryName).limit(5).get();
+            console.log("Busca concluída. Resultados encontrados:", snapshot.size);
             resultsArea.innerHTML = '';
             
             if(snapshot.empty) {
@@ -643,15 +671,16 @@
                 resultsArea.appendChild(card);
             });
         } catch(e) {
-            console.error(e);
-            resultsArea.innerHTML = '<p style="color:#ff3333;">ERRO DE REDE</p>';
+            console.error("Erro na busca:", e);
+            resultsArea.innerHTML = '<p style="color:#ff3333;">ERRO DE REDE (VER CONSOLE)</p>';
         }
     }
     
-    // CARREGAR RANKING GLOBAL (TOP 100)
+    // CARREGAR RANKING GLOBAL (TOP 100) - COM LOGS E LOADER
     async function loadLeaderboard() {
         const list = document.getElementById('leaderboard-list');
         list.innerHTML = '<div class="loader"></div>';
+        console.log("Carregando leaderboard...");
         
         try {
             // Ordena apenas por Rank para evitar erro de índice no início
@@ -660,9 +689,10 @@
                                      .limit(100)
                                      .get();
                                      
+            console.log("Leaderboard carregado. Total de jogadores:", snapshot.size);
             list.innerHTML = '';
             if(snapshot.empty) {
-                list.innerHTML = '<p style="color:#aaa;">SEM DADOS</p>';
+                list.innerHTML = '<p style="color:#aaa;">SEM DADOS DE RANKING</p>';
                 return;
             }
             
@@ -684,8 +714,8 @@
             });
             
         } catch(e) {
-            console.error(e);
-            list.innerHTML = '<p style="color:#ff3333;">ERRO AO CARREGAR RANKING</p>';
+            console.error("Erro ao carregar leaderboard:", e);
+            list.innerHTML = '<p style="color:#ff3333;">ERRO AO CARREGAR RANKING (VER CONSOLE)</p>';
         }
     }
 
