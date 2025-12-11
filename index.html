@@ -16,7 +16,7 @@
 
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
 
-    <title>Cartas Velhas: Cyberpunk Tactics v0.9.40 (BOOT SCREEN)</title>
+    <title>Cartas Velhas: Cyberpunk Tactics v0.9.43 (SMART BOOT)</title>
     
     <link rel="stylesheet" href="style.css">
     
@@ -80,15 +80,14 @@
     <div id="screen-menu" class="screen hidden"> <div class="cyber-panel">
             <div class="title-glitch">CARTAS<br>VELHAS</div>
             
-            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 10px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.40 (BOOT SCREEN)</p>
+            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 10px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.43 (SMART BOOT)</p>
             
             <div id="online-counter-display" class="online-tag hidden">
                 <span class="live-dot">●</span> <span id="online-count-val">0</span> AGENTES ONLINE
             </div>
             <br>
             
-            <div id="guest-input-area">
-                <p style="color:#aaa; font-size:0.8rem;">ACESSO RESTRITO A OPERADORES LOGADOS</p>
+            <div id="guest-input-area" class="hidden"> <p style="color:#aaa; font-size:0.8rem;">ACESSO RESTRITO A OPERADORES LOGADOS</p>
                 <button class="cyber-btn google-btn" onclick="loginGoogle()"><span>G+ ENTRAR COM GOOGLE</span></button>
             </div>
 
@@ -226,6 +225,11 @@
         <div class="cyber-panel">
             <h2 style="color:#fff; margin-top:0;">SYSTEM LOG</h2>
             <div class="scroll-content">
+                <div class="update-block">
+                    <div class="update-title">v0.9.43 - Smart Boot</div>
+                    <span class="update-item">UX: Loading Screen sincronizada com Login.</span>
+                    <span class="update-item">Fix: Prevenção de 'piscar' na tela inicial.</span>
+                </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.40 - Boot Screen</div>
                     <span class="update-item">UX: Tela de carregamento estilo Terminal.</span>

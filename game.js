@@ -56,33 +56,49 @@ let isMuted = false;
 let matchSecurityToken = null; // Token secreto gerado no início da partida
 let matchStartTime = 0;        // Timestamp de início para evitar vitórias instantâneas
 
-// --- BOOT SYSTEM (TRUE LOADING - SEM ATRASO ARTIFICIAL) ---
+// --- SMART BOOT SYSTEM (LOADING + AUTH SYNC) ---
+let bootState = {
+    animFinished: false,
+    authFinished: false
+};
+
+function checkBootState() {
+    // Só libera se a animação acabou E o Firebase já respondeu
+    if(bootState.animFinished && bootState.authFinished) {
+        let text = document.getElementById('loading-text');
+        if(text) text.innerText = "> SYSTEM READY.";
+        
+        const screen = document.getElementById('loading-screen');
+        if(screen) {
+            screen.style.opacity = '0';
+            document.getElementById('screen-menu').classList.remove('hidden');
+            setTimeout(() => screen.classList.add('hidden'), 500);
+        }
+    } else if (bootState.animFinished && !bootState.authFinished) {
+        // Se a animação acabou mas o Firebase tá lento
+        let text = document.getElementById('loading-text');
+        if(text) text.innerText = "> WAITING FOR SERVER RESPONSE...";
+    }
+}
+
 // Fase 1: HTML e JS lidos
 document.addEventListener("DOMContentLoaded", () => {
     let bar = document.getElementById('loading-fill');
     let text = document.getElementById('loading-text');
-    if(bar) bar.style.width = '60%'; // Indica que o script começou a rodar
+    if(bar) bar.style.width = '60%'; 
     if(text) text.innerText = "> PARSING DATA...";
 });
 
-// Fase 2: Tudo carregado (imagens, scripts externos, css)
+// Fase 2: Carregamento Visual
 window.addEventListener('load', () => {
     let bar = document.getElementById('loading-fill');
-    let text = document.getElementById('loading-text');
-    let screen = document.getElementById('loading-screen');
+    if(bar) bar.style.width = '100%';
     
-    if(bar) bar.style.width = '100%'; // Completa a barra
-    if(text) text.innerText = "> SYSTEM READY.";
-    
-    // Remove a tela assim que possível (apenas um pequeno delay de 300ms para a transição CSS não ser brusca demais)
+    // Pequeno delay para a barra encher visualmente antes de liberar
     setTimeout(() => {
-        if(screen) {
-            screen.style.opacity = '0';
-            document.getElementById('screen-menu').classList.remove('hidden');
-            // Remove do DOM após o fade-out
-            setTimeout(() => screen.classList.add('hidden'), 500);
-        }
-    }, 300);
+        bootState.animFinished = true;
+        checkBootState();
+    }, 500);
 });
 
 // --- DATABASE LOGIC ---
@@ -263,25 +279,29 @@ function updateUIWithStats() {
     document.getElementById('stat-losses').innerText = userStats.losses || 0;
 }
 
-// --- SECURITY & SAVE LOGIC (CORREÇÃO DE BUG) ---
+// --- SECURITY & SAVE LOGIC ---
 function saveGameResult(isWin, token) {
-    // 1. Check Token
+    // --- SECURITY CHECK ---
+    // 1. Verifica se o token existe e bate com o interno
     if (!token || token !== matchSecurityToken) {
-        if(isWin) showToast("ERRO: SYNC FAIL", "#ff3333");
-        console.warn("SECURITY ALERT: Token mismatch.");
+        console.warn("SECURITY ALERT: Tentativa de manipulação de resultado detectada.");
+        showToast("ERRO: DADOS INVÁLIDOS", "#ff0000");
         return;
     }
 
-    // 2. Check Time (REDUZIDO PARA 1s)
+    // 2. Verifica se a partida durou pelo menos 1 segundo (evita auto-win imediato)
     const duration = Date.now() - matchStartTime;
     if (duration < 1000) {
-        if(isWin) showToast("ERRO: VERY FAST", "#ff3333");
-        console.warn("SECURITY ALERT: Partida < 1s.");
+        console.warn("SECURITY ALERT: Partida muito curta (<1s).");
         return;
     }
 
-    // 3. Check Winner State
-    if (!GameState.winner) return;
+    // 3. Verifica se existe realmente um vencedor no estado do jogo
+    if (!GameState.winner) {
+        console.warn("SECURITY ALERT: Tentativa de salvar sem vencedor definido.");
+        return;
+    }
+    // ----------------------
 
     if (!currentUser) return; 
     if (isBotMatch) { saveLocalHistory(isWin ? "Vitória vs BOT" : "Derrota vs BOT", isWin); return; }
@@ -299,7 +319,8 @@ function saveGameResult(isWin, token) {
     }
     updateUIWithStats();
     
-    matchSecurityToken = null; // Consome o token
+    // Consome o token para impedir duplo salvamento
+    matchSecurityToken = null;
 }
 
 // --- LOCAL HISTORY ---
@@ -333,10 +354,12 @@ function loginGoogle() {
 }
 function logout() { auth.signOut().then(() => { showToast("SAIU", "#ffffff"); }); }
 
+// --- AUTH STATE & BOOT SYNC ---
 auth.onAuthStateChanged((user) => {
     const guestArea = document.getElementById('guest-input-area');
     const userArea = document.getElementById('user-profile-area');
     const gameControls = document.getElementById('game-controls');
+    
     if (user) {
         currentUser = user;
         guestArea.classList.add('hidden'); userArea.classList.remove('hidden'); gameControls.classList.remove('hidden');
@@ -347,6 +370,10 @@ auth.onAuthStateChanged((user) => {
         guestArea.classList.remove('hidden'); userArea.classList.add('hidden'); gameControls.classList.add('hidden');
         document.getElementById('modal-nickname').classList.add('hidden');
     }
+    
+    // AVISA O BOOT QUE O AUTH TERMINOU (LOGADO OU NÃO)
+    bootState.authFinished = true;
+    checkBootState();
 });
 
 // --- UI HELPERS ---
