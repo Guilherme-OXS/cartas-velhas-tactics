@@ -240,7 +240,9 @@ function saveGameResult(isWin, token) {
     // 1. Verifica se o token existe e bate com o interno
     if (!token || token !== matchSecurityToken) {
         console.warn("SECURITY ALERT: Tentativa de manipulação de resultado detectada.");
-        showToast("ERRO: DADOS INVÁLIDOS", "#ff0000");
+        // Em P2P, às vezes a sincronia falha. Se for vitória legítima mas sem token, 
+        // avisamos o usuário, mas não salvamos para proteger o ranking.
+        if (isWin) showToast("ERRO SYNC: VITÓRIA NÃO SALVA", "#ff3333");
         return;
     }
 
@@ -547,7 +549,14 @@ function handleConnectionRequest(c) {
 function configureConnection() { conn.on('open', () => { conn.send({ type: 'JOIN_HANDSHAKE', name: myName, rank: userStats.rank||1000 }); setupClientListener(); }); }
 function setupClientListener() { conn.on('data', handleData); conn.on('close', () => { showToast("DESCONECTADO", "#ff0000"); setTimeout(()=>location.reload(), 3000); }); }
 function handleData(data) {
-    if (data.type === 'STATE_UPDATE') { if(data.hostRank) opponentStats.rank = data.hostRank; syncState(data.state, data.serverTime); }
+    if (data.type === 'STATE_UPDATE') { 
+        if(data.hostRank) opponentStats.rank = data.hostRank; 
+        
+        // CORREÇÃO: Cliente recebe o token do Host aqui!
+        if(data.token) matchSecurityToken = data.token;
+        
+        syncState(data.state, data.serverTime); 
+    }
     else if (data.type === 'ACTION' && isHost) processAction(data.action, 'O');
     else if (data.type === 'TOAST') showToast(data.msg, data.color);
     else if (data.type === 'CHAT') showToast(data.msg, "#00e5ff");
@@ -564,7 +573,7 @@ function resetMatch() {
     GameState.hands = { 'X': generateHand(), 'O': generateHand() }; 
     GameState.turn = 'X'; 
     
-    // SECURITY RESET
+    // SECURITY RESET (HOST GERA O TOKEN)
     matchStartTime = Date.now();
     matchSecurityToken = Math.random().toString(36).substr(2) + Math.random().toString(36).substr(2);
     
@@ -651,10 +660,27 @@ function checkLineWin(player) {
 }
 
 function isProtected(idx) { return GameState.shields[idx] > 0; }
-function broadcastState() { if (!isBotMatch && conn && conn.open) conn.send({ type: 'STATE_UPDATE', state: GameState, serverTime: timeLeft, hostRank: userStats.rank||1000 }); syncState(GameState, timeLeft); }
+
+// --- CORREÇÃO: HOST ENVIA O TOKEN AQUI ---
+function broadcastState() { 
+    if (!isBotMatch && conn && conn.open) {
+        conn.send({ 
+            type: 'STATE_UPDATE', 
+            state: GameState, 
+            serverTime: timeLeft, 
+            hostRank: userStats.rank||1000,
+            token: matchSecurityToken // <--- CHAVE ENVIADA AO CLIENTE
+        }); 
+    }
+    syncState(GameState, timeLeft); 
+}
 
 function syncState(newState, serverTime) {
     Object.assign(GameState, newState); 
+    
+    // Inicia cronômetro local para o cliente
+    if(!isInGame && !GameState.winner) matchStartTime = Date.now();
+
     if (serverTime !== undefined) { if(Math.abs(timeLeft - serverTime) > 0.5) timeLeft = serverTime; }
     document.getElementById('name-x').innerText = GameState.names.X; document.getElementById('name-o').innerText = GameState.names.O;
     if(isQuickMatch) document.getElementById('room-code').innerText = "RÁPIDA"; if(isBotMatch) document.getElementById('room-code').innerText = "OFFLINE";
