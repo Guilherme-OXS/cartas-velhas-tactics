@@ -4,8 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <meta name="description" content="Cartas Velhas: Cyberpunk Tactics. Jogo de estratégia 3D.">
-    <title>Cartas Velhas: Cyberpunk Tactics v0.9.30 (UI & DB FIX)</title>
+    <meta name="description" content="Cartas Velhas: Cyberpunk Tactics. Uma reinvenção estratégica 3D multiplayer do Jogo da Velha com cartas, poderes e física. Jogue grátis online.">
+    <meta name="keywords" content="Cartas Velhas, Cyberpunk Tactics, Jogo da Velha 3D, Jogo de Estratégia, Multiplayer P2P, Guilherme Otávio Xavier de Souza, Browser Game, WebGL">
+    <meta name="author" content="Guilherme Otávio Xavier de Souza">
+    <meta name="robots" content="index, follow">
+
+    <meta property="og:title" content="Cartas Velhas: Cyberpunk Tactics">
+    <meta property="og:description" content="Desafia os teus amigos neste jogo tático 3D. Regra do Infinito, Cartas Especiais e Multiplayer em tempo real.">
+    <meta property="og:type" content="website">
+    
+    <title>Cartas Velhas: Cyberpunk Tactics v0.9.31 (MOBILE FIX)</title>
     <style>
         /* --- CORE STYLES --- */
         body { margin: 0; overflow: hidden; background-color: #050510; font-family: 'Segoe UI', Tahoma, monospace; user-select: none; touch-action: none; }
@@ -37,6 +45,7 @@
             box-shadow: 0 0 20px rgba(0, 229, 255, 0.1); backdrop-filter: blur(5px);
             transform: skewX(-2deg);
             margin: auto; text-align: center;
+            box-sizing: border-box; /* Garante que padding não estoure a largura */
         }
         
         .title-glitch { 
@@ -150,10 +159,10 @@
         .chat-bar { 
             position: absolute; 
             top: 50%; 
-            right: 20px; /* Alinhado à direita */
+            right: 20px; 
             transform: translateY(-50%); 
             display: flex; 
-            flex-direction: column; /* Vertical */
+            flex-direction: column; 
             gap: 15px; 
             pointer-events: auto; 
             z-index: 50;
@@ -182,6 +191,39 @@
         .history-item { border-bottom: 1px solid #333; padding: 3px 0; }
         .win-tag { color: #00ff88; font-weight: bold; }
         .lose-tag { color: #ff0055; font-weight: bold; }
+
+        /* --- MOBILE MEDIA QUERY (CORREÇÕES) --- */
+        @media only screen and (max-width: 600px) {
+            .title-glitch { font-size: 2.2rem; margin-bottom: 10px; }
+            .cyber-panel { padding: 15px; width: 95%; max-height: 90vh; overflow-y: auto; }
+            .cyber-btn { 
+                min-width: 120px; 
+                padding: 8px 12px; 
+                font-size: 0.75rem; 
+                margin: 3px; 
+            }
+            .user-profile-container { 
+                flex-direction: column; 
+                text-align: center; 
+                gap: 5px; 
+            }
+            .user-info { text-align: center; margin-bottom: 5px; }
+            .input-code { width: 160px; font-size: 1rem; }
+            
+            /* Ajuste HUD no mobile */
+            .hud-top { padding: 5px; }
+            .score-val { font-size: 1.8rem; }
+            
+            /* Ajuste Cartas no mobile */
+            .hand-wrapper { bottom: 10px; }
+            .card { width: 60px; height: 90px; }
+            .card-icon { font-size: 1.5rem; }
+            .card-name { font-size: 0.5rem; }
+            
+            /* Ajuste Chat no mobile */
+            .chat-bar { right: 5px; gap: 8px; }
+            .emoji-btn { width: 40px; height: 40px; font-size: 1.2rem; }
+        }
     </style>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -235,7 +277,7 @@
         <div class="cyber-panel">
             <div class="title-glitch">CARTAS<br>VELHAS</div>
             
-            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 30px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.30 (UI & DB FIX)</p>
+            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 30px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.31 (MOBILE FIX)</p>
             
             <div id="guest-input-area">
                 <p style="color:#aaa; font-size:0.8rem;">ACESSO RESTRITO A OPERADORES LOGADOS</p>
@@ -248,8 +290,10 @@
                     <div id="profile-name" class="user-nick">Player</div>
                     <div class="user-status">● Carregando stats...</div>
                 </div>
-                <button class="cyber-btn" style="min-width:auto; padding:5px 10px; font-size:0.6rem; margin-left:10px;" onclick="openScreen('screen-profile')">PERFIL</button>
-                <button class="cyber-btn secondary" style="min-width:auto; padding:5px 10px; font-size:0.6rem; margin-left:5px;" onclick="logout()">SAIR</button>
+                <div style="display:flex; justify-content:center; gap:5px; margin-top:5px;">
+                    <button class="cyber-btn" style="min-width:auto; padding:5px 10px; font-size:0.6rem;" onclick="openScreen('screen-profile')">PERFIL</button>
+                    <button class="cyber-btn secondary" style="min-width:auto; padding:5px 10px; font-size:0.6rem;" onclick="logout()">SAIR</button>
+                </div>
             </div>
             <br>
             
@@ -258,11 +302,13 @@
                 <br>
                 <button class="cyber-btn" onclick="startBotMatch()"><span>🤖 JOGAR VS BOT</span></button>
                 <br>
-                <button class="cyber-btn secondary" onclick="openScreen('screen-social')"><span>🔍 SOCIAL</span></button>
-                <button class="cyber-btn secondary" onclick="openScreen('screen-leaderboard')"><span>🏆 RANK GLOBAL</span></button>
+                <div style="display:flex; justify-content:center; gap:5px; margin-top:5px; flex-wrap:wrap;">
+                    <button class="cyber-btn secondary" style="min-width:120px;" onclick="openScreen('screen-social')"><span>🔍 SOCIAL</span></button>
+                    <button class="cyber-btn secondary" style="min-width:120px;" onclick="openScreen('screen-leaderboard')"><span>🏆 RANK GLOBAL</span></button>
+                </div>
                 <br>
-                <div style="margin-top: 10px;">
-                    <button class="cyber-btn secondary" onclick="openScreen('screen-lobby-custom')"><span>SALAS</span></button>
+                <div style="margin-top: 5px; display:flex; justify-content:center; gap:5px; flex-wrap:wrap;">
+                    <button class="cyber-btn secondary" style="min-width: 80px; font-size: 0.7rem;" onclick="openScreen('screen-lobby-custom')"><span>SALAS</span></button>
                     <button class="cyber-btn secondary" style="min-width: 80px; font-size: 0.7rem;" onclick="openScreen('screen-cards')"><span>CARTAS</span></button>
                     <button class="cyber-btn secondary" style="min-width: 80px; font-size: 0.7rem;" onclick="openScreen('screen-credits')"><span>CRÉDITOS</span></button>
                     <button class="cyber-btn secondary" style="min-width: 80px; font-size: 0.7rem;" onclick="openScreen('screen-updates')"><span>UPDATES</span></button>
@@ -374,6 +420,11 @@
         <div class="cyber-panel">
             <h2 style="color:#fff; margin-top:0;">SYSTEM LOG</h2>
             <div class="scroll-content">
+                <div class="update-block">
+                    <div class="update-title">v0.9.31 - Mobile Polish</div>
+                    <span class="update-item">UX: Interface adaptativa para smartphones.</span>
+                    <span class="update-item">Fix: Tamanhos de botões e textos ajustados.</span>
+                </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.30 - UI & DB Fix</div>
                     <span class="update-item">Fix: Alerta de erro no banco de dados.</span>
