@@ -56,34 +56,33 @@ let isMuted = false;
 let matchSecurityToken = null; // Token secreto gerado no início da partida
 let matchStartTime = 0;        // Timestamp de início para evitar vitórias instantâneas
 
-// --- BOOT SYSTEM (LOADING SCREEN) ---
-window.addEventListener('load', () => {
-    // Simula um carregamento de sistema para efeito visual
+// --- BOOT SYSTEM (TRUE LOADING - SEM ATRASO ARTIFICIAL) ---
+// Fase 1: HTML e JS lidos
+document.addEventListener("DOMContentLoaded", () => {
     let bar = document.getElementById('loading-fill');
     let text = document.getElementById('loading-text');
-    let width = 0;
+    if(bar) bar.style.width = '60%'; // Indica que o script começou a rodar
+    if(text) text.innerText = "> PARSING DATA...";
+});
+
+// Fase 2: Tudo carregado (imagens, scripts externos, css)
+window.addEventListener('load', () => {
+    let bar = document.getElementById('loading-fill');
+    let text = document.getElementById('loading-text');
+    let screen = document.getElementById('loading-screen');
     
-    let interval = setInterval(() => {
-        width += Math.random() * 5;
-        if(width > 100) width = 100;
-        bar.style.width = width + '%';
-        
-        if(width < 30) text.innerText = "> LOADING ASSETS...";
-        else if(width < 60) text.innerText = "> CONNECTING NEURAL NET...";
-        else if(width < 90) text.innerText = "> ESTABLISHING PEER LINK...";
-        
-        if(width >= 100) {
-            clearInterval(interval);
-            text.innerText = "> SYSTEM READY.";
-            setTimeout(() => {
-                document.getElementById('loading-screen').style.opacity = '0';
-                document.getElementById('screen-menu').classList.remove('hidden'); // Mostra menu
-                setTimeout(() => {
-                    document.getElementById('loading-screen').classList.add('hidden');
-                }, 500);
-            }, 500);
+    if(bar) bar.style.width = '100%'; // Completa a barra
+    if(text) text.innerText = "> SYSTEM READY.";
+    
+    // Remove a tela assim que possível (apenas um pequeno delay de 300ms para a transição CSS não ser brusca demais)
+    setTimeout(() => {
+        if(screen) {
+            screen.style.opacity = '0';
+            document.getElementById('screen-menu').classList.remove('hidden');
+            // Remove do DOM após o fade-out
+            setTimeout(() => screen.classList.add('hidden'), 500);
         }
-    }, 50); // Velocidade do loading
+    }, 300);
 });
 
 // --- DATABASE LOGIC ---
@@ -264,29 +263,25 @@ function updateUIWithStats() {
     document.getElementById('stat-losses').innerText = userStats.losses || 0;
 }
 
-// --- SECURITY & SAVE LOGIC ---
+// --- SECURITY & SAVE LOGIC (CORREÇÃO DE BUG) ---
 function saveGameResult(isWin, token) {
-    // --- SECURITY CHECK ---
-    // 1. Verifica se o token existe e bate com o interno
+    // 1. Check Token
     if (!token || token !== matchSecurityToken) {
-        console.warn("SECURITY ALERT: Tentativa de manipulação de resultado detectada.");
-        showToast("ERRO: DADOS INVÁLIDOS", "#ff0000");
+        if(isWin) showToast("ERRO: SYNC FAIL", "#ff3333");
+        console.warn("SECURITY ALERT: Token mismatch.");
         return;
     }
 
-    // 2. Verifica se a partida durou pelo menos 5 segundos (evita auto-win imediato)
+    // 2. Check Time (REDUZIDO PARA 1s)
     const duration = Date.now() - matchStartTime;
-    if (duration < 5000) {
-        console.warn("SECURITY ALERT: Partida muito curta (<5s).");
+    if (duration < 1000) {
+        if(isWin) showToast("ERRO: VERY FAST", "#ff3333");
+        console.warn("SECURITY ALERT: Partida < 1s.");
         return;
     }
 
-    // 3. Verifica se existe realmente um vencedor no estado do jogo
-    if (!GameState.winner) {
-        console.warn("SECURITY ALERT: Tentativa de salvar sem vencedor definido.");
-        return;
-    }
-    // ----------------------
+    // 3. Check Winner State
+    if (!GameState.winner) return;
 
     if (!currentUser) return; 
     if (isBotMatch) { saveLocalHistory(isWin ? "Vitória vs BOT" : "Derrota vs BOT", isWin); return; }
@@ -304,8 +299,7 @@ function saveGameResult(isWin, token) {
     }
     updateUIWithStats();
     
-    // Consome o token para impedir duplo salvamento
-    matchSecurityToken = null;
+    matchSecurityToken = null; // Consome o token
 }
 
 // --- LOCAL HISTORY ---
