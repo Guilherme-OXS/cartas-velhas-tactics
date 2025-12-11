@@ -61,6 +61,9 @@ let matchStartTime = 0;        // Timestamp de início para evitar vitórias ins
 async function loadUserProfile(user) {
     try {
         const userRef = db.collection('players').doc(user.uid);
+        // Atualiza lastSeen imediatamente no login
+        userRef.set({ lastSeen: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+        
         const doc = await userRef.get();
 
         if (doc.exists) {
@@ -83,6 +86,7 @@ async function loadUserProfile(user) {
                 losses: 0,
                 rank: 1000, 
                 hasSetNick: false,
+                lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             };
             await userRef.set(userStats);
@@ -90,12 +94,48 @@ async function loadUserProfile(user) {
         }
         updateUIWithStats();
         loadMatchHistory();
+        startHeartbeat(); // Inicia o "pulso" online
     } catch (e) {
         console.error("Erro no DB:", e);
         if(e.code === 'permission-denied' || e.message.includes('permission-denied')) {
             showToast("ERRO DB: PERMISSÃO NEGADA (Check Console)", "#ff0000");
             console.warn("⚠️ ALERTA: O banco de dados no Firebase não foi ativado ou as regras bloqueiam escrita.");
         }
+    }
+}
+
+// --- ONLINE STATUS SYSTEM ---
+function startHeartbeat() {
+    // 1. Atualiza o contador imediatamente
+    updateOnlineCount();
+    
+    // 2. Loop de Heartbeat (a cada 1 minuto avisa que está online)
+    setInterval(() => {
+        if(currentUser) {
+            db.collection('players').doc(currentUser.uid).update({
+                lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(e => console.log("Heartbeat skip"));
+        }
+    }, 60000); 
+
+    // 3. Atualiza o contador visual a cada 2 minutos
+    setInterval(updateOnlineCount, 120000);
+}
+
+async function updateOnlineCount() {
+    try {
+        // Pega jogadores ativos nos últimos 5 minutos
+        const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
+        const snapshot = await db.collection('players')
+            .where('lastSeen', '>', fiveMinAgo)
+            .get();
+        
+        const count = snapshot.size || 1; // Pelo menos eu estou online
+        document.getElementById('online-count-val').innerText = count;
+        document.getElementById('online-counter-display').classList.remove('hidden');
+    } catch(e) {
+        console.log("Erro contador online (provavelmente falta Index):", e);
+        // Fallback: não mostra nada se der erro de índice no Firebase
     }
 }
 

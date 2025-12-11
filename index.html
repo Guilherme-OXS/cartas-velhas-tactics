@@ -6,7 +6,7 @@
     
     <meta name="description" content="Cartas Velhas: Cyberpunk Tactics. Jogo de estratégia 3D.">
     <meta name="author" content="Guilherme Otávio Xavier de Souza">
-    <title>Cartas Velhas: Cyberpunk Tactics v0.9.33 (SECURE)</title>
+    <title>Cartas Velhas: Cyberpunk Tactics v0.9.34 (ONLINE COUNT)</title>
     
     <link rel="stylesheet" href="style.css">
     
@@ -61,7 +61,12 @@
         <div class="cyber-panel">
             <div class="title-glitch">CARTAS<br>VELHAS</div>
             
-            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 30px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.33 (SECURE)</p>
+            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 10px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.34 (LIVE OPS)</p>
+            
+            <div id="online-counter-display" class="online-tag hidden">
+                <span class="live-dot">●</span> <span id="online-count-val">0</span> AGENTES ONLINE
+            </div>
+            <br>
             
             <div id="guest-input-area">
                 <p style="color:#aaa; font-size:0.8rem;">ACESSO RESTRITO A OPERADORES LOGADOS</p>
@@ -202,6 +207,11 @@
         <div class="cyber-panel">
             <h2 style="color:#fff; margin-top:0;">SYSTEM LOG</h2>
             <div class="scroll-content">
+                <div class="update-block">
+                    <div class="update-title">v0.9.34 - Live Ops</div>
+                    <span class="update-item">Feature: Contador de Jogadores Online.</span>
+                    <span class="update-item">System: Heartbeat automático para Firestore.</span>
+                </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.33 - Security Patch</div>
                     <span class="update-item">Security: Token de validação de vitória.</span>

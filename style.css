@@ -175,6 +175,11 @@ body::after {
 .win-tag { color: #00ff88; font-weight: bold; }
 .lose-tag { color: #ff0055; font-weight: bold; }
 
+/* ESTILOS DO CONTADOR ONLINE */
+.online-tag { color: #00ff88; font-size: 0.8rem; border: 1px solid #00ff88; padding: 5px 15px; border-radius: 20px; display: inline-block; background: rgba(0, 255, 136, 0.1); margin-bottom: 10px; font-weight: bold; letter-spacing: 1px; }
+.live-dot { color: #00ff88; animation: pulse-dot 1.5s infinite; }
+@keyframes pulse-dot { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
 /* --- MOBILE MEDIA QUERY (CORREÇÕES) --- */
 @media only screen and (max-width: 600px) {
     .title-glitch { font-size: 2.2rem; margin-bottom: 10px; }
