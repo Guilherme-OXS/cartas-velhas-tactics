@@ -23,7 +23,7 @@ const MAX_PUB_ROOMS = 20;
 const BOT_TIMEOUT = 10000; 
 
 const CARDS = {
-    'PLACE': { name: 'Básica', icon: ♟️', rarity: 'common', weight: 40, desc: 'Coloca uma peça no tabuleiro. Se tiveres 3, a mais velha some.' },
+    'PLACE': { name: 'Básica', icon: '♟️', rarity: 'common', weight: 40, desc: 'Coloca uma peça no tabuleiro. Se tiveres 3, a mais velha some.' },
     'BOMB': { name: 'Bomba', icon: '💣', rarity: 'rare', weight: 15, desc: 'Destrói uma peça do inimigo (se não tiver escudo).' },
     'SHIELD': { name: 'Escudo', icon: '🛡️', rarity: 'rare', weight: 15, desc: 'Coloca uma peça protegida contra Bombas e Trocas.' },
     'MOVE': { name: 'Mover', icon: '🔄', rarity: 'rare', weight: 10, desc: 'Move uma peça TUA para um espaço vazio.' },
@@ -844,4 +844,5 @@ function onInput(x, y) {
 window.addEventListener('mousedown', e => { if(e.button===0) onInput(e.clientX, e.clientY); else resetSelection(); });
 window.addEventListener('touchstart', e => { if(e.touches.length > 0 && e.target.tagName === 'CANVAS') { e.preventDefault(); onInput(e.touches[0].clientX, e.touches[0].clientY); } }, {passive: false});
 function showToast(m,c) { const t=document.getElementById('toast-msg'); t.innerText=m; t.style.textShadow=`0 0 50px ${c}`; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000); }
+
 function quitGame() { if(conn) conn.close(); location.reload(); }
