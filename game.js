@@ -56,6 +56,36 @@ let isMuted = false;
 let matchSecurityToken = null; // Token secreto gerado no início da partida
 let matchStartTime = 0;        // Timestamp de início para evitar vitórias instantâneas
 
+// --- BOOT SYSTEM (LOADING SCREEN) ---
+window.addEventListener('load', () => {
+    // Simula um carregamento de sistema para efeito visual
+    let bar = document.getElementById('loading-fill');
+    let text = document.getElementById('loading-text');
+    let width = 0;
+    
+    let interval = setInterval(() => {
+        width += Math.random() * 5;
+        if(width > 100) width = 100;
+        bar.style.width = width + '%';
+        
+        if(width < 30) text.innerText = "> LOADING ASSETS...";
+        else if(width < 60) text.innerText = "> CONNECTING NEURAL NET...";
+        else if(width < 90) text.innerText = "> ESTABLISHING PEER LINK...";
+        
+        if(width >= 100) {
+            clearInterval(interval);
+            text.innerText = "> SYSTEM READY.";
+            setTimeout(() => {
+                document.getElementById('loading-screen').style.opacity = '0';
+                document.getElementById('screen-menu').classList.remove('hidden'); // Mostra menu
+                setTimeout(() => {
+                    document.getElementById('loading-screen').classList.add('hidden');
+                }, 500);
+            }, 500);
+        }
+    }, 50); // Velocidade do loading
+});
+
 // --- DATABASE LOGIC ---
 
 async function loadUserProfile(user) {
@@ -240,9 +270,7 @@ function saveGameResult(isWin, token) {
     // 1. Verifica se o token existe e bate com o interno
     if (!token || token !== matchSecurityToken) {
         console.warn("SECURITY ALERT: Tentativa de manipulação de resultado detectada.");
-        // Em P2P, às vezes a sincronia falha. Se for vitória legítima mas sem token, 
-        // avisamos o usuário, mas não salvamos para proteger o ranking.
-        if (isWin) showToast("ERRO SYNC: VITÓRIA NÃO SALVA", "#ff3333");
+        showToast("ERRO: DADOS INVÁLIDOS", "#ff0000");
         return;
     }
 

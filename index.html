@@ -16,7 +16,7 @@
 
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
 
-    <title>Cartas Velhas: Cyberpunk Tactics v0.9.38 (ICON UPDATE)</title>
+    <title>Cartas Velhas: Cyberpunk Tactics v0.9.40 (BOOT SCREEN)</title>
     
     <link rel="stylesheet" href="style.css">
     
@@ -28,6 +28,16 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
+
+    <div id="loading-screen">
+        <div class="loader-content">
+            <div class="glitch-text" style="font-size: 2rem; font-weight: bold; margin-bottom: 20px;">SYSTEM BOOT</div>
+            <div class="loading-bar-frame">
+                <div id="loading-fill" class="loading-bar-fill"></div>
+            </div>
+            <div id="loading-text" style="font-family: monospace; color: #00ff88; font-size: 0.8rem; margin-top: 10px;">> INITIALIZING KERNEL...</div>
+        </div>
+    </div>
 
     <div id="canvas-container" style="position: absolute; top:0; left:0; width:100%; height:100%;"></div>
 
@@ -67,11 +77,10 @@
         <button onclick="quitGame()" class="cyber-btn secondary pointer-events-auto" style="position:absolute; top:10px; right:10px; min-width:auto; padding:5px 15px; font-size:0.7rem;"><span>SAIR</span></button>
     </div>
 
-    <div id="screen-menu" class="screen">
-        <div class="cyber-panel">
+    <div id="screen-menu" class="screen hidden"> <div class="cyber-panel">
             <div class="title-glitch">CARTAS<br>VELHAS</div>
             
-            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 10px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.38 (ICON UPDATE)</p>
+            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 10px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.40 (BOOT SCREEN)</p>
             
             <div id="online-counter-display" class="online-tag hidden">
                 <span class="live-dot">●</span> <span id="online-count-val">0</span> AGENTES ONLINE
@@ -217,6 +226,11 @@
         <div class="cyber-panel">
             <h2 style="color:#fff; margin-top:0;">SYSTEM LOG</h2>
             <div class="scroll-content">
+                <div class="update-block">
+                    <div class="update-title">v0.9.40 - Boot Screen</div>
+                    <span class="update-item">UX: Tela de carregamento estilo Terminal.</span>
+                    <span class="update-item">System: Transições suaves no início.</span>
+                </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.38 - Icon Update</div>
                     <span class="update-item">UI: Novo ícone de aba (Favicon) estilo Robô.</span>

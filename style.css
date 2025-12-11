@@ -13,6 +13,18 @@ body::after {
 
 :root { --x-color: #ff0055; --o-color: #00e5ff; --card-bg: rgba(10, 10, 20, 0.90); }
 
+/* --- TELA DE CARREGAMENTO (BOOT SCREEN) --- */
+#loading-screen {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: #000; z-index: 9999;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+}
+.loader-content { text-align: center; color: var(--o-color); width: 80%; max-width: 400px; }
+.loading-bar-frame { width: 100%; height: 10px; border: 2px solid #333; padding: 2px; }
+.loading-bar-fill { height: 100%; width: 0%; background: var(--o-color); transition: width 0.2s; box-shadow: 0 0 10px var(--o-color); }
+.glitch-text { animation: glitch-anim 0.5s infinite; color: #fff; text-shadow: 2px 2px var(--x-color); }
+
 /* UI COMPONENTS */
 .screen { 
     position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
