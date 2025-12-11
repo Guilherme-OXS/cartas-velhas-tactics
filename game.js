@@ -141,7 +141,7 @@ async function updateOnlineCount() {
 
 function saveInitialNickname() {
     if(!currentUser) return;
-    const newNick = document.getElementById('permanent-nick-input').value.trim().toUpperCase();
+    const newNick = document.getElementById('permanent-nick-input').value.trim();
     if(newNick.length > 2 && newNick.length <= 10) {
         db.collection('players').doc(currentUser.uid).update({ displayName: newNick, hasSetNick: true })
         .then(() => {
@@ -156,7 +156,7 @@ function saveInitialNickname() {
 
 function saveNewNickname() {
     if(!currentUser) { showToast("ERRO: NÃO LOGADO", "#ff0000"); return; }
-    const newNick = document.getElementById('edit-nick-input').value.trim().toUpperCase();
+    const newNick = document.getElementById('edit-nick-input').value.trim();
     if(newNick.length > 0 && newNick.length <= 10) {
         // Atualiza DB
         db.collection('players').doc(currentUser.uid).update({ displayName: newNick })
@@ -175,7 +175,7 @@ function saveNewNickname() {
 }
 
 async function searchPlayer() {
-    const queryName = document.getElementById('search-player-input').value.trim().toUpperCase();
+    const queryName = document.getElementById('search-player-input').value.trim();
     const resultsArea = document.getElementById('search-results-area');
     resultsArea.innerHTML = '<div class="loader"></div>';
     if(queryName.length === 0) { resultsArea.innerHTML = '<p style="color:#aaa;">DIGITE UM NOME</p>'; return; }

@@ -6,7 +6,7 @@
     
     <meta name="description" content="Cartas Velhas: Cyberpunk Tactics. Jogo de estratégia 3D.">
     <meta name="author" content="Guilherme Otávio Xavier de Souza">
-    <title>Cartas Velhas: Cyberpunk Tactics v0.9.35 (UNIFORM TEXT)</title>
+    <title>Cartas Velhas: Cyberpunk Tactics v0.9.36 (NATURAL CASE)</title>
     
     <link rel="stylesheet" href="style.css">
     
@@ -25,7 +25,7 @@
         <div class="cyber-panel" style="text-align: center;">
             <h2 style="color:var(--o-color);">IDENTIFICAÇÃO NECESSÁRIA</h2>
             <p style="color:#fff;">ESCOLHA SEU NOME DE GUERRA PERMANENTE</p>
-            <input type="text" id="permanent-nick-input" class="input-code" maxlength="10" placeholder="NICKNAME" style="border-color: var(--o-color);">
+            <input type="text" id="permanent-nick-input" class="input-code" maxlength="10" placeholder="Nickname" style="border-color: var(--o-color);">
             <br>
             <button class="cyber-btn" onclick="saveInitialNickname()"><span>CONFIRMAR</span></button>
         </div>
@@ -61,7 +61,7 @@
         <div class="cyber-panel">
             <div class="title-glitch">CARTAS<br>VELHAS</div>
             
-            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 10px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.35 (UNIFORM TEXT)</p>
+            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 10px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.36 (NATURAL CASE)</p>
             
             <div id="online-counter-display" class="online-tag hidden">
                 <span class="live-dot">●</span> <span id="online-count-val">0</span> AGENTES ONLINE
@@ -148,7 +148,7 @@
         <div class="cyber-panel">
             <h2 style="color:#fff; margin-top:0;">REDE NEURAL</h2>
             <p style="color:#aaa; font-size:0.8rem;">BUSCAR AGENTES ATIVOS</p>
-            <input type="text" id="search-player-input" class="input-code" placeholder="NICK DO JOGADOR">
+            <input type="text" id="search-player-input" class="input-code" placeholder="Nick do Jogador">
             <button class="cyber-btn" onclick="searchPlayer()"><span>BUSCAR</span></button>
             
             <div id="search-results-area" class="scroll-content" style="margin-top:20px; height: 300px;">
@@ -207,6 +207,11 @@
         <div class="cyber-panel">
             <h2 style="color:#fff; margin-top:0;">SYSTEM LOG</h2>
             <div class="scroll-content">
+                <div class="update-block">
+                    <div class="update-title">v0.9.36 - Natural Case</div>
+                    <span class="update-item">UI: Nomes exibidos conforme digitados (ex: 'Gui' vs 'GUI').</span>
+                    <span class="update-item">Fix: Input de busca agora é case-sensitive.</span>
+                </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.35 - Uniform Text</div>
                     <span class="update-item">UI: Padronização de nomes em MAIÚSCULAS.</span>

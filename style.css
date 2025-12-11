@@ -116,7 +116,7 @@ body::after {
 .user-profile-container { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 20px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; border: 1px solid #333; }
 .user-avatar { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--o-color); object-fit: cover; }
 .user-info { text-align: left; }
-.user-nick { color: #fff; font-weight: bold; font-size: 0.9rem; text-transform: uppercase; }
+.user-nick { color: #fff; font-weight: bold; font-size: 0.9rem; }
 .user-status { color: #00ff88; font-size: 0.7rem; }
 
 .stats-grid { display: flex; justify-content: space-around; width: 100%; margin-top: 20px; gap: 10px; }
@@ -127,12 +127,12 @@ body::after {
 
 .search-result-card { background: rgba(0,0,0,0.6); border: 1px solid #444; border-left: 2px solid var(--o-color); padding: 10px; margin-bottom: 10px; display: flex; align-items: center; gap: 15px; }
 .search-info { text-align: left; flex: 1; }
-.search-name { color: #fff; font-weight: bold; font-size: 1rem; text-transform: uppercase; }
+.search-name { color: #fff; font-weight: bold; font-size: 1rem; }
 .search-rank { color: #bd00ff; font-size: 0.8rem; font-weight: bold; }
 
 .ranking-row { display: flex; align-items: center; padding: 8px; border-bottom: 1px solid #333; color: #ccc; font-size: 0.8rem; }
 .rank-num { width: 30px; font-weight: bold; color: var(--o-color); }
-.rank-name { flex: 1; text-align: left; font-weight: bold; color: #fff; text-transform: uppercase; }
+.rank-name { flex: 1; text-align: left; font-weight: bold; color: #fff; }
 .rank-elo { width: 60px; text-align: right; color: #bd00ff; font-weight: bold; }
 .rank-wl { width: 80px; text-align: right; color: #888; font-size: 0.7rem; }
 
