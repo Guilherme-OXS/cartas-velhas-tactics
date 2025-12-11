@@ -4,16 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <meta name="description" content="Cartas Velhas: Cyberpunk Tactics. Uma reinvenção estratégica 3D multiplayer do Jogo da Velha com cartas, poderes e física. Jogue grátis online.">
-    <meta name="keywords" content="Cartas Velhas, Cyberpunk Tactics, Jogo da Velha 3D, Jogo de Estratégia, Multiplayer P2P, Guilherme Otávio Xavier de Souza, Browser Game, WebGL">
-    <meta name="author" content="Guilherme Otávio Xavier de Souza">
-    <meta name="robots" content="index, follow">
-
-    <meta property="og:title" content="Cartas Velhas: Cyberpunk Tactics">
-    <meta property="og:description" content="Desafia os teus amigos neste jogo tático 3D. Regra do Infinito, Cartas Especiais e Multiplayer em tempo real.">
-    <meta property="og:type" content="website">
-    
-    <title>Cartas Velhas: Cyberpunk Tactics v0.9.31 (MOBILE FIX)</title>
+    <meta name="description" content="Cartas Velhas: Cyberpunk Tactics. Jogo de estratégia 3D.">
+    <title>Cartas Velhas: Cyberpunk Tactics v0.9.32 (STABLE CAM)</title>
     <style>
         /* --- CORE STYLES --- */
         body { margin: 0; overflow: hidden; background-color: #050510; font-family: 'Segoe UI', Tahoma, monospace; user-select: none; touch-action: none; }
@@ -45,7 +37,7 @@
             box-shadow: 0 0 20px rgba(0, 229, 255, 0.1); backdrop-filter: blur(5px);
             transform: skewX(-2deg);
             margin: auto; text-align: center;
-            box-sizing: border-box; /* Garante que padding não estoure a largura */
+            box-sizing: border-box;
         }
         
         .title-glitch { 
@@ -277,7 +269,7 @@
         <div class="cyber-panel">
             <div class="title-glitch">CARTAS<br>VELHAS</div>
             
-            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 30px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.31 (MOBILE FIX)</p>
+            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 30px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.32 (STABLE CAM)</p>
             
             <div id="guest-input-area">
                 <p style="color:#aaa; font-size:0.8rem;">ACESSO RESTRITO A OPERADORES LOGADOS</p>
@@ -290,10 +282,8 @@
                     <div id="profile-name" class="user-nick">Player</div>
                     <div class="user-status">● Carregando stats...</div>
                 </div>
-                <div style="display:flex; justify-content:center; gap:5px; margin-top:5px;">
-                    <button class="cyber-btn" style="min-width:auto; padding:5px 10px; font-size:0.6rem;" onclick="openScreen('screen-profile')">PERFIL</button>
-                    <button class="cyber-btn secondary" style="min-width:auto; padding:5px 10px; font-size:0.6rem;" onclick="logout()">SAIR</button>
-                </div>
+                <button class="cyber-btn" style="min-width:auto; padding:5px 10px; font-size:0.6rem; margin-left:10px;" onclick="openScreen('screen-profile')">PERFIL</button>
+                <button class="cyber-btn secondary" style="min-width:auto; padding:5px 10px; font-size:0.6rem; margin-left:5px;" onclick="logout()">SAIR</button>
             </div>
             <br>
             
@@ -420,6 +410,11 @@
         <div class="cyber-panel">
             <h2 style="color:#fff; margin-top:0;">SYSTEM LOG</h2>
             <div class="scroll-content">
+                <div class="update-block">
+                    <div class="update-title">v0.9.32 - Stable Camera</div>
+                    <span class="update-item">UX: Câmera fixa no mobile para evitar erros.</span>
+                    <span class="update-item">UX: Toque exclusivo para jogar.</span>
+                </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.31 - Mobile Polish</div>
                     <span class="update-item">UX: Interface adaptativa para smartphones.</span>
@@ -1251,7 +1246,7 @@
     }
 
     function updateVisuals() {
-        if(!isUserInteracting) camera.userData.targetRot = (mySide==='X') ? 0 : Math.PI; 
+        camera.userData.targetRot = (mySide==='X') ? 0 : Math.PI; // Rotação fixa
         pieceGroup.clear();
         if(GameState.winningLine) spawnWinParticles(GameState.winningLine);
         GameState.board.forEach((c, i) => {
@@ -1296,35 +1291,15 @@
 
     const raycaster = new THREE.Raycaster(); const mouse = new THREE.Vector2(); let menuTime = 0;
     
-    // CAMERA TOUCH CONTROLS
-    let isUserInteracting = false, onMouseDownMouseX = 0, onMouseDownMouseY = 0, lon = 0, onMouseDownLon = 0, lat = 0, onMouseDownLat = 0;
-    
-    document.addEventListener('touchstart', (e) => {
-        if(e.touches.length === 1 && !e.target.closest('.card') && !e.target.closest('button')) {
-            isUserInteracting = true;
-            onMouseDownMouseX = e.touches[0].clientX;
-            onMouseDownLon = lon;
-        }
-    }, {passive: false});
-    
-    document.addEventListener('touchmove', (e) => {
-        if(isUserInteracting) {
-            lon = (onMouseDownMouseX - e.touches[0].clientX) * 0.5 + onMouseDownLon;
-        }
-    }, {passive: false});
-    
-    document.addEventListener('touchend', () => { isUserInteracting = false; });
+    // --- CÂMERA FIXA NO MOBILE (Sem listeners de touchmove para câmera) ---
 
     function animate() {
         requestAnimationFrame(animate);
         if(isInGame) {
             if(cameraShake > 0) { cameraShake -= 0.05; if(cameraShake < 0) cameraShake = 0; camera.position.x += (Math.random()-0.5) * cameraShake; camera.position.y += (Math.random()-0.5) * cameraShake; camera.position.z += (Math.random()-0.5) * cameraShake; }
             
-            // CAMERA LOGIC
+            // CAMERA LOGIC SIMPLIFICADA (FIXA)
             let targetRot = camera.userData.targetRot || 0;
-            if(isUserInteracting) {
-                targetRot = THREE.MathUtils.degToRad(lon);
-            }
             const angle = THREE.MathUtils.lerp(Math.atan2(camera.position.x, camera.position.z), targetRot, 0.05);
             
             if(cameraShake < 0.1) { camera.position.x = Math.sin(angle) * 14; camera.position.z = Math.cos(angle) * 14; camera.position.y = THREE.MathUtils.lerp(camera.position.y, 15, 0.1); camera.lookAt(0,0,0); }
@@ -1334,7 +1309,6 @@
         pieceGroup.children.forEach(p => { 
             p.rotation.y += p.userData.spinSpeed || 0.01; 
             if(p.userData.isGlitching) { 
-                // Feedback visual de "Infinito" (pisca)
                 const scale = 0.9 + Math.sin(Date.now() * 0.01) * 0.1;
                 p.scale.setScalar(scale); 
             } 
@@ -1425,7 +1399,7 @@
     }
 
     window.addEventListener('mousedown', e => { if(e.button===0) onInput(e.clientX, e.clientY); else resetSelection(); });
-    // Touchstart já gerenciado no controle de câmera
+    window.addEventListener('touchstart', e => { if(e.touches.length > 0 && e.target.tagName === 'CANVAS') { e.preventDefault(); onInput(e.touches[0].clientX, e.touches[0].clientY); } }, {passive: false});
     function showToast(m,c) { const t=document.getElementById('toast-msg'); t.innerText=m; t.style.textShadow=`0 0 50px ${c}`; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000); }
     function quitGame() { if(conn) conn.close(); location.reload(); }
 
