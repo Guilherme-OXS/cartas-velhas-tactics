@@ -1,5 +1,5 @@
 /* --- CORE STYLES --- */
-body { margin: 0; overflow: hidden; background-color: #050510; font-family: 'Segoe UI', Tahoma, monospace; user-select: none; touch-action: none; }
+body { margin: 0; overflow: hidden; background-color: #050510; font-family: 'Segoe UI', Tahoma, monospace; user-select: none; touch-action: none; height: 100vh; height: 100dvh; }
 
 /* Scanlines */
 body::after {
@@ -24,6 +24,14 @@ body::after {
 .loading-bar-frame { width: 100%; height: 10px; border: 2px solid #333; padding: 2px; }
 .loading-bar-fill { height: 100%; width: 0%; background: var(--o-color); transition: width 0.2s; box-shadow: 0 0 10px var(--o-color); }
 .glitch-text { animation: glitch-anim 0.5s infinite; color: #fff; text-shadow: 2px 2px var(--x-color); }
+
+/* INVITE MODAL */
+#invite-modal {
+    position:fixed; top:20px; left:50%; transform:translateX(-50%);
+    background:rgba(0,0,0,0.95); border:2px solid var(--o-color);
+    padding:20px; z-index:2000; text-align:center;
+    box-shadow:0 0 25px var(--o-color); min-width:280px; border-radius: 5px;
+}
 
 /* UI COMPONENTS */
 .screen { 
@@ -114,7 +122,7 @@ body::after {
 #hint-pill { position: absolute; top: 120px; background: rgba(0,0,0,0.8); border: 1px solid var(--o-color); color: #fff; padding: 5px 15px; border-radius: 4px; font-size: 0.8rem; transform: translateY(-20px); opacity: 0; transition: 0.3s; pointer-events: none; letter-spacing: 2px; }
 #hint-pill.active { transform: translateY(0); opacity: 1; }
 
-#toast-msg { position: absolute; top: 40%; width: 100%; text-align: center; font-size: 3rem; font-weight: 900; color: #fff; text-shadow: 0 0 20px var(--x-color); opacity: 0; pointer-events: none; transition: 0.3s; z-index: 200; transform: scale(0.5); }
+#toast-msg { position: absolute; top: 40%; width: 100%; text-align: center; font-size: 2rem; font-weight: 900; color: #fff; text-shadow: 0 0 20px var(--x-color); opacity: 0; pointer-events: none; transition: 0.3s; z-index: 200; transform: scale(0.5); width: 80%; left: 10%; background: rgba(0,0,0,0.5); border-radius: 10px; padding: 10px; }
 #toast-msg.show { transform: scale(1); opacity: 1; }
 
 @keyframes glitch-anim { 0% { text-shadow: 3px 3px 0px var(--x-color); } 20% { text-shadow: -3px -3px 0px var(--o-color); } 40% { text-shadow: 2px -2px 0px #fff; } 100% { text-shadow: 3px 3px 0px var(--x-color); } }

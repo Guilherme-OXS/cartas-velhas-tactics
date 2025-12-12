@@ -9,12 +9,12 @@
     <meta name="robots" content="index, follow">
 
     <meta property="og:title" content="Cartas Velhas: Cyberpunk Tactics">
-    <meta property="og:description" content="Desafia os teus amigos neste jogo tático 3D. Regra do Infinito, Cartas Especiais e Multiplayer em tempo real.">
+    <meta property="og:description" content="Estratégia 3D Multiplayer. Jogue agora.">
     <meta property="og:type" content="website">
 
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
 
-    <title>Cartas Velhas: Cyberpunk Tactics v0.9.45 (SOCIAL HUB)</title>
+    <title>Cartas Velhas: Cyberpunk Tactics v0.9.46 (STABLE)</title>
     
     <link rel="stylesheet" href="style.css">
     
@@ -37,11 +37,13 @@
         </div>
     </div>
 
-    <div id="invite-modal" class="hidden" style="position:fixed; top:20px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.9); border:2px solid var(--o-color); padding:15px; z-index:2000; text-align:center; box-shadow:0 0 20px var(--o-color); min-width:250px;">
+    <div id="invite-modal" class="hidden">
         <div style="color:#fff; font-weight:bold; margin-bottom:10px;">CONVITE RECEBIDO</div>
         <div id="invite-text" style="color:#aaa; font-size:0.9rem; margin-bottom:15px;">Player te chamou!</div>
-        <button class="cyber-btn" onclick="acceptInvite()">ACEITAR</button>
-        <button class="cyber-btn secondary" onclick="closeInvite()">RECUSAR</button>
+        <div style="display:flex; gap:10px; justify-content:center;">
+            <button class="cyber-btn" onclick="acceptInvite()">ACEITAR</button>
+            <button class="cyber-btn secondary" onclick="closeInvite()">RECUSAR</button>
+        </div>
     </div>
 
     <div id="canvas-container" style="position: absolute; top:0; left:0; width:100%; height:100%;"></div>
@@ -85,7 +87,7 @@
     <div id="screen-menu" class="screen hidden">
         <div class="cyber-panel">
             <div class="title-glitch">CARTAS<br>VELHAS</div>
-            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 10px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.45 (SOCIAL HUB)</p>
+            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 10px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.46 (STABLE)</p>
             
             <div id="online-counter-display" class="online-tag hidden">
                 <span class="live-dot">●</span> <span id="online-count-val">0</span> AGENTES ONLINE
@@ -178,6 +180,18 @@
         </div>
     </div>
 
+    <div id="screen-lobby-custom" class="screen hidden">
+        <h2 style="color:#fff;">MODO PRIVADO</h2>
+        <button class="cyber-btn" onclick="openLobby('host')"><span>CRIAR SALA</span></button>
+        <button class="cyber-btn" onclick="openLobby('join')"><span>ENTRAR COM CÓDIGO</span></button>
+        <br><br>
+        <div id="lobby-friends-invite" style="margin-top:20px; display:none;">
+            <p style="color:#aaa; font-size:0.8rem;">CONVIDAR AMIGOS ONLINE</p>
+            <div id="lobby-friends-list" style="max-height:100px; overflow-y:auto;"></div>
+        </div>
+        <button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button>
+    </div>
+
     <div id="screen-leaderboard" class="screen hidden">
         <div class="cyber-panel">
             <h2 style="color:#bd00ff; margin-top:0;">TOP 100 ELITE</h2>
@@ -213,176 +227,38 @@
             <h2 style="color:#fff; margin-top:0;">SYSTEM LOG</h2>
             <div class="scroll-content">
                 <div class="update-block">
-                    <div class="update-title">v0.9.45 - Social Hub</div>
-                    <span class="update-item">Feature: Tela Social Unificada (Busca + Amigos).</span>
-                    <span class="update-item">Fix: Convites apenas para amigos Online.</span>
-                    <span class="update-item">Fix: Persistência de pedidos de amizade offline.</span>
+                    <div class="update-title">v0.9.46 - Stability</div>
+                    <span class="update-item">Fix: Estabilidade no sistema de Amigos (Anti-Duplicação).</span>
+                    <span class="update-item">UI: Feedback visual de mensagens ajustado.</span>
                 </div>
                 <div class="update-block">
-                    <div class="update-title">v0.9.43 - Smart Boot</div>
-                    <span class="update-item">UX: Loading Screen sincronizada com Login.</span>
+                    <div class="update-title">v0.9.45 - Social Hub</div>
+                    <span class="update-item">Feature: Tela Social Unificada (Busca + Amigos).</span>
+                    <span class="update-item">Feature: Convites de partida em tempo real.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.40 - Boot Screen</div>
-                    <span class="update-item">UX: Tela de carregamento estilo Terminal.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.38 - Icon Update</div>
-                    <span class="update-item">UI: Novo ícone de aba (Favicon) estilo Robô.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.37 - SEO Patch</div>
-                    <span class="update-item">System: Metadados para Google e Redes Sociais adicionados.</span>
+                    <span class="update-item">UX: Tela de carregamento inteligente.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.36 - Natural Case</div>
                     <span class="update-item">UI: Nomes exibidos conforme digitados.</span>
                 </div>
                 <div class="update-block">
-                    <div class="update-title">v0.9.35 - Uniform Text</div>
-                    <span class="update-item">UI: Padronização de nomes em MAIÚSCULAS.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.34 - Live Ops</div>
-                    <span class="update-item">Feature: Contador de Jogadores Online.</span>
-                    <span class="update-item">System: Heartbeat automático para Firestore.</span>
-                </div>
-                <div class="update-block">
                     <div class="update-title">v0.9.33 - Security Patch</div>
-                    <span class="update-item">Security: Token de validação de vitória.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.32 - Stable Camera</div>
-                    <span class="update-item">UX: Câmera fixa no mobile para evitar erros.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.31 - Mobile Polish</div>
-                    <span class="update-item">UX: Interface adaptativa para smartphones.</span>
+                    <span class="update-item">Security: Token de validação e verificação de tempo.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.30 - UI & DB Fix</div>
                     <span class="update-item">Fix: Alerta de erro no banco de dados.</span>
                 </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.29 - Name Fix & UI Polish</div>
-                    <span class="update-item">Fix: Salvar nome agora funciona corretamente.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.28 - Ultimate Update</div>
-                    <span class="update-item">Feature: Chat Rápido (Emojis).</span>
-                    <span class="update-item">Feature: Botão Mute & Histórico de Partidas.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.27 - Rank & Nick Fix</div>
-                    <span class="update-item">Fix: Input de nome agora carrega o valor correto.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.26 - Login & Anim Fix</div>
-                    <span class="update-item">Sistema: Jogo permitido apenas após Login.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.25 - Security & Bot Fix</div>
-                    <span class="update-item">Fix: Bot agora usa as cartas corretamente.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.24 - Fixes & Logs</div>
-                    <span class="update-item">UI: Correção de alinhamento central dos painéis.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.23 - Fixes Finais</div>
-                    <span class="update-item">Profile: Mudança de nome liberada.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.22 - Identidade & Ranking</div>
-                    <span class="update-item">Sistema: Ranking Global (Top 100) por ELO.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.21 - Social & Fair Play</div>
-                    <span class="update-item">Feature: Busca de Amigos (Tela Social).</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.20 - Perfil Avançado</div>
-                    <span class="update-item">Feature: Tela de Perfil completa.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.19 - Persistência Total</div>
-                    <span class="update-item">Database: Firestore conectado.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.17 - Login System</div>
-                    <span class="update-item">Backend: Integração com Firebase (Google).</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.16 - Stability Patch</div>
-                    <span class="update-item">Segurança: Proteção contra nomes inválidos.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.15 - Quality of Life</div>
-                    <span class="update-item">Correção: Jogador 2 recebe cartas.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.13 - Sync Fix</div>
-                    <span class="update-item">Correção: Distribuição de cartas corrigida.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.12 - Empate & Fixes</div>
-                    <span class="update-item">Nova Regra: EMPATE se ambos vencerem na mesma jogada.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.10 - Bot Update</div>
-                    <span class="update-item">Modo VS Bot Disponível.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.9 - Restauração</div>
-                    <span class="update-item">Correção Crítica: Matchmaking revertido.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.8.0 - Cyber Polish</div>
-                    <span class="update-item">Menu Principal estilo "Terminal Hacker".</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.7.0 - Expansão Mobile</div>
-                    <span class="update-item">Partida Rápida: Algoritmo automático.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.6.0 - Polimento</div>
-                    <span class="update-item">Handshake Robusto.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.5.0 - Multiplayer P2P</div>
-                    <span class="update-item">Conexão Direta via PeerJS.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.4.0 - Sistema de Cartas</div>
-                    <span class="update-item">Introdução do Deck Building.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.3.0 - A Revolução 3D</div>
-                    <span class="update-item">Migração para Three.js.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.2.0 - Ação e "Sumo"</div>
-                    <span class="update-item">Poderes Iniciais.</span>
-                </div>
                 <div class="update-block" style="border:none;">
-                    <div class="update-title">v0.1.0 - A Base</div>
-                    <span class="update-item">Mecânica Principal: Regra do Infinito.</span>
+                    <div class="update-title">Arquivo Legado (v0.1.0 - v0.9.29)</div>
+                    <span class="update-item">Historico completo de versões anteriores arquivado.</span>
                 </div>
             </div>
             <center><button class="cyber-btn secondary" style="margin-top:20px;" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button></center>
         </div>
-    </div>
-
-    <div id="screen-lobby-custom" class="screen hidden">
-        <h2 style="color:#fff;">MODO PRIVADO</h2>
-        <button class="cyber-btn" onclick="openLobby('host')"><span>CRIAR SALA</span></button>
-        <button class="cyber-btn" onclick="openLobby('join')"><span>ENTRAR COM CÓDIGO</span></button>
-        <br><br>
-        <div id="lobby-friends-invite" style="margin-top:20px; display:none;">
-            <p style="color:#aaa; font-size:0.8rem;">CONVIDAR AMIGOS ONLINE</p>
-            <div id="lobby-friends-list" style="max-height:100px; overflow-y:auto;"></div>
-        </div>
-        <button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button>
     </div>
 
     <div id="screen-lobby-wait" class="screen hidden">

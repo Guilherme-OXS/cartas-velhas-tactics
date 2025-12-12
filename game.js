@@ -22,6 +22,7 @@ const APP_ID = "cv-tactics-final-v5-";
 const MAX_PUB_ROOMS = 20;
 const BOT_TIMEOUT = 10000; 
 
+// SE EMOJIS APARECEREM ESTRANHOS, SALVE ESTE ARQUIVO COMO UTF-8
 const CARDS = {
     'PLACE': { name: 'Básica', icon: '♟️', rarity: 'common', weight: 40, desc: 'Coloca uma peça no tabuleiro. Se tiveres 3, a mais velha some.' },
     'BOMB': { name: 'Bomba', icon: '💣', rarity: 'rare', weight: 15, desc: 'Destrói uma peça do inimigo (se não tiver escudo).' },
@@ -55,6 +56,7 @@ let isMuted = false;
 // --- SECURITY VARIABLES ---
 let matchSecurityToken = null; 
 let matchStartTime = 0; 
+let socialInitialized = false; // Prevents duplicate listeners
 
 // --- BOOT SYSTEM (TRUE LOADING) ---
 let bootState = { animFinished: false, authFinished: false };
@@ -120,7 +122,7 @@ async function loadUserProfile(user) {
         updateUIWithStats();
         loadMatchHistory();
         startHeartbeat();
-        setupFriendSystem(); // INICIA SOCIAL
+        setupFriendSystem(); 
     } catch (e) {
         console.error("Erro no DB:", e);
     }
@@ -130,7 +132,8 @@ async function loadUserProfile(user) {
 let incomingInviteCode = null;
 
 function setupFriendSystem() {
-    if(!currentUser) return;
+    if(!currentUser || socialInitialized) return;
+    socialInitialized = true; // LOCK
     
     // 1. Escutar Pedidos de Amizade Pendentes
     db.collection('friend_requests').where('to', '==', currentUser.uid)
@@ -168,7 +171,6 @@ function setupFriendSystem() {
             const fDoc = await db.collection('players').doc(doc.id).get();
             let isOnline = false;
             
-            // Check de Online mais rigoroso
             if(fDoc.exists && fDoc.data().lastSeen) {
                 const diff = Date.now() - fDoc.data().lastSeen.toMillis();
                 if(diff < 120000) isOnline = true; // 2 minutos
@@ -187,7 +189,6 @@ function setupFriendSystem() {
             
             list.innerHTML += html;
             
-            // Adiciona também na lista do Lobby APENAS se estiver online
             if(isOnline) {
                 document.getElementById('lobby-friends-invite').style.display = 'block';
                 lobbyList.innerHTML += html;
@@ -245,11 +246,15 @@ function searchPlayer() {
                 </div>`;
         }
         if(resultsArea.innerHTML === '') resultsArea.innerHTML = '<p style="color:#aaa;">É você mesmo.</p>';
+    })
+    .catch(e => {
+        console.error(e);
+        if(e.message.includes('index')) resultsArea.innerHTML = '<p style="color:#ff3333;">ERRO DB: Index Faltando</p>';
+        else resultsArea.innerHTML = '<p style="color:#ff3333;">Erro de conexão.</p>';
     });
 }
 
 function sendFriendRequest(targetUid) {
-    // Verifica spam (se já mandou)
     db.collection('friend_requests')
         .where('from', '==', currentUser.uid)
         .where('to', '==', targetUid)
