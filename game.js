@@ -56,7 +56,7 @@ let isMuted = false;
 // --- SECURITY VARIABLES ---
 let matchSecurityToken = null; 
 let matchStartTime = 0; 
-let socialInitialized = false; // Prevents duplicate listeners
+let socialInitialized = false; 
 
 // --- BOOT SYSTEM (TRUE LOADING) ---
 let bootState = { animFinished: false, authFinished: false };
@@ -104,7 +104,7 @@ async function loadUserProfile(user) {
             if (userStats.rank === undefined) userRef.update({ rank: 1000, wins: 0, losses: 0 }); 
             if(userStats.hasSetNick) {
                 myName = userStats.displayName;
-                showToast(`WINS: ${userStats.wins}`, "#00ff88");
+                // REMOVIDO: showToast(`WINS: ${userStats.wins}`, "#00ff88"); (A pedido: era intrusivo)
             } else {
                 document.getElementById('modal-nickname').classList.remove('hidden');
             }
@@ -122,7 +122,7 @@ async function loadUserProfile(user) {
         updateUIWithStats();
         loadMatchHistory();
         startHeartbeat();
-        setupFriendSystem(); 
+        setupFriendSystem();
     } catch (e) {
         console.error("Erro no DB:", e);
     }
@@ -171,6 +171,7 @@ function setupFriendSystem() {
             const fDoc = await db.collection('players').doc(doc.id).get();
             let isOnline = false;
             
+            // Check de Online mais rigoroso
             if(fDoc.exists && fDoc.data().lastSeen) {
                 const diff = Date.now() - fDoc.data().lastSeen.toMillis();
                 if(diff < 120000) isOnline = true; // 2 minutos
@@ -189,6 +190,7 @@ function setupFriendSystem() {
             
             list.innerHTML += html;
             
+            // Adiciona também na lista do Lobby APENAS se estiver online
             if(isOnline) {
                 document.getElementById('lobby-friends-invite').style.display = 'block';
                 lobbyList.innerHTML += html;
