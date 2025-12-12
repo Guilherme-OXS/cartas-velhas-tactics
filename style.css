@@ -193,8 +193,8 @@ body::after {
 @keyframes pulse-dot { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 
 .friend-card { background: rgba(255,255,255,0.05); border: 1px solid #333; padding: 10px; margin-bottom: 5px; display: flex; align-items: center; justify-content: space-between; }
-.friend-name { font-weight: bold; color: #fff; }
-.status-indicator { width: 10px; height: 10px; border-radius: 50%; background: #555; display: inline-block; margin-right: 5px; }
+.friend-name { font-weight: bold; color: #fff; margin-left: 5px; }
+.status-indicator { width: 10px; height: 10px; border-radius: 50%; background: #555; display: inline-block; }
 .status-indicator.online { background: #00ff88; box-shadow: 0 0 5px #00ff88; }
 
 /* --- MOBILE MEDIA QUERY (CORREÇÕES) --- */

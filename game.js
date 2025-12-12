@@ -126,7 +126,7 @@ async function loadUserProfile(user) {
     }
 }
 
-// --- FRIEND & INVITE SYSTEM (NOVO) ---
+// --- FRIEND & INVITE SYSTEM (UNIFICADO) ---
 let incomingInviteCode = null;
 
 function setupFriendSystem() {
@@ -140,11 +140,11 @@ function setupFriendSystem() {
         snapshot.forEach(doc => {
             const req = doc.data();
             list.innerHTML += `
-                <div class="friend-card" style="border-color:#ffaa00;">
-                    <span class="friend-name">${req.fromName}</span>
+                <div class="friend-card" style="border: 1px solid #ffaa00;">
+                    <span class="friend-name" style="color:#ffaa00;">${req.fromName} quer ser seu amigo.</span>
                     <div>
-                        <button class="cyber-btn" style="min-width:auto; padding:5px;" onclick="acceptFriend('${doc.id}', '${req.from}', '${req.fromName}')">✓</button>
-                        <button class="cyber-btn secondary" style="min-width:auto; padding:5px;" onclick="rejectFriend('${doc.id}')">X</button>
+                        <button class="cyber-btn" style="min-width:auto; padding:5px 10px;" onclick="acceptFriend('${doc.id}', '${req.from}', '${req.fromName}')">✓</button>
+                        <button class="cyber-btn secondary" style="min-width:auto; padding:5px 10px;" onclick="rejectFriend('${doc.id}')">X</button>
                     </div>
                 </div>`;
         });
@@ -159,32 +159,35 @@ function setupFriendSystem() {
         lobbyList.innerHTML = '';
         
         if(snapshot.empty) {
-            list.innerHTML = '<p style="color:#aaa; text-align:center;">Sem amigos adicionados.</p>';
+            list.innerHTML = '<p style="color:#aaa; text-align:center;">Busque jogadores acima para adicionar.</p>';
             return;
         }
 
         snapshot.forEach(async doc => {
             const f = doc.data();
-            // Checa status online (se lastSeen < 2 min)
             const fDoc = await db.collection('players').doc(doc.id).get();
             let isOnline = false;
+            
+            // Check de Online mais rigoroso
             if(fDoc.exists && fDoc.data().lastSeen) {
                 const diff = Date.now() - fDoc.data().lastSeen.toMillis();
-                if(diff < 120000) isOnline = true;
+                if(diff < 120000) isOnline = true; // 2 minutos
             }
 
             const html = `
                 <div class="friend-card">
-                    <div>
+                    <div style="display:flex; align-items:center;">
                         <span class="status-indicator ${isOnline?'online':''}"></span>
                         <span class="friend-name">${f.name}</span>
                     </div>
-                    ${isOnline ? `<button class="cyber-btn" style="min-width:auto; padding:5px 10px; font-size:0.7rem;" onclick="inviteFriend('${doc.id}')">✉️</button>` : '<span style="color:#666; font-size:0.7rem;">OFF</span>'}
+                    ${isOnline 
+                        ? `<button class="cyber-btn" style="min-width:auto; padding:5px 10px; font-size:0.7rem;" onclick="inviteFriend('${doc.id}')">✉️ CONVIDAR</button>` 
+                        : '<span style="color:#666; font-size:0.7rem;">OFFLINE</span>'}
                 </div>`;
             
             list.innerHTML += html;
             
-            // Adiciona também na lista do Lobby se estiver online
+            // Adiciona também na lista do Lobby APENAS se estiver online
             if(isOnline) {
                 document.getElementById('lobby-friends-invite').style.display = 'block';
                 lobbyList.innerHTML += html;
@@ -201,42 +204,74 @@ function setupFriendSystem() {
                 incomingInviteCode = invite.code;
                 document.getElementById('invite-text').innerText = `${invite.from} te chamou para a batalha!`;
                 document.getElementById('invite-modal').classList.remove('hidden');
-                SoundFX.matchWin(); // Som de alerta
-                // Remove o convite do banco para não spamar
+                SoundFX.matchWin(); 
                 change.doc.ref.delete(); 
             }
         });
     });
 }
 
-function sendFriendRequest() {
-    const targetNick = document.getElementById('add-friend-input').value.trim();
-    if(!targetNick) return;
+// BUSCAR PARA ADICIONAR (UNIFICADO)
+function searchPlayer() {
+    const queryName = document.getElementById('search-player-input').value.trim();
+    const resultsArea = document.getElementById('search-results-area');
+    resultsArea.innerHTML = '<div class="loader"></div>';
     
-    db.collection('players').where('displayName', '==', targetNick).limit(1).get()
-    .then(snapshot => {
-        if(snapshot.empty) { showToast("JOGADOR NÃO ENCONTRADO", "#ff3333"); return; }
-        const targetDoc = snapshot.docs[0];
-        if(targetDoc.id === currentUser.uid) { showToast("ERRO: É VOCÊ", "#ff3333"); return; }
+    if(!queryName) { resultsArea.innerHTML = '<p style="color:#aaa;">Digite um nome.</p>'; return; }
+    
+    db.collection('players').where('displayName', '==', queryName).limit(5).get()
+    .then(async snapshot => {
+        resultsArea.innerHTML = '';
+        if(snapshot.empty) { resultsArea.innerHTML = '<p style="color:#ff3333;">Ninguém encontrado.</p>'; return; }
         
-        db.collection('friend_requests').add({
-            from: currentUser.uid,
-            fromName: myName,
-            to: targetDoc.id,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        }).then(() => {
-            showToast("PEDIDO ENVIADO", "#00ff88");
-            document.getElementById('add-friend-input').value = '';
-        });
+        for (const doc of snapshot.docs) {
+            const p = doc.data();
+            if(doc.id === currentUser.uid) continue; // Não mostrar a si mesmo
+
+            // Verifica se já é amigo
+            const friendCheck = await db.collection('players').doc(currentUser.uid).collection('friends').doc(doc.id).get();
+            const isFriend = friendCheck.exists;
+
+            resultsArea.innerHTML += `
+                <div class="search-result-card">
+                    <img src="${p.photoURL}" class="user-avatar">
+                    <div class="search-info">
+                        <div class="search-name">${p.displayName}</div>
+                        <div class="search-rank">RANK: ${p.rank || 1000}</div>
+                    </div>
+                    ${isFriend 
+                        ? '<span style="color:#00ff88; font-size:0.8rem;">AMIGO ✓</span>' 
+                        : `<button class="cyber-btn" style="min-width:auto; padding:5px 10px;" onclick="sendFriendRequest('${doc.id}')">➕</button>`}
+                </div>`;
+        }
+        if(resultsArea.innerHTML === '') resultsArea.innerHTML = '<p style="color:#aaa;">É você mesmo.</p>';
     });
 }
 
+function sendFriendRequest(targetUid) {
+    // Verifica spam (se já mandou)
+    db.collection('friend_requests')
+        .where('from', '==', currentUser.uid)
+        .where('to', '==', targetUid)
+        .get()
+        .then(snap => {
+            if(!snap.empty) { showToast("JÁ ENVIADO", "#ffaa00"); return; }
+            
+            db.collection('friend_requests').add({
+                from: currentUser.uid,
+                fromName: myName,
+                to: targetUid,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => {
+                showToast("PEDIDO ENVIADO", "#00ff88");
+                searchPlayer(); // Atualiza a lista para sumir o botão
+            });
+        });
+}
+
 function acceptFriend(reqId, friendUid, friendName) {
-    // Adiciona na minha lista
     db.collection('players').doc(currentUser.uid).collection('friends').doc(friendUid).set({ name: friendName });
-    // Adiciona na lista dele
     db.collection('players').doc(friendUid).collection('friends').doc(currentUser.uid).set({ name: myName });
-    // Remove pedido
     db.collection('friend_requests').doc(reqId).delete();
     showToast("AMIGO ADICIONADO", "#00ff88");
 }
@@ -247,10 +282,7 @@ function rejectFriend(reqId) {
 
 function inviteFriend(friendUid) {
     if(!peer || !peer.id) { showToast("CRIE UMA SALA PRIMEIRO", "#ff3333"); return; }
-    
-    // Extrai o código da sala do peer ID
     const code = peer.id.replace(APP_ID, '');
-    
     db.collection('players').doc(friendUid).collection('invites').add({
         code: code,
         from: myName,
@@ -328,30 +360,6 @@ function saveNewNickname() {
         })
         .catch(err => { showToast("ERRO AO SALVAR", "#ff0000"); });
     } else { showToast("NOME INVÁLIDO", "#ff3333"); }
-}
-
-async function searchPlayer() {
-    const queryName = document.getElementById('search-player-input').value.trim();
-    const resultsArea = document.getElementById('search-results-area');
-    resultsArea.innerHTML = '<div class="loader"></div>';
-    if(queryName.length === 0) { resultsArea.innerHTML = '<p style="color:#aaa;">DIGITE UM NOME</p>'; return; }
-    try {
-        const snapshot = await db.collection('players').where('displayName', '==', queryName).limit(5).get();
-        resultsArea.innerHTML = '';
-        if(snapshot.empty) { resultsArea.innerHTML = '<p style="color:#ff3333;">NENHUM AGENTE ENCONTRADO</p>'; return; }
-        snapshot.forEach(doc => {
-            const p = doc.data();
-            resultsArea.innerHTML += `
-                <div class="search-result-card">
-                    <img src="${p.photoURL}" class="user-avatar">
-                    <div class="search-info">
-                        <div class="search-name">${p.displayName}</div>
-                        <div class="search-rank">RANK: ${p.rank || 1000}</div>
-                        <div style="color:#aaa; font-size:0.7rem;">VITÓRIAS: ${p.wins || 0}</div>
-                    </div>
-                </div>`;
-        });
-    } catch(e) { resultsArea.innerHTML = '<p style="color:#ff3333;">ERRO DE REDE</p>'; }
 }
 
 async function loadLeaderboard() {

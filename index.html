@@ -2,11 +2,9 @@
 <html lang="pt-pt">
 <head>
     <meta charset="UTF-8">
-    
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <meta name="description" content="Cartas Velhas: Cyberpunk Tactics. Uma reinvenção estratégica 3D multiplayer do Jogo da Velha com cartas, poderes e física. Jogue grátis online.">
-    <meta name="keywords" content="Cartas Velhas, Cyberpunk Tactics, Jogo da Velha 3D, Jogo de Estratégia, Multiplayer P2P, Guilherme Otávio Xavier de Souza, Browser Game, WebGL">
+    <meta name="description" content="Cartas Velhas: Cyberpunk Tactics. Jogo de estratégia 3D multiplayer.">
     <meta name="author" content="Guilherme Otávio Xavier de Souza">
     <meta name="robots" content="index, follow">
 
@@ -16,7 +14,7 @@
 
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
 
-    <title>Cartas Velhas: Cyberpunk Tactics v0.9.44 (SOCIAL LINK)</title>
+    <title>Cartas Velhas: Cyberpunk Tactics v0.9.45 (SOCIAL HUB)</title>
     
     <link rel="stylesheet" href="style.css">
     
@@ -50,9 +48,9 @@
 
     <div id="modal-nickname" class="hidden">
         <div class="cyber-panel" style="text-align: center;">
-            <h2 style="color:var(--o-color);">IDENTIFICAÇÃO NECESSÁRIA</h2>
-            <p style="color:#fff;">ESCOLHA SEU NOME DE GUERRA PERMANENTE</p>
-            <input type="text" id="permanent-nick-input" class="input-code" maxlength="10" placeholder="Nickname" style="border-color: var(--o-color);">
+            <h2 style="color:var(--o-color);">IDENTIFICAÇÃO</h2>
+            <p style="color:#fff;">ESCOLHA SEU NOME DE GUERRA</p>
+            <input type="text" id="permanent-nick-input" class="input-code" maxlength="10" placeholder="Nickname">
             <br>
             <button class="cyber-btn" onclick="saveInitialNickname()"><span>CONFIRMAR</span></button>
         </div>
@@ -87,8 +85,7 @@
     <div id="screen-menu" class="screen hidden">
         <div class="cyber-panel">
             <div class="title-glitch">CARTAS<br>VELHAS</div>
-            
-            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 10px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.44 (SOCIAL LINK)</p>
+            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 10px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.45 (SOCIAL HUB)</p>
             
             <div id="online-counter-display" class="online-tag hidden">
                 <span class="live-dot">●</span> <span id="online-count-val">0</span> AGENTES ONLINE
@@ -116,10 +113,7 @@
                 <br>
                 <button class="cyber-btn" onclick="startBotMatch()"><span>🤖 JOGAR VS BOT</span></button>
                 <br>
-                <div style="display:flex; justify-content:center; gap:5px; margin-top:5px; flex-wrap:wrap;">
-                    <button class="cyber-btn secondary" style="min-width:120px;" onclick="openScreen('screen-social')"><span>🔍 BUSCAR</span></button>
-                    <button class="cyber-btn secondary" style="min-width:120px;" onclick="openScreen('screen-friends')"><span>👥 AMIGOS</span></button>
-                </div>
+                <button class="cyber-btn secondary" style="width: 200px;" onclick="openScreen('screen-social')"><span>👥 SOCIAL & AMIGOS</span></button>
                 <br>
                 <div style="margin-top: 5px; display:flex; justify-content:center; gap:5px; flex-wrap:wrap;">
                     <button class="cyber-btn secondary" style="min-width: 80px; font-size: 0.7rem;" onclick="openScreen('screen-leaderboard')"><span>RANK</span></button>
@@ -128,6 +122,33 @@
                     <button class="cyber-btn secondary" style="min-width: 80px; font-size: 0.7rem;" onclick="openScreen('screen-updates')"><span>UPDATES</span></button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div id="screen-social" class="screen hidden">
+        <div class="cyber-panel" style="max-width: 700px;">
+            <h2 style="color:#fff; margin-top:0;">REDE NEURAL</h2>
+            
+            <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <p style="color:#aaa; font-size:0.8rem; margin-top:0;">BUSCAR NOVOS AGENTES</p>
+                <div style="display:flex; gap:5px;">
+                    <input type="text" id="search-player-input" class="input-code" placeholder="Nick exato" style="width:100%; font-size:0.9rem;">
+                    <button class="cyber-btn" onclick="searchPlayer()" style="min-width:auto;">🔍</button>
+                </div>
+                <div id="search-results-area" style="margin-top:10px;"></div>
+            </div>
+
+            <div id="friend-requests-area">
+                <div id="friend-requests-list"></div>
+            </div>
+
+            <h3 style="color:var(--o-color); font-size:1rem; border-bottom:1px solid #333; padding-bottom:5px;">MEUS AMIGOS</h3>
+            <div id="friends-list-content" class="scroll-content" style="height: 250px;">
+                <p style="color:#aaa; text-align:center;">Carregando lista...</p>
+            </div>
+            
+            <br>
+            <button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button>
         </div>
     </div>
 
@@ -143,66 +164,15 @@
                     <button class="cyber-btn secondary" style="min-width: auto; padding: 10px;" onclick="saveNewNickname()">💾</button>
                 </div>
             </div>
-
             <div class="stats-grid">
-                <div class="stat-box" style="border-color: #bd00ff;">
-                    <div class="stat-val" id="stat-rank" style="color:#bd00ff;">---</div>
-                    <div class="stat-label">ELO RANK</div>
-                </div>
-                <div class="stat-box" style="border-color: #00ff88;">
-                    <div class="stat-val" id="stat-wins" style="color:#00ff88;">---</div>
-                    <div class="stat-label">VITÓRIAS</div>
-                </div>
-                <div class="stat-box" style="border-color: #ff0055;">
-                    <div class="stat-val" id="stat-losses" style="color:#ff0055;">---</div>
-                    <div class="stat-label">DERROTAS</div>
-                </div>
+                <div class="stat-box" style="border-color: #bd00ff;"><div class="stat-val" id="stat-rank">---</div><div class="stat-label">ELO RANK</div></div>
+                <div class="stat-box" style="border-color: #00ff88;"><div class="stat-val" id="stat-wins">---</div><div class="stat-label">VITÓRIAS</div></div>
+                <div class="stat-box" style="border-color: #ff0055;"><div class="stat-val" id="stat-losses">---</div><div class="stat-label">DERROTAS</div></div>
             </div>
-            
             <div style="margin-top: 20px;">
                 <label style="color:#aaa; font-size:0.7rem;">HISTÓRICO RECENTE (LOCAL)</label>
-                <div id="match-history-list" class="history-list">
-                    <div style="text-align:center; padding-top:20px;">Sem dados recentes.</div>
-                </div>
+                <div id="match-history-list" class="history-list"><div style="text-align:center;">Sem dados.</div></div>
             </div>
-            
-            <br>
-            <button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button>
-        </div>
-    </div>
-    
-    <div id="screen-friends" class="screen hidden">
-        <div class="cyber-panel">
-            <h2 style="color:#fff; margin-top:0;">LISTA DE AMIGOS</h2>
-            
-            <div style="display:flex; gap:5px; margin-bottom:20px;">
-                <input type="text" id="add-friend-input" class="input-code" placeholder="Nickname Exato" style="width:100%; font-size:0.9rem;">
-                <button class="cyber-btn" onclick="sendFriendRequest()" style="min-width:auto;">➕</button>
-            </div>
-
-            <div id="friend-requests-list"></div>
-            
-            <div style="border-bottom: 1px solid #333; margin: 10px 0;"></div>
-            
-            <div id="friends-list-content" class="scroll-content" style="height: 300px;">
-                <p style="color:#aaa; text-align:center;">Carregando...</p>
-            </div>
-            
-            <br>
-            <button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button>
-        </div>
-    </div>
-    
-    <div id="screen-social" class="screen hidden">
-        <div class="cyber-panel">
-            <h2 style="color:#fff; margin-top:0;">REDE NEURAL</h2>
-            <p style="color:#aaa; font-size:0.8rem;">BUSCAR AGENTES ATIVOS</p>
-            <input type="text" id="search-player-input" class="input-code" placeholder="Nick do Jogador">
-            <button class="cyber-btn" onclick="searchPlayer()"><span>BUSCAR</span></button>
-            
-            <div id="search-results-area" class="scroll-content" style="margin-top:20px; height: 300px;">
-                </div>
-            
             <br>
             <button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button>
         </div>
@@ -211,27 +181,15 @@
     <div id="screen-leaderboard" class="screen hidden">
         <div class="cyber-panel">
             <h2 style="color:#bd00ff; margin-top:0;">TOP 100 ELITE</h2>
-            <div style="border-bottom: 2px solid #333; padding-bottom: 5px; margin-bottom: 10px; display:flex; color:#666; font-size:0.7rem; font-weight:bold;">
-                <span style="width:30px;">#</span>
-                <span style="flex:1; text-align:left;">AGENTE</span>
-                <span style="width:60px; text-align:right;">ELO</span>
-                <span style="width:80px; text-align:right;">W / L</span>
-            </div>
-            
-            <div id="leaderboard-list" class="scroll-content" style="height: 400px;">
-                <div class="loader"></div>
-            </div>
-            
-            <br>
-            <button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button>
+            <div id="leaderboard-list" class="scroll-content" style="height: 400px;"><div class="loader"></div></div>
+            <br><button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button>
         </div>
     </div>
 
     <div id="screen-cards" class="screen hidden">
         <div class="cyber-panel">
             <h2 style="color:#fff; margin-top:0;">CONHECIMENTO</h2>
-            <div class="scroll-content" id="cards-list-ui">
-                </div>
+            <div class="scroll-content" id="cards-list-ui"></div>
             <center><button class="cyber-btn secondary" style="margin-top:20px;" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button></center>
         </div>
     </div>
@@ -240,13 +198,11 @@
         <div class="cyber-panel">
             <h2 style="color:#fff; margin-top:0;">CRÉDITOS</h2>
             <div style="color:#ccc; text-align:center;">
-                DESENVOLVIDO POR:
-                <span class="credits-name">Guilherme Otávio<br>Xavier de Souza</span>
+                DESENVOLVIDO POR: <span class="credits-name">Guilherme Otávio<br>Xavier de Souza</span>
                 <hr style="border-color:#333; margin: 20px 0;">
                 <p>Engine: Three.js WebGL</p>
                 <p>Network: PeerJS P2P</p>
                 <p>Backend: Firebase Auth & Firestore</p>
-                <p>Audio: WebAudio API Synth</p>
             </div>
             <center><button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button></center>
         </div>
@@ -257,9 +213,10 @@
             <h2 style="color:#fff; margin-top:0;">SYSTEM LOG</h2>
             <div class="scroll-content">
                 <div class="update-block">
-                    <div class="update-title">v0.9.44 - Social Link</div>
-                    <span class="update-item">Feature: Sistema de Amigos (Adicionar/Aceitar).</span>
-                    <span class="update-item">Feature: Convites de partida em tempo real.</span>
+                    <div class="update-title">v0.9.45 - Social Hub</div>
+                    <span class="update-item">Feature: Tela Social Unificada (Busca + Amigos).</span>
+                    <span class="update-item">Fix: Convites apenas para amigos Online.</span>
+                    <span class="update-item">Fix: Persistência de pedidos de amizade offline.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.43 - Smart Boot</div>
@@ -288,6 +245,7 @@
                 <div class="update-block">
                     <div class="update-title">v0.9.34 - Live Ops</div>
                     <span class="update-item">Feature: Contador de Jogadores Online.</span>
+                    <span class="update-item">System: Heartbeat automático para Firestore.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.33 - Security Patch</div>
@@ -344,11 +302,11 @@
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.20 - Perfil Avançado</div>
-                    <span class="update-item">Feature: Tela de Perfil completa (Wins/Losses/Rank).</span>
+                    <span class="update-item">Feature: Tela de Perfil completa.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.19 - Persistência Total</div>
-                    <span class="update-item">Database: Firestore conectado para salvar vitórias.</span>
+                    <span class="update-item">Database: Firestore conectado.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.17 - Login System</div>
@@ -356,7 +314,7 @@
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.16 - Stability Patch</div>
-                    <span class="update-item">Segurança: Proteção contra nomes inválidos/longos.</span>
+                    <span class="update-item">Segurança: Proteção contra nomes inválidos.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.15 - Quality of Life</div>
@@ -364,11 +322,11 @@
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.13 - Sync Fix</div>
-                    <span class="update-item">Correção: Distribuição de cartas no modo "Criar Sala" corrigida.</span>
+                    <span class="update-item">Correção: Distribuição de cartas corrigida.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.12 - Empate & Fixes</div>
-                    <span class="update-item">Nova Regra: EMPATE se ambos vencerem na mesma jogada (Troca).</span>
+                    <span class="update-item">Nova Regra: EMPATE se ambos vencerem na mesma jogada.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.10 - Bot Update</div>
@@ -376,18 +334,18 @@
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.9 - Restauração</div>
-                    <span class="update-item">Correção Crítica: Matchmaking revertido para lógica estável.</span>
+                    <span class="update-item">Correção Crítica: Matchmaking revertido.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.8.0 - Cyber Polish</div>
                     <span class="update-item">Menu Principal estilo "Terminal Hacker".</span>
                 </div>
                 <div class="update-block">
-                    <div class="update-title">v0.7.0 - Expansão Mobile & Matchmaking</div>
-                    <span class="update-item">Partida Rápida: Algoritmo automático de busca de salas.</span>
+                    <div class="update-title">v0.7.0 - Expansão Mobile</div>
+                    <span class="update-item">Partida Rápida: Algoritmo automático.</span>
                 </div>
                 <div class="update-block">
-                    <div class="update-title">v0.6.0 - Polimento de Jogabilidade</div>
+                    <div class="update-title">v0.6.0 - Polimento</div>
                     <span class="update-item">Handshake Robusto.</span>
                 </div>
                 <div class="update-block">
@@ -400,16 +358,15 @@
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.3.0 - A Revolução 3D</div>
-                    <span class="update-item">Migração para Three.js (WebGL).</span>
+                    <span class="update-item">Migração para Three.js.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.2.0 - Ação e "Sumo"</div>
-                    <span class="update-item">Poderes Iniciais, Screen shake e Áudio.</span>
+                    <span class="update-item">Poderes Iniciais.</span>
                 </div>
                 <div class="update-block" style="border:none;">
                     <div class="update-title">v0.1.0 - A Base</div>
                     <span class="update-item">Mecânica Principal: Regra do Infinito.</span>
-                    <span class="update-item">Visual 2D Inicial.</span>
                 </div>
             </div>
             <center><button class="cyber-btn secondary" style="margin-top:20px;" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button></center>
@@ -421,12 +378,10 @@
         <button class="cyber-btn" onclick="openLobby('host')"><span>CRIAR SALA</span></button>
         <button class="cyber-btn" onclick="openLobby('join')"><span>ENTRAR COM CÓDIGO</span></button>
         <br><br>
-        
         <div id="lobby-friends-invite" style="margin-top:20px; display:none;">
             <p style="color:#aaa; font-size:0.8rem;">CONVIDAR AMIGOS ONLINE</p>
             <div id="lobby-friends-list" style="max-height:100px; overflow-y:auto;"></div>
         </div>
-
         <button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button>
     </div>
 
@@ -458,6 +413,5 @@
     </div>
 
     <script src="game.js"></script>
-
 </body>
 </html>
