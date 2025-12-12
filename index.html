@@ -4,23 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <meta name="description" content="Cartas Velhas: Cyberpunk Tactics. Jogo de estratégia 3D multiplayer.">
+    <meta name="description" content="Cartas Velhas: Cyberpunk Tactics. A reinvenção tática 3D do Jogo da Velha. Multiplayer, Cartas e Estratégia.">
     <meta name="author" content="Guilherme Otávio Xavier de Souza">
     <meta name="robots" content="index, follow">
 
-    <meta property="og:title" content="Cartas Velhas: Cyberpunk Tactics">
-    <meta property="og:description" content="Estratégia 3D Multiplayer. Jogue agora.">
+    <meta property="og:title" content="Cartas Velhas: Cyberpunk Tactics v1.0">
+    <meta property="og:description" content="Jogue a versão final! Estratégia, Cartas e Multiplayer em tempo real.">
     <meta property="og:type" content="website">
 
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
 
-    <title>Cartas Velhas: Cyberpunk Tactics v0.9.47 (CLEAN)</title>
+    <title>Cartas Velhas: Cyberpunk Tactics v1.0</title>
     
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=1.0">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
@@ -29,7 +28,7 @@
 
     <div id="loading-screen">
         <div class="loader-content">
-            <div class="glitch-text" style="font-size: 2rem; font-weight: bold; margin-bottom: 20px;">SYSTEM BOOT</div>
+            <div class="glitch-text" style="font-size: 2rem; font-weight: bold; margin-bottom: 20px;">SYSTEM BOOT v1.0</div>
             <div class="loading-bar-frame">
                 <div id="loading-fill" class="loading-bar-fill"></div>
             </div>
@@ -38,8 +37,8 @@
     </div>
 
     <div id="invite-modal" class="hidden">
-        <div style="color:#fff; font-weight:bold; margin-bottom:10px;">CONVITE RECEBIDO</div>
-        <div id="invite-text" style="color:#aaa; font-size:0.9rem; margin-bottom:15px;">Player te chamou!</div>
+        <div style="color:#fff; font-weight:bold; margin-bottom:10px;">CONVITE DE BATALHA</div>
+        <div id="invite-text" style="color:#aaa; font-size:0.9rem; margin-bottom:15px;">...</div>
         <div style="display:flex; gap:10px; justify-content:center;">
             <button class="cyber-btn" onclick="acceptInvite()">ACEITAR</button>
             <button class="cyber-btn secondary" onclick="closeInvite()">RECUSAR</button>
@@ -50,11 +49,11 @@
 
     <div id="modal-nickname" class="hidden">
         <div class="cyber-panel" style="text-align: center;">
-            <h2 style="color:var(--o-color);">IDENTIFICAÇÃO</h2>
-            <p style="color:#fff;">ESCOLHA SEU NOME DE GUERRA</p>
+            <h2 style="color:var(--o-color);">IDENTIDADE</h2>
+            <p style="color:#fff;">REGISTRE SEU NOME DE OPERADOR</p>
             <input type="text" id="permanent-nick-input" class="input-code" maxlength="10" placeholder="Nickname">
             <br>
-            <button class="cyber-btn" onclick="saveInitialNickname()"><span>CONFIRMAR</span></button>
+            <button class="cyber-btn" onclick="saveInitialNickname()"><span>CONFIRMAR REGISTRO</span></button>
         </div>
     </div>
 
@@ -86,8 +85,8 @@
 
     <div id="screen-menu" class="screen hidden">
         <div class="cyber-panel">
-            <div class="title-glitch">CARTAS<br>VELHAS</div>
-            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 10px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.47 (CLEANUP)</p>
+            <div class="title-glitch" style="font-size: 3.5rem;">CARTAS<br>VELHAS</div>
+            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 20px; font-size: 0.9rem; font-weight: bold;">TACTICAL SYSTEM v1.0</p>
             
             <div id="online-counter-display" class="online-tag hidden">
                 <span class="live-dot">●</span> <span id="online-count-val">0</span> AGENTES ONLINE
@@ -117,11 +116,11 @@
                 <br>
                 <button class="cyber-btn secondary" style="width: 200px;" onclick="openScreen('screen-social')"><span>👥 SOCIAL & AMIGOS</span></button>
                 <br>
-                <div style="margin-top: 5px; display:flex; justify-content:center; gap:5px; flex-wrap:wrap;">
+                <div style="margin-top: 15px; display:flex; justify-content:center; gap:5px; flex-wrap:wrap;">
                     <button class="cyber-btn secondary" style="min-width: 80px; font-size: 0.7rem;" onclick="openScreen('screen-leaderboard')"><span>RANK</span></button>
                     <button class="cyber-btn secondary" style="min-width: 80px; font-size: 0.7rem;" onclick="openScreen('screen-lobby-custom')"><span>SALAS</span></button>
                     <button class="cyber-btn secondary" style="min-width: 80px; font-size: 0.7rem;" onclick="openScreen('screen-cards')"><span>CARTAS</span></button>
-                    <button class="cyber-btn secondary" style="min-width: 80px; font-size: 0.7rem;" onclick="openScreen('screen-updates')"><span>UPDATES</span></button>
+                    <button class="cyber-btn secondary" style="min-width: 80px; font-size: 0.7rem;" onclick="openScreen('screen-updates')"><span>SOBRE</span></button>
                 </div>
             </div>
         </div>
@@ -135,7 +134,7 @@
                 <p style="color:#aaa; font-size:0.8rem; margin-top:0;">BUSCAR NOVOS AGENTES</p>
                 <div style="display:flex; gap:5px;">
                     <input type="text" id="search-player-input" class="input-code" placeholder="Nick exato" style="width:100%; font-size:0.9rem;">
-                    <button class="cyber-btn" onclick="searchPlayer()" style="min-width:auto;">🔍</button>
+                    <button id="btn-search" class="cyber-btn" onclick="searchPlayer()" style="min-width:auto;">🔍</button>
                 </div>
                 <div id="search-results-area" style="margin-top:10px;"></div>
             </div>
@@ -182,8 +181,8 @@
 
     <div id="screen-lobby-custom" class="screen hidden">
         <h2 style="color:#fff;">MODO PRIVADO</h2>
-        <button class="cyber-btn" onclick="openLobby('host')"><span>CRIAR SALA</span></button>
-        <button class="cyber-btn" onclick="openLobby('join')"><span>ENTRAR COM CÓDIGO</span></button>
+        <button id="btn-create-room" class="cyber-btn" onclick="openLobby('host')"><span>CRIAR SALA</span></button>
+        <button id="btn-join-room" class="cyber-btn" onclick="openLobby('join')"><span>ENTRAR COM CÓDIGO</span></button>
         <br><br>
         <div id="lobby-friends-invite" style="margin-top:20px; display:none;">
             <p style="color:#aaa; font-size:0.8rem;">CONVIDAR AMIGOS ONLINE</p>
@@ -208,49 +207,27 @@
         </div>
     </div>
 
-    <div id="screen-credits" class="screen hidden">
-        <div class="cyber-panel">
-            <h2 style="color:#fff; margin-top:0;">CRÉDITOS</h2>
-            <div style="color:#ccc; text-align:center;">
-                DESENVOLVIDO POR: <span class="credits-name">Guilherme Otávio<br>Xavier de Souza</span>
-                <hr style="border-color:#333; margin: 20px 0;">
-                <p>Engine: Three.js WebGL</p>
-                <p>Network: PeerJS P2P</p>
-                <p>Backend: Firebase Auth & Firestore</p>
-            </div>
-            <center><button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button></center>
-        </div>
-    </div>
-
     <div id="screen-updates" class="screen hidden">
         <div class="cyber-panel">
-            <h2 style="color:#fff; margin-top:0;">SYSTEM LOG</h2>
-            <div class="scroll-content">
-                <div class="update-block">
-                    <div class="update-title">v0.9.47 - Cleanup</div>
-                    <span class="update-item">Fix: Remoção de Toast invasivo na inicialização.</span>
-                    <span class="update-item">System: Limpeza de logs antigos para melhor leitura.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.46 - Stability</div>
-                    <span class="update-item">Fix: Estabilidade no sistema de Amigos.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.45 - Social Hub</div>
-                    <span class="update-item">Feature: Tela Social Unificada (Busca + Amigos).</span>
-                    <span class="update-item">Feature: Convites de partida em tempo real.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.43 - Smart Boot</div>
-                    <span class="update-item">UX: Loading Screen sincronizada com Login.</span>
-                </div>
-                <div class="update-block">
-                    <div class="update-title">v0.9.40 - Boot Screen</div>
-                    <span class="update-item">UX: Tela de carregamento estilo Terminal.</span>
-                </div>
+            <h2 style="color:#fff; margin-top:0;">SOBRE O SISTEMA</h2>
+            
+            <div style="text-align:center; margin-bottom: 30px;">
+                <p style="color:#aaa; font-size:0.8rem;">DESENVOLVIDO E MANTIDO POR:</p>
+                <span class="credits-name" style="font-size: 1.5rem;">Guilherme Otávio<br>Xavier de Souza</span>
+                <p style="color:#00ff88; font-size:0.7rem; margin-top:5px;">ALL RIGHTS RESERVED © 2025</p>
+            </div>
+
+            <hr style="border-color:#333; margin: 20px 0;">
+
+            <h3 style="color:var(--o-color); margin-top:0;">CHANGELOG OFICIAL</h3>
+            <div class="scroll-content" style="height: 200px;">
                 <div class="update-block" style="border:none;">
-                    <div class="update-title">Arquivo Legado (v0.1.0 - v0.9.39)</div>
-                    <span class="update-item">Todas as mecânicas base (Infinito, Deck, P2P) mantidas.</span>
+                    <div class="update-title">v1.0.0 - GOLD MASTER</div>
+                    <span class="update-item">Lançamento Oficial.</span>
+                    <span class="update-item">Sistema Social Completo (Amigos/Convites).</span>
+                    <span class="update-item">Segurança Reforçada (Anti-Cheat).</span>
+                    <span class="update-item">Otimização de Carregamento (Smart Boot).</span>
+                    <span class="update-item">Interface Cyberpunk Finalizada.</span>
                 </div>
             </div>
             <center><button class="cyber-btn secondary" style="margin-top:20px;" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button></center>
@@ -284,6 +261,6 @@
         <button class="cyber-btn secondary" onclick="location.reload()" style="margin-top:20px;"><span>SAIR</span></button>
     </div>
 
-    <script src="game.js"></script>
+    <script src="game.js?v=1.0"></script>
 </body>
 </html>

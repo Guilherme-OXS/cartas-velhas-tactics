@@ -58,6 +58,17 @@ let matchSecurityToken = null;
 let matchStartTime = 0; 
 let socialInitialized = false; 
 
+// --- UTILS ---
+function escapeHtml(text) {
+    if (!text) return text;
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 // --- BOOT SYSTEM (TRUE LOADING) ---
 let bootState = { animFinished: false, authFinished: false };
 
@@ -104,7 +115,6 @@ async function loadUserProfile(user) {
             if (userStats.rank === undefined) userRef.update({ rank: 1000, wins: 0, losses: 0 }); 
             if(userStats.hasSetNick) {
                 myName = userStats.displayName;
-                // REMOVIDO: showToast(`WINS: ${userStats.wins}`, "#00ff88"); (A pedido: era intrusivo)
             } else {
                 document.getElementById('modal-nickname').classList.remove('hidden');
             }
@@ -144,9 +154,9 @@ function setupFriendSystem() {
             const req = doc.data();
             list.innerHTML += `
                 <div class="friend-card" style="border: 1px solid #ffaa00;">
-                    <span class="friend-name" style="color:#ffaa00;">${req.fromName} quer ser seu amigo.</span>
+                    <span class="friend-name" style="color:#ffaa00;">${escapeHtml(req.fromName)} quer ser seu amigo.</span>
                     <div>
-                        <button class="cyber-btn" style="min-width:auto; padding:5px 10px;" onclick="acceptFriend('${doc.id}', '${req.from}', '${req.fromName}')">✓</button>
+                        <button class="cyber-btn" style="min-width:auto; padding:5px 10px;" onclick="acceptFriend('${doc.id}', '${req.from}', '${escapeHtml(req.fromName)}')">✓</button>
                         <button class="cyber-btn secondary" style="min-width:auto; padding:5px 10px;" onclick="rejectFriend('${doc.id}')">X</button>
                     </div>
                 </div>`;
@@ -181,7 +191,7 @@ function setupFriendSystem() {
                 <div class="friend-card">
                     <div style="display:flex; align-items:center;">
                         <span class="status-indicator ${isOnline?'online':''}"></span>
-                        <span class="friend-name">${f.name}</span>
+                        <span class="friend-name">${escapeHtml(f.name)}</span>
                     </div>
                     ${isOnline 
                         ? `<button class="cyber-btn" style="min-width:auto; padding:5px 10px; font-size:0.7rem;" onclick="inviteFriend('${doc.id}')">✉️ CONVIDAR</button>` 
@@ -190,7 +200,6 @@ function setupFriendSystem() {
             
             list.innerHTML += html;
             
-            // Adiciona também na lista do Lobby APENAS se estiver online
             if(isOnline) {
                 document.getElementById('lobby-friends-invite').style.display = 'block';
                 lobbyList.innerHTML += html;
@@ -205,7 +214,7 @@ function setupFriendSystem() {
             if (change.type === "added") {
                 const invite = change.doc.data();
                 incomingInviteCode = invite.code;
-                document.getElementById('invite-text').innerText = `${invite.from} te chamou para a batalha!`;
+                document.getElementById('invite-text').innerText = `${escapeHtml(invite.from)} te chamou para a batalha!`;
                 document.getElementById('invite-modal').classList.remove('hidden');
                 SoundFX.matchWin(); 
                 change.doc.ref.delete(); 
@@ -222,6 +231,10 @@ function searchPlayer() {
     
     if(!queryName) { resultsArea.innerHTML = '<p style="color:#aaa;">Digite um nome.</p>'; return; }
     
+    // Desabilita botão
+    const btn = document.getElementById('btn-search');
+    if(btn) btn.disabled = true;
+
     db.collection('players').where('displayName', '==', queryName).limit(5).get()
     .then(async snapshot => {
         resultsArea.innerHTML = '';
@@ -231,7 +244,6 @@ function searchPlayer() {
             const p = doc.data();
             if(doc.id === currentUser.uid) continue; // Não mostrar a si mesmo
 
-            // Verifica se já é amigo
             const friendCheck = await db.collection('players').doc(currentUser.uid).collection('friends').doc(doc.id).get();
             const isFriend = friendCheck.exists;
 
@@ -239,7 +251,7 @@ function searchPlayer() {
                 <div class="search-result-card">
                     <img src="${p.photoURL}" class="user-avatar">
                     <div class="search-info">
-                        <div class="search-name">${p.displayName}</div>
+                        <div class="search-name">${escapeHtml(p.displayName)}</div>
                         <div class="search-rank">RANK: ${p.rank || 1000}</div>
                     </div>
                     ${isFriend 
@@ -251,12 +263,18 @@ function searchPlayer() {
     })
     .catch(e => {
         console.error(e);
-        if(e.message.includes('index')) resultsArea.innerHTML = '<p style="color:#ff3333;">ERRO DB: Index Faltando</p>';
+        if(e.code === 'permission-denied') resultsArea.innerHTML = '<p style="color:#ff3333;">ERRO: Atualize as Regras do Firebase.</p>';
+        else if(e.message.includes('index')) resultsArea.innerHTML = '<p style="color:#ff3333;">ERRO DB: Index Faltando</p>';
         else resultsArea.innerHTML = '<p style="color:#ff3333;">Erro de conexão.</p>';
+    })
+    .finally(() => {
+        if(btn) btn.disabled = false;
     });
 }
 
 function sendFriendRequest(targetUid) {
+    if(targetUid === currentUser.uid) return;
+    
     db.collection('friend_requests')
         .where('from', '==', currentUser.uid)
         .where('to', '==', targetUid)
@@ -341,7 +359,9 @@ async function updateOnlineCount() {
 
 function saveInitialNickname() {
     if(!currentUser) return;
-    const newNick = document.getElementById('permanent-nick-input').value.trim();
+    let newNick = document.getElementById('permanent-nick-input').value.trim();
+    newNick = escapeHtml(newNick); // SANITIZE
+    
     if(newNick.length > 2 && newNick.length <= 10) {
         db.collection('players').doc(currentUser.uid).update({ displayName: newNick, hasSetNick: true })
         .then(() => {
@@ -356,7 +376,9 @@ function saveInitialNickname() {
 
 function saveNewNickname() {
     if(!currentUser) { showToast("ERRO: NÃO LOGADO", "#ff0000"); return; }
-    const newNick = document.getElementById('edit-nick-input').value.trim();
+    let newNick = document.getElementById('edit-nick-input').value.trim();
+    newNick = escapeHtml(newNick); // SANITIZE
+
     if(newNick.length > 0 && newNick.length <= 10) {
         db.collection('players').doc(currentUser.uid).update({ displayName: newNick })
         .then(() => {
@@ -383,7 +405,7 @@ async function loadLeaderboard() {
         snapshot.forEach(doc => {
             const p = doc.data();
             const hl = (currentUser && doc.id === currentUser.uid) ? "rgba(0, 229, 255, 0.1)" : "transparent";
-            list.innerHTML += `<div class="ranking-row" style="background:${hl}"><div class="rank-num">${rank++}</div><div class="rank-name">${p.displayName || 'Anon'}</div><div class="rank-elo">${p.rank || 1000}</div><div class="rank-wl">${p.wins}/${p.losses}</div></div>`;
+            list.innerHTML += `<div class="ranking-row" style="background:${hl}"><div class="rank-num">${rank++}</div><div class="rank-name">${escapeHtml(p.displayName || 'Anon')}</div><div class="rank-elo">${p.rank || 1000}</div><div class="rank-wl">${p.wins}/${p.losses}</div></div>`;
         });
     } catch(e) {
         list.innerHTML = '<p style="color:#ff3333;">ERRO AO CARREGAR RANKING</p>';
@@ -554,9 +576,20 @@ function initPeer(id = null) { return new Peer(id, { debug: 1 }); }
 function copyCode() { navigator.clipboard.writeText(document.getElementById('display-code').innerText); showToast("COPIADO", "#fff"); }
 
 function openLobby(mode) {
+    const btnCreate = document.getElementById('btn-create-room');
+    const btnJoin = document.getElementById('btn-join-room');
+    if(btnCreate) btnCreate.disabled = true;
+    if(btnJoin) btnJoin.disabled = true;
+
     openScreen('screen-lobby-wait'); resetLobbyUI();
     if (mode === 'host') setupHostPrivate(); 
     else if (mode === 'join') document.getElementById('lobby-client-ui').classList.remove('hidden');
+
+    // Re-enable buttons after short delay in case user goes back
+    setTimeout(() => {
+         if(btnCreate) btnCreate.disabled = false;
+         if(btnJoin) btnJoin.disabled = false;
+    }, 1000);
 }
 
 function setupHostPrivate() {
