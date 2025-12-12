@@ -53,21 +53,16 @@ let botTimer = null;
 let isMuted = false;
 
 // --- SECURITY VARIABLES ---
-let matchSecurityToken = null; // Token secreto gerado no início da partida
-let matchStartTime = 0;        // Timestamp de início para evitar vitórias instantâneas
+let matchSecurityToken = null; 
+let matchStartTime = 0; 
 
-// --- SMART BOOT SYSTEM (LOADING + AUTH SYNC) ---
-let bootState = {
-    animFinished: false,
-    authFinished: false
-};
+// --- BOOT SYSTEM (TRUE LOADING) ---
+let bootState = { animFinished: false, authFinished: false };
 
 function checkBootState() {
-    // Só libera se a animação acabou E o Firebase já respondeu
     if(bootState.animFinished && bootState.authFinished) {
         let text = document.getElementById('loading-text');
         if(text) text.innerText = "> SYSTEM READY.";
-        
         const screen = document.getElementById('loading-screen');
         if(screen) {
             screen.style.opacity = '0';
@@ -75,13 +70,11 @@ function checkBootState() {
             setTimeout(() => screen.classList.add('hidden'), 500);
         }
     } else if (bootState.animFinished && !bootState.authFinished) {
-        // Se a animação acabou mas o Firebase tá lento
         let text = document.getElementById('loading-text');
         if(text) text.innerText = "> WAITING FOR SERVER RESPONSE...";
     }
 }
 
-// Fase 1: HTML e JS lidos
 document.addEventListener("DOMContentLoaded", () => {
     let bar = document.getElementById('loading-fill');
     let text = document.getElementById('loading-text');
@@ -89,16 +82,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if(text) text.innerText = "> PARSING DATA...";
 });
 
-// Fase 2: Carregamento Visual
 window.addEventListener('load', () => {
     let bar = document.getElementById('loading-fill');
     if(bar) bar.style.width = '100%';
-    
-    // Pequeno delay para a barra encher visualmente antes de liberar
-    setTimeout(() => {
-        bootState.animFinished = true;
-        checkBootState();
-    }, 500);
+    setTimeout(() => { bootState.animFinished = true; checkBootState(); }, 500);
 });
 
 // --- DATABASE LOGIC ---
@@ -106,17 +93,13 @@ window.addEventListener('load', () => {
 async function loadUserProfile(user) {
     try {
         const userRef = db.collection('players').doc(user.uid);
-        // Atualiza lastSeen imediatamente no login
         userRef.set({ lastSeen: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
         
         const doc = await userRef.get();
 
         if (doc.exists) {
             userStats = doc.data();
-            if (userStats.rank === undefined || userStats.rank === null) {
-                userStats.rank = 1000; userStats.wins = userStats.wins || 0; userStats.losses = userStats.losses || 0;
-                userRef.update({ rank: 1000, wins: 0, losses: 0 }); 
-            }
+            if (userStats.rank === undefined) userRef.update({ rank: 1000, wins: 0, losses: 0 }); 
             if(userStats.hasSetNick) {
                 myName = userStats.displayName;
                 showToast(`WINS: ${userStats.wins}`, "#00ff88");
@@ -127,10 +110,7 @@ async function loadUserProfile(user) {
             userStats = {
                 displayName: user.displayName || "Agente", 
                 photoURL: user.photoURL,
-                wins: 0,
-                losses: 0,
-                rank: 1000, 
-                hasSetNick: false,
+                wins: 0, losses: 0, rank: 1000, hasSetNick: false,
                 lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             };
@@ -139,49 +119,185 @@ async function loadUserProfile(user) {
         }
         updateUIWithStats();
         loadMatchHistory();
-        startHeartbeat(); // Inicia o "pulso" online
+        startHeartbeat();
+        setupFriendSystem(); // INICIA SOCIAL
     } catch (e) {
         console.error("Erro no DB:", e);
-        if(e.code === 'permission-denied' || e.message.includes('permission-denied')) {
-            showToast("ERRO DB: PERMISSÃO NEGADA (Check Console)", "#ff0000");
-            console.warn("⚠️ ALERTA: O banco de dados no Firebase não foi ativado ou as regras bloqueiam escrita.");
-        }
     }
+}
+
+// --- FRIEND & INVITE SYSTEM (NOVO) ---
+let incomingInviteCode = null;
+
+function setupFriendSystem() {
+    if(!currentUser) return;
+    
+    // 1. Escutar Pedidos de Amizade Pendentes
+    db.collection('friend_requests').where('to', '==', currentUser.uid)
+    .onSnapshot(snapshot => {
+        const list = document.getElementById('friend-requests-list');
+        list.innerHTML = '';
+        snapshot.forEach(doc => {
+            const req = doc.data();
+            list.innerHTML += `
+                <div class="friend-card" style="border-color:#ffaa00;">
+                    <span class="friend-name">${req.fromName}</span>
+                    <div>
+                        <button class="cyber-btn" style="min-width:auto; padding:5px;" onclick="acceptFriend('${doc.id}', '${req.from}', '${req.fromName}')">✓</button>
+                        <button class="cyber-btn secondary" style="min-width:auto; padding:5px;" onclick="rejectFriend('${doc.id}')">X</button>
+                    </div>
+                </div>`;
+        });
+    });
+
+    // 2. Escutar Lista de Amigos
+    db.collection('players').doc(currentUser.uid).collection('friends')
+    .onSnapshot(snapshot => {
+        const list = document.getElementById('friends-list-content');
+        const lobbyList = document.getElementById('lobby-friends-list');
+        list.innerHTML = '';
+        lobbyList.innerHTML = '';
+        
+        if(snapshot.empty) {
+            list.innerHTML = '<p style="color:#aaa; text-align:center;">Sem amigos adicionados.</p>';
+            return;
+        }
+
+        snapshot.forEach(async doc => {
+            const f = doc.data();
+            // Checa status online (se lastSeen < 2 min)
+            const fDoc = await db.collection('players').doc(doc.id).get();
+            let isOnline = false;
+            if(fDoc.exists && fDoc.data().lastSeen) {
+                const diff = Date.now() - fDoc.data().lastSeen.toMillis();
+                if(diff < 120000) isOnline = true;
+            }
+
+            const html = `
+                <div class="friend-card">
+                    <div>
+                        <span class="status-indicator ${isOnline?'online':''}"></span>
+                        <span class="friend-name">${f.name}</span>
+                    </div>
+                    ${isOnline ? `<button class="cyber-btn" style="min-width:auto; padding:5px 10px; font-size:0.7rem;" onclick="inviteFriend('${doc.id}')">✉️</button>` : '<span style="color:#666; font-size:0.7rem;">OFF</span>'}
+                </div>`;
+            
+            list.innerHTML += html;
+            
+            // Adiciona também na lista do Lobby se estiver online
+            if(isOnline) {
+                document.getElementById('lobby-friends-invite').style.display = 'block';
+                lobbyList.innerHTML += html;
+            }
+        });
+    });
+
+    // 3. Escutar Convites de Partida
+    db.collection('players').doc(currentUser.uid).collection('invites')
+    .onSnapshot(snapshot => {
+        snapshot.docChanges().forEach(change => {
+            if (change.type === "added") {
+                const invite = change.doc.data();
+                incomingInviteCode = invite.code;
+                document.getElementById('invite-text').innerText = `${invite.from} te chamou para a batalha!`;
+                document.getElementById('invite-modal').classList.remove('hidden');
+                SoundFX.matchWin(); // Som de alerta
+                // Remove o convite do banco para não spamar
+                change.doc.ref.delete(); 
+            }
+        });
+    });
+}
+
+function sendFriendRequest() {
+    const targetNick = document.getElementById('add-friend-input').value.trim();
+    if(!targetNick) return;
+    
+    db.collection('players').where('displayName', '==', targetNick).limit(1).get()
+    .then(snapshot => {
+        if(snapshot.empty) { showToast("JOGADOR NÃO ENCONTRADO", "#ff3333"); return; }
+        const targetDoc = snapshot.docs[0];
+        if(targetDoc.id === currentUser.uid) { showToast("ERRO: É VOCÊ", "#ff3333"); return; }
+        
+        db.collection('friend_requests').add({
+            from: currentUser.uid,
+            fromName: myName,
+            to: targetDoc.id,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => {
+            showToast("PEDIDO ENVIADO", "#00ff88");
+            document.getElementById('add-friend-input').value = '';
+        });
+    });
+}
+
+function acceptFriend(reqId, friendUid, friendName) {
+    // Adiciona na minha lista
+    db.collection('players').doc(currentUser.uid).collection('friends').doc(friendUid).set({ name: friendName });
+    // Adiciona na lista dele
+    db.collection('players').doc(friendUid).collection('friends').doc(currentUser.uid).set({ name: myName });
+    // Remove pedido
+    db.collection('friend_requests').doc(reqId).delete();
+    showToast("AMIGO ADICIONADO", "#00ff88");
+}
+
+function rejectFriend(reqId) {
+    db.collection('friend_requests').doc(reqId).delete();
+}
+
+function inviteFriend(friendUid) {
+    if(!peer || !peer.id) { showToast("CRIE UMA SALA PRIMEIRO", "#ff3333"); return; }
+    
+    // Extrai o código da sala do peer ID
+    const code = peer.id.replace(APP_ID, '');
+    
+    db.collection('players').doc(friendUid).collection('invites').add({
+        code: code,
+        from: myName,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => {
+        showToast("CONVITE ENVIADO", "#00e5ff");
+    });
+}
+
+function acceptInvite() {
+    document.getElementById('invite-modal').classList.add('hidden');
+    if(incomingInviteCode) {
+        document.getElementById('input-code').value = incomingInviteCode;
+        openLobby('join');
+        connectToHost();
+    }
+}
+
+function closeInvite() {
+    document.getElementById('invite-modal').classList.add('hidden');
 }
 
 // --- ONLINE STATUS SYSTEM ---
 function startHeartbeat() {
-    // 1. Atualiza o contador imediatamente
     updateOnlineCount();
-    
-    // 2. Loop de Heartbeat (a cada 1 minuto avisa que está online)
     setInterval(() => {
         if(currentUser) {
             db.collection('players').doc(currentUser.uid).update({
                 lastSeen: firebase.firestore.FieldValue.serverTimestamp()
-            }).catch(e => console.log("Heartbeat skip"));
+            }).catch(e => {});
         }
     }, 60000); 
-
-    // 3. Atualiza o contador visual a cada 2 minutos
     setInterval(updateOnlineCount, 120000);
 }
 
 async function updateOnlineCount() {
     try {
-        // Pega jogadores ativos nos últimos 5 minutos
         const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
-        const snapshot = await db.collection('players')
-            .where('lastSeen', '>', fiveMinAgo)
-            .get();
-        
-        const count = snapshot.size || 1; // Pelo menos eu estou online
-        document.getElementById('online-count-val').innerText = count;
-        document.getElementById('online-counter-display').classList.remove('hidden');
-    } catch(e) {
-        console.log("Erro contador online (provavelmente falta Index):", e);
-        // Fallback: não mostra nada se der erro de índice no Firebase
-    }
+        const snapshot = await db.collection('players').where('lastSeen', '>', fiveMinAgo).get();
+        const count = snapshot.size || 1;
+        const el = document.getElementById('online-count-val');
+        const box = document.getElementById('online-counter-display');
+        if(el && box) {
+            el.innerText = count;
+            box.classList.remove('hidden');
+        }
+    } catch(e) {}
 }
 
 function saveInitialNickname() {
@@ -203,19 +319,14 @@ function saveNewNickname() {
     if(!currentUser) { showToast("ERRO: NÃO LOGADO", "#ff0000"); return; }
     const newNick = document.getElementById('edit-nick-input').value.trim();
     if(newNick.length > 0 && newNick.length <= 10) {
-        // Atualiza DB
         db.collection('players').doc(currentUser.uid).update({ displayName: newNick })
         .then(() => {
-            console.log("SUCESSO: Nome salvo no Firebase");
             userStats.displayName = newNick; myName = newNick;
             updateUIWithStats(); 
             localStorage.setItem('cv_username', newNick);
             showToast("NICK SALVO", "#00ff88");
         })
-        .catch(err => { 
-            console.error("ERRO FIREBASE:", err);
-            showToast("ERRO AO SALVAR", "#ff0000"); 
-        });
+        .catch(err => { showToast("ERRO AO SALVAR", "#ff0000"); });
     } else { showToast("NOME INVÁLIDO", "#ff3333"); }
 }
 
@@ -250,9 +361,7 @@ async function loadLeaderboard() {
         const snapshot = await db.collection('players').orderBy('rank', 'desc').limit(100).get();
         list.innerHTML = '';
         if(snapshot.empty) {
-            if (currentUser) {
-                 list.innerHTML = `<div class="ranking-row" style="background:rgba(0, 229, 255, 0.1);"><div class="rank-num">1</div><div class="rank-name">${userStats.displayName}</div><div class="rank-elo">${userStats.rank || 1000}</div><div class="rank-wl">${userStats.wins}/${userStats.losses}</div></div><p style="color:#aaa; text-align:center; margin-top:10px;">Você é o primeiro Operador!</p>`;
-            } else { list.innerHTML = '<p style="color:#aaa;">SEM DADOS DE RANKING</p>'; }
+            list.innerHTML = '<p style="color:#aaa;">SEM DADOS DE RANKING</p>';
             return;
         }
         let rank = 1;
@@ -262,8 +371,7 @@ async function loadLeaderboard() {
             list.innerHTML += `<div class="ranking-row" style="background:${hl}"><div class="rank-num">${rank++}</div><div class="rank-name">${p.displayName || 'Anon'}</div><div class="rank-elo">${p.rank || 1000}</div><div class="rank-wl">${p.wins}/${p.losses}</div></div>`;
         });
     } catch(e) {
-        if(e.message.includes("index")) list.innerHTML = '<p style="color:#ff3333;">ERRO: ÍNDICE FALTANTE NO FIREBASE</p>';
-        else list.innerHTML = '<p style="color:#ff3333;">ERRO AO CARREGAR RANKING</p>';
+        list.innerHTML = '<p style="color:#ff3333;">ERRO AO CARREGAR RANKING</p>';
     }
 }
 
@@ -281,27 +389,16 @@ function updateUIWithStats() {
 
 // --- SECURITY & SAVE LOGIC ---
 function saveGameResult(isWin, token) {
-    // --- SECURITY CHECK ---
-    // 1. Verifica se o token existe e bate com o interno
     if (!token || token !== matchSecurityToken) {
-        console.warn("SECURITY ALERT: Tentativa de manipulação de resultado detectada.");
-        showToast("ERRO: DADOS INVÁLIDOS", "#ff0000");
+        if(isWin) showToast("ERRO: SYNC FAIL", "#ff3333");
         return;
     }
-
-    // 2. Verifica se a partida durou pelo menos 1 segundo (evita auto-win imediato)
     const duration = Date.now() - matchStartTime;
     if (duration < 1000) {
-        console.warn("SECURITY ALERT: Partida muito curta (<1s).");
+        if(isWin) showToast("ERRO: VERY FAST", "#ff3333");
         return;
     }
-
-    // 3. Verifica se existe realmente um vencedor no estado do jogo
-    if (!GameState.winner) {
-        console.warn("SECURITY ALERT: Tentativa de salvar sem vencedor definido.");
-        return;
-    }
-    // ----------------------
+    if (!GameState.winner) return;
 
     if (!currentUser) return; 
     if (isBotMatch) { saveLocalHistory(isWin ? "Vitória vs BOT" : "Derrota vs BOT", isWin); return; }
@@ -318,12 +415,9 @@ function saveGameResult(isWin, token) {
         saveLocalHistory(`Derrota vs ${GameState.names[mySide==='X'?'O':'X']}`, false);
     }
     updateUIWithStats();
-    
-    // Consome o token para impedir duplo salvamento
-    matchSecurityToken = null;
+    matchSecurityToken = null; 
 }
 
-// --- LOCAL HISTORY ---
 function saveLocalHistory(text, isWin) {
     let hist = JSON.parse(localStorage.getItem('cv_history') || '[]');
     hist.unshift({ text: text, win: isWin, date: new Date().toLocaleTimeString() });
@@ -354,7 +448,6 @@ function loginGoogle() {
 }
 function logout() { auth.signOut().then(() => { showToast("SAIU", "#ffffff"); }); }
 
-// --- AUTH STATE & BOOT SYNC ---
 auth.onAuthStateChanged((user) => {
     const guestArea = document.getElementById('guest-input-area');
     const userArea = document.getElementById('user-profile-area');
@@ -371,7 +464,6 @@ auth.onAuthStateChanged((user) => {
         document.getElementById('modal-nickname').classList.add('hidden');
     }
     
-    // AVISA O BOOT QUE O AUTH TERMINOU (LOGADO OU NÃO)
     bootState.authFinished = true;
     checkBootState();
 });
@@ -389,7 +481,6 @@ function openScreen(screenId) {
     if(audioCtx.state === 'suspended') audioCtx.resume();
     if(screenId === 'screen-cards') renderCardsHelp();
     if(screenId === 'screen-profile' && currentUser) { 
-        // FIX: Força atualização do Input de Nome ao abrir a tela
         document.getElementById('edit-nick-input').value = userStats.displayName || myName;
         updateUIWithStats(); 
         loadMatchHistory(); 
@@ -600,10 +691,7 @@ function setupClientListener() { conn.on('data', handleData); conn.on('close', (
 function handleData(data) {
     if (data.type === 'STATE_UPDATE') { 
         if(data.hostRank) opponentStats.rank = data.hostRank; 
-        
-        // CORREÇÃO: Cliente recebe o token do Host aqui!
         if(data.token) matchSecurityToken = data.token;
-        
         syncState(data.state, data.serverTime); 
     }
     else if (data.type === 'ACTION' && isHost) processAction(data.action, 'O');
@@ -622,7 +710,7 @@ function resetMatch() {
     GameState.hands = { 'X': generateHand(), 'O': generateHand() }; 
     GameState.turn = 'X'; 
     
-    // SECURITY RESET (HOST GERA O TOKEN)
+    // SECURITY RESET
     matchStartTime = Date.now();
     matchSecurityToken = Math.random().toString(36).substr(2) + Math.random().toString(36).substr(2);
     
@@ -679,7 +767,6 @@ function processAction(action, player) {
     if (success) {
         if(type !== 'TIMEOUT') { GameState.hands[player].splice(cardIdx, 1); GameState.hands[player].push(GameState.hands[player].includes('PLACE') ? getRandomCard() : 'PLACE'); }
         
-        // --- LÓGICA DE EMPATE JUSTO ---
         const winLineX = checkLineWin('X');
         const winLineO = checkLineWin('O');
         
@@ -710,7 +797,6 @@ function checkLineWin(player) {
 
 function isProtected(idx) { return GameState.shields[idx] > 0; }
 
-// --- CORREÇÃO: HOST ENVIA O TOKEN AQUI ---
 function broadcastState() { 
     if (!isBotMatch && conn && conn.open) {
         conn.send({ 
@@ -718,7 +804,7 @@ function broadcastState() {
             state: GameState, 
             serverTime: timeLeft, 
             hostRank: userStats.rank||1000,
-            token: matchSecurityToken // <--- CHAVE ENVIADA AO CLIENTE
+            token: matchSecurityToken
         }); 
     }
     syncState(GameState, timeLeft); 
@@ -727,7 +813,6 @@ function broadcastState() {
 function syncState(newState, serverTime) {
     Object.assign(GameState, newState); 
     
-    // Inicia cronômetro local para o cliente
     if(!isInGame && !GameState.winner) matchStartTime = Date.now();
 
     if (serverTime !== undefined) { if(Math.abs(timeLeft - serverTime) > 0.5) timeLeft = serverTime; }
@@ -745,7 +830,6 @@ function showGameOver() {
     document.getElementById('winner-text').style.color = (GameState.winner==='X'?'var(--x-color)':'var(--o-color)');
     SoundFX.matchWin();
     
-    // SECURITY UPDATE: Pass token to save function
     if(currentUser && GameState.winner === mySide) { 
         saveGameResult(true, matchSecurityToken); 
         showToast("RANK SUBIU!", "#00ff88"); 

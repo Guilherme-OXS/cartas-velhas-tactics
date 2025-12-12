@@ -16,7 +16,7 @@
 
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
 
-    <title>Cartas Velhas: Cyberpunk Tactics v0.9.43 (SMART BOOT)</title>
+    <title>Cartas Velhas: Cyberpunk Tactics v0.9.44 (SOCIAL LINK)</title>
     
     <link rel="stylesheet" href="style.css">
     
@@ -37,6 +37,13 @@
             </div>
             <div id="loading-text" style="font-family: monospace; color: #00ff88; font-size: 0.8rem; margin-top: 10px;">> INITIALIZING KERNEL...</div>
         </div>
+    </div>
+
+    <div id="invite-modal" class="hidden" style="position:fixed; top:20px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.9); border:2px solid var(--o-color); padding:15px; z-index:2000; text-align:center; box-shadow:0 0 20px var(--o-color); min-width:250px;">
+        <div style="color:#fff; font-weight:bold; margin-bottom:10px;">CONVITE RECEBIDO</div>
+        <div id="invite-text" style="color:#aaa; font-size:0.9rem; margin-bottom:15px;">Player te chamou!</div>
+        <button class="cyber-btn" onclick="acceptInvite()">ACEITAR</button>
+        <button class="cyber-btn secondary" onclick="closeInvite()">RECUSAR</button>
     </div>
 
     <div id="canvas-container" style="position: absolute; top:0; left:0; width:100%; height:100%;"></div>
@@ -77,17 +84,19 @@
         <button onclick="quitGame()" class="cyber-btn secondary pointer-events-auto" style="position:absolute; top:10px; right:10px; min-width:auto; padding:5px 15px; font-size:0.7rem;"><span>SAIR</span></button>
     </div>
 
-    <div id="screen-menu" class="screen hidden"> <div class="cyber-panel">
+    <div id="screen-menu" class="screen hidden">
+        <div class="cyber-panel">
             <div class="title-glitch">CARTAS<br>VELHAS</div>
             
-            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 10px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.43 (SMART BOOT)</p>
+            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 10px; font-size: 0.8rem;">TACTICAL SYSTEM v0.9.44 (SOCIAL LINK)</p>
             
             <div id="online-counter-display" class="online-tag hidden">
                 <span class="live-dot">●</span> <span id="online-count-val">0</span> AGENTES ONLINE
             </div>
             <br>
             
-            <div id="guest-input-area" class="hidden"> <p style="color:#aaa; font-size:0.8rem;">ACESSO RESTRITO A OPERADORES LOGADOS</p>
+            <div id="guest-input-area" class="hidden">
+                <p style="color:#aaa; font-size:0.8rem;">ACESSO RESTRITO A OPERADORES LOGADOS</p>
                 <button class="cyber-btn google-btn" onclick="loginGoogle()"><span>G+ ENTRAR COM GOOGLE</span></button>
             </div>
 
@@ -108,14 +117,14 @@
                 <button class="cyber-btn" onclick="startBotMatch()"><span>🤖 JOGAR VS BOT</span></button>
                 <br>
                 <div style="display:flex; justify-content:center; gap:5px; margin-top:5px; flex-wrap:wrap;">
-                    <button class="cyber-btn secondary" style="min-width:120px;" onclick="openScreen('screen-social')"><span>🔍 SOCIAL</span></button>
-                    <button class="cyber-btn secondary" style="min-width:120px;" onclick="openScreen('screen-leaderboard')"><span>🏆 RANK GLOBAL</span></button>
+                    <button class="cyber-btn secondary" style="min-width:120px;" onclick="openScreen('screen-social')"><span>🔍 BUSCAR</span></button>
+                    <button class="cyber-btn secondary" style="min-width:120px;" onclick="openScreen('screen-friends')"><span>👥 AMIGOS</span></button>
                 </div>
                 <br>
                 <div style="margin-top: 5px; display:flex; justify-content:center; gap:5px; flex-wrap:wrap;">
+                    <button class="cyber-btn secondary" style="min-width: 80px; font-size: 0.7rem;" onclick="openScreen('screen-leaderboard')"><span>RANK</span></button>
                     <button class="cyber-btn secondary" style="min-width: 80px; font-size: 0.7rem;" onclick="openScreen('screen-lobby-custom')"><span>SALAS</span></button>
                     <button class="cyber-btn secondary" style="min-width: 80px; font-size: 0.7rem;" onclick="openScreen('screen-cards')"><span>CARTAS</span></button>
-                    <button class="cyber-btn secondary" style="min-width: 80px; font-size: 0.7rem;" onclick="openScreen('screen-credits')"><span>CRÉDITOS</span></button>
                     <button class="cyber-btn secondary" style="min-width: 80px; font-size: 0.7rem;" onclick="openScreen('screen-updates')"><span>UPDATES</span></button>
                 </div>
             </div>
@@ -155,6 +164,28 @@
                 <div id="match-history-list" class="history-list">
                     <div style="text-align:center; padding-top:20px;">Sem dados recentes.</div>
                 </div>
+            </div>
+            
+            <br>
+            <button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button>
+        </div>
+    </div>
+    
+    <div id="screen-friends" class="screen hidden">
+        <div class="cyber-panel">
+            <h2 style="color:#fff; margin-top:0;">LISTA DE AMIGOS</h2>
+            
+            <div style="display:flex; gap:5px; margin-bottom:20px;">
+                <input type="text" id="add-friend-input" class="input-code" placeholder="Nickname Exato" style="width:100%; font-size:0.9rem;">
+                <button class="cyber-btn" onclick="sendFriendRequest()" style="min-width:auto;">➕</button>
+            </div>
+
+            <div id="friend-requests-list"></div>
+            
+            <div style="border-bottom: 1px solid #333; margin: 10px 0;"></div>
+            
+            <div id="friends-list-content" class="scroll-content" style="height: 300px;">
+                <p style="color:#aaa; text-align:center;">Carregando...</p>
             </div>
             
             <br>
@@ -226,14 +257,17 @@
             <h2 style="color:#fff; margin-top:0;">SYSTEM LOG</h2>
             <div class="scroll-content">
                 <div class="update-block">
+                    <div class="update-title">v0.9.44 - Social Link</div>
+                    <span class="update-item">Feature: Sistema de Amigos (Adicionar/Aceitar).</span>
+                    <span class="update-item">Feature: Convites de partida em tempo real.</span>
+                </div>
+                <div class="update-block">
                     <div class="update-title">v0.9.43 - Smart Boot</div>
                     <span class="update-item">UX: Loading Screen sincronizada com Login.</span>
-                    <span class="update-item">Fix: Prevenção de 'piscar' na tela inicial.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.40 - Boot Screen</div>
                     <span class="update-item">UX: Tela de carregamento estilo Terminal.</span>
-                    <span class="update-item">System: Transições suaves no início.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.38 - Icon Update</div>
@@ -245,93 +279,72 @@
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.36 - Natural Case</div>
-                    <span class="update-item">UI: Nomes exibidos conforme digitados (ex: 'Gui' vs 'GUI').</span>
-                    <span class="update-item">Fix: Input de busca agora é case-sensitive.</span>
+                    <span class="update-item">UI: Nomes exibidos conforme digitados.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.35 - Uniform Text</div>
                     <span class="update-item">UI: Padronização de nomes em MAIÚSCULAS.</span>
-                    <span class="update-item">Fix: Consistência de visualização no Ranking.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.34 - Live Ops</div>
                     <span class="update-item">Feature: Contador de Jogadores Online.</span>
-                    <span class="update-item">System: Heartbeat automático para Firestore.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.33 - Security Patch</div>
                     <span class="update-item">Security: Token de validação de vitória.</span>
-                    <span class="update-item">Fix: Bloqueio de cheats via console.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.32 - Stable Camera</div>
                     <span class="update-item">UX: Câmera fixa no mobile para evitar erros.</span>
-                    <span class="update-item">UX: Toque exclusivo para jogar.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.31 - Mobile Polish</div>
                     <span class="update-item">UX: Interface adaptativa para smartphones.</span>
-                    <span class="update-item">Fix: Tamanhos de botões e textos ajustados.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.30 - UI & DB Fix</div>
                     <span class="update-item">Fix: Alerta de erro no banco de dados.</span>
-                    <span class="update-item">UI: Barra lateral de Emojis melhorada.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.29 - Name Fix & UI Polish</div>
                     <span class="update-item">Fix: Salvar nome agora funciona corretamente.</span>
-                    <span class="update-item">Histórico restaurado.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.28 - Ultimate Update</div>
                     <span class="update-item">Feature: Chat Rápido (Emojis).</span>
                     <span class="update-item">Feature: Botão Mute & Histórico de Partidas.</span>
-                    <span class="update-item">Fix: Empate justo (Swap) & Conexão Timeout.</span>
-                    <span class="update-item">UX: Bot Inteligente & Câmera Mobile.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.27 - Rank & Nick Fix</div>
                     <span class="update-item">Fix: Input de nome agora carrega o valor correto.</span>
-                    <span class="update-item">Fix: Usuários sem Rank agora são corrigidos ao logar.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.26 - Login & Anim Fix</div>
                     <span class="update-item">Sistema: Jogo permitido apenas após Login.</span>
-                    <span class="update-item">Fix: Correção visual na animação das peças.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.25 - Security & Bot Fix</div>
                     <span class="update-item">Fix: Bot agora usa as cartas corretamente.</span>
-                    <span class="update-item">Security: Validação de cartas no servidor.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.24 - Fixes & Logs</div>
                     <span class="update-item">UI: Correção de alinhamento central dos painéis.</span>
-                    <span class="update-item">Sistema: Adicionados logs de debug para Busca e Ranking.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.23 - Fixes Finais</div>
                     <span class="update-item">Profile: Mudança de nome liberada.</span>
-                    <span class="update-item">Rank: Correção na listagem do Top 100.</span>
-                    <span class="update-item">UI: Créditos restaurados.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.22 - Identidade & Ranking</div>
                     <span class="update-item">Sistema: Ranking Global (Top 100) por ELO.</span>
-                    <span class="update-item">Login: Escolha obrigatória de Nickname permanente.</span>
-                    <span class="update-item">Histórico: Log completo restaurado.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.21 - Social & Fair Play</div>
                     <span class="update-item">Feature: Busca de Amigos (Tela Social).</span>
-                    <span class="update-item">Fair Play: Partidas contra BOT não contam Rank.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.20 - Perfil Avançado</div>
                     <span class="update-item">Feature: Tela de Perfil completa (Wins/Losses/Rank).</span>
-                    <span class="update-item">Feature: Edição de Nickname com salvamento.</span>
-                    <span class="update-item">Feature: Ver perfil do oponente (clique no nome).</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.19 - Persistência Total</div>
@@ -340,19 +353,14 @@
                 <div class="update-block">
                     <div class="update-title">v0.9.17 - Login System</div>
                     <span class="update-item">Backend: Integração com Firebase (Google).</span>
-                    <span class="update-item">UI: Perfil de jogador com foto e nome real.</span>
-                    <span class="update-item">Persistência: Login automático ao voltar.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.16 - Stability Patch</div>
                     <span class="update-item">Segurança: Proteção contra nomes inválidos/longos.</span>
-                    <span class="update-item">Rede: Suavização do timer (anti-jitter).</span>
-                    <span class="update-item">Performance: Otimização de partículas.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.15 - Quality of Life</div>
                     <span class="update-item">Correção: Jogador 2 recebe cartas.</span>
-                    <span class="update-item">Sistema: Nickname local salvo.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.13 - Sync Fix</div>
@@ -361,49 +369,34 @@
                 <div class="update-block">
                     <div class="update-title">v0.9.12 - Empate & Fixes</div>
                     <span class="update-item">Nova Regra: EMPATE se ambos vencerem na mesma jogada (Troca).</span>
-                    <span class="update-item">Partida reinicia sem pontos em caso de empate.</span>
-                    <span class="update-item">Correção: Placar zera na Revanche.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.10 - Bot Update</div>
                     <span class="update-item">Modo VS Bot Disponível.</span>
-                    <span class="update-item">Nova Carta: Empurrar (Mover Inimigo).</span>
-                    <span class="update-item">Correção: Placar zera ao reiniciar.</span>
-                    <span class="update-item">Seleção livre (Origem/Destino).</span>
-                    <span class="update-item">Menu de explicação das cartas.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.9.9 - Restauração</div>
                     <span class="update-item">Correção Crítica: Matchmaking revertido para lógica estável.</span>
-                    <span class="update-item">Implementado Jitter (atraso aleatório) para evitar conflitos.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.8.0 - Cyber Polish</div>
                     <span class="update-item">Menu Principal estilo "Terminal Hacker".</span>
-                    <span class="update-item">Efeitos visuais (Scanlines, Iluminação Volumétrica).</span>
-                    <span class="update-item">Câmara orbital no menu principal.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.7.0 - Expansão Mobile & Matchmaking</div>
                     <span class="update-item">Partida Rápida: Algoritmo automático de busca de salas.</span>
-                    <span class="update-item">Suporte Mobile Real.</span>
-                    <span class="update-item">Resiliência: Tratamento de desconexões.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.6.0 - Polimento de Jogabilidade</div>
                     <span class="update-item">Handshake Robusto.</span>
-                    <span class="update-item">Feedback Visual: Glitch na peça mais antiga.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.5.0 - Multiplayer P2P</div>
                     <span class="update-item">Conexão Direta via PeerJS.</span>
-                    <span class="update-item">Sistema de Salas Privadas.</span>
-                    <span class="update-item">Sincronização Total em tempo real.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.4.0 - Sistema de Cartas</div>
                     <span class="update-item">Introdução do Deck Building.</span>
-                    <span class="update-item">Novas Cartas: Escudo, Mover e Trocar.</span>
                 </div>
                 <div class="update-block">
                     <div class="update-title">v0.3.0 - A Revolução 3D</div>
@@ -428,6 +421,12 @@
         <button class="cyber-btn" onclick="openLobby('host')"><span>CRIAR SALA</span></button>
         <button class="cyber-btn" onclick="openLobby('join')"><span>ENTRAR COM CÓDIGO</span></button>
         <br><br>
+        
+        <div id="lobby-friends-invite" style="margin-top:20px; display:none;">
+            <p style="color:#aaa; font-size:0.8rem;">CONVIDAR AMIGOS ONLINE</p>
+            <div id="lobby-friends-list" style="max-height:100px; overflow-y:auto;"></div>
+        </div>
+
         <button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button>
     </div>
 

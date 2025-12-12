@@ -187,10 +187,15 @@ body::after {
 .win-tag { color: #00ff88; font-weight: bold; }
 .lose-tag { color: #ff0055; font-weight: bold; }
 
-/* ESTILOS DO CONTADOR ONLINE */
+/* ESTILOS DO CONTADOR ONLINE E AMIGOS */
 .online-tag { color: #00ff88; font-size: 0.8rem; border: 1px solid #00ff88; padding: 5px 15px; border-radius: 20px; display: inline-block; background: rgba(0, 255, 136, 0.1); margin-bottom: 10px; font-weight: bold; letter-spacing: 1px; }
 .live-dot { color: #00ff88; animation: pulse-dot 1.5s infinite; }
 @keyframes pulse-dot { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
+.friend-card { background: rgba(255,255,255,0.05); border: 1px solid #333; padding: 10px; margin-bottom: 5px; display: flex; align-items: center; justify-content: space-between; }
+.friend-name { font-weight: bold; color: #fff; }
+.status-indicator { width: 10px; height: 10px; border-radius: 50%; background: #555; display: inline-block; margin-right: 5px; }
+.status-indicator.online { background: #00ff88; box-shadow: 0 0 5px #00ff88; }
 
 /* --- MOBILE MEDIA QUERY (CORREÇÕES) --- */
 @media only screen and (max-width: 600px) {
