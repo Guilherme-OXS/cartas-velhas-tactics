@@ -1,7 +1,38 @@
 /* --- CORE STYLES --- */
 body { margin: 0; overflow: hidden; background-color: #050510; font-family: 'Segoe UI', Tahoma, monospace; user-select: none; touch-action: none; height: 100vh; height: 100dvh; }
 
-/* Scanlines */
+/* VARIÁVEIS CYBERPUNK PADRÃO (FALLBACK) */
+:root { 
+    --x-color: #ff0055; 
+    --o-color: #00e5ff; 
+    --card-bg: rgba(10, 10, 20, 0.90); 
+}
+
+/* --- MODO NATAL (CLASSE ADICIONADA PELO JS) --- */
+body.christmas-theme {
+    background-color: #020a05; /* Fundo mais verde escuro/azulado */
+}
+body.christmas-theme::after {
+    /* Scanlines com tom mais festivo */
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.05), rgba(0, 0, 255, 0.03));
+}
+body.christmas-theme {
+    --x-color: #ff0033; /* Vermelho Natalino Neon */
+    --o-color: #00ff66; /* Verde Neon */
+    --card-bg: rgba(20, 0, 5, 0.90);
+}
+
+/* EFEITO DE NEVE CSS */
+#snow-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><circle cx="5" cy="5" r="1" fill="white" opacity="0.4"/></svg>');
+    background-size: 20px 20px;
+    animation: snow-fall 10s linear infinite;
+    opacity: 0.3;
+}
+@keyframes snow-fall { from { background-position: 0 0; } to { background-position: 0 100vh; } }
+
+/* RESTO DO CSS (Mantido da v1.5) */
 body::after {
     content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
     background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
@@ -11,12 +42,9 @@ body::after {
 #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; z-index: 10; }
 .pointer-events-auto { pointer-events: auto; }
 
-:root { --x-color: #ff0055; --o-color: #00e5ff; --card-bg: rgba(10, 10, 20, 0.90); }
-
-/* --- TELA DE CARREGAMENTO (BOOT SCREEN) --- */
 #loading-screen {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: #000; z-index: 5000; /* Alto, mas menor que o modal */
+    background: #000; z-index: 5000;
     display: flex; align-items: center; justify-content: center;
     flex-direction: column;
 }
@@ -25,7 +53,6 @@ body::after {
 .loading-bar-fill { height: 100%; width: 0%; background: var(--o-color); transition: width 0.2s; box-shadow: 0 0 10px var(--o-color); }
 .glitch-text { animation: glitch-anim 0.5s infinite; color: #fff; text-shadow: 2px 2px var(--x-color); }
 
-/* INVITE MODAL - Z-INDEX MÁXIMO */
 #invite-modal {
     position:fixed; top:20px; left:50%; transform:translateX(-50%);
     background:rgba(0,0,0,0.95); border:2px solid var(--o-color);
@@ -33,7 +60,6 @@ body::after {
     box-shadow:0 0 25px var(--o-color); min-width:280px; border-radius: 5px;
 }
 
-/* UI COMPONENTS */
 .screen { 
     position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
     background: radial-gradient(circle at center, rgba(26,26,46,0.8) 0%, #000 100%); 
@@ -46,9 +72,7 @@ body::after {
     background: rgba(0, 0, 0, 0.9); border: 1px solid #333; border-left: 4px solid var(--o-color);
     padding: 30px; max-width: 600px; width: 90%; position: relative;
     box-shadow: 0 0 20px rgba(0, 229, 255, 0.1); backdrop-filter: blur(5px);
-    transform: skewX(-2deg);
-    margin: auto; text-align: center;
-    box-sizing: border-box;
+    transform: skewX(-2deg); margin: auto; text-align: center; box-sizing: border-box;
 }
 
 .title-glitch { 
@@ -79,7 +103,6 @@ body::after {
 .scroll-content::-webkit-scrollbar-track { background: #111; }
 .scroll-content::-webkit-scrollbar-thumb { background-color: var(--o-color); border-radius: 3px; }
 
-/* ELEMENTOS UI */
 .card-row { display: flex; align-items: center; margin-bottom: 10px; border-bottom: 1px dashed #333; padding-bottom: 5px; }
 .card-preview { font-size: 1.5rem; width: 40px; text-align: center; margin-right: 10px; }
 .card-info { flex: 1; }
@@ -87,11 +110,6 @@ body::after {
 .card-rarity { font-size: 0.7rem; text-transform: uppercase; margin-left: 5px; }
 .rarity-common { color: #888; } .rarity-rare { color: #00ff88; } .rarity-legendary { color: #bd00ff; }
 .card-desc-text { color: #aaa; font-size: 0.8rem; }
-
-.update-block { margin-bottom: 20px; border-bottom: 1px dashed #333; padding-bottom: 15px; }
-.update-title { color: var(--o-color); font-weight: bold; font-size: 1rem; margin-bottom: 5px; text-transform: uppercase; }
-.update-item { color: #ccc; font-size: 0.85rem; margin-bottom: 3px; display: block; }
-.update-item::before { content: "> "; color: #666; }
 
 .hud-top { padding: 10px; display: flex; flex-direction: column; align-items: center; background: linear-gradient(to bottom, rgba(0,0,0,0.95), transparent); width: 100%; position: relative;}
 .scores { display: flex; gap: 30px; margin-top: 5px; align-items: center; justify-content: center; width: 100%; }
@@ -158,31 +176,14 @@ body::after {
 
 #modal-nickname { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
 
-/* NOVA UI DE REAÇÕES - BARRA LATERAL FIXA DIREITA */
 .chat-bar { 
-    position: absolute; 
-    top: 50%; 
-    right: 20px; 
-    transform: translateY(-50%); 
-    display: flex; 
-    flex-direction: column; 
-    gap: 15px; 
-    pointer-events: auto; 
-    z-index: 50;
+    position: absolute; top: 50%; right: 20px; transform: translateY(-50%); 
+    display: flex; flex-direction: column; gap: 15px; pointer-events: auto; z-index: 50;
 }
 .emoji-btn { 
-    background: rgba(0,0,0,0.8); 
-    border: 2px solid var(--o-color); 
-    color: #fff; 
-    font-size: 1.8rem; 
-    width: 55px; 
-    height: 55px; 
-    border-radius: 50%; 
-    cursor: pointer; 
-    transition: 0.2s; 
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    background: rgba(0,0,0,0.8); border: 2px solid var(--o-color); color: #fff; 
+    font-size: 1.8rem; width: 55px; height: 55px; border-radius: 50%; cursor: pointer; 
+    transition: 0.2s; display: flex; align-items: center; justify-content: center; 
     box-shadow: 0 0 10px rgba(0,229,255,0.3);
 }
 .emoji-btn:hover { transform: scale(1.15); background: var(--o-color); box-shadow: 0 0 20px var(--o-color); }
@@ -195,7 +196,6 @@ body::after {
 .win-tag { color: #00ff88; font-weight: bold; }
 .lose-tag { color: #ff0055; font-weight: bold; }
 
-/* ESTILOS DO CONTADOR ONLINE E AMIGOS */
 .online-tag { color: #00ff88; font-size: 0.8rem; border: 1px solid #00ff88; padding: 5px 15px; border-radius: 20px; display: inline-block; background: rgba(0, 255, 136, 0.1); margin-bottom: 10px; font-weight: bold; letter-spacing: 1px; }
 .live-dot { color: #00ff88; animation: pulse-dot 1.5s infinite; }
 @keyframes pulse-dot { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
@@ -205,35 +205,24 @@ body::after {
 .status-indicator { width: 10px; height: 10px; border-radius: 50%; background: #555; display: inline-block; }
 .status-indicator.online { background: #00ff88; box-shadow: 0 0 5px #00ff88; }
 
-/* --- MOBILE MEDIA QUERY (CORREÇÕES) --- */
+.update-block { margin-bottom: 20px; border-bottom: 1px dashed #333; padding-bottom: 15px; }
+.update-title { color: var(--o-color); font-weight: bold; font-size: 1rem; margin-bottom: 5px; text-transform: uppercase; }
+.update-item { color: #ccc; font-size: 0.85rem; margin-bottom: 3px; display: block; }
+.update-item::before { content: "> "; color: #666; }
+
 @media only screen and (max-width: 600px) {
     .title-glitch { font-size: 2.2rem; margin-bottom: 10px; }
     .cyber-panel { padding: 15px; width: 95%; max-height: 90vh; overflow-y: auto; }
-    .cyber-btn { 
-        min-width: 120px; 
-        padding: 8px 12px; 
-        font-size: 0.75rem; 
-        margin: 3px; 
-    }
-    .user-profile-container { 
-        flex-direction: column; 
-        text-align: center; 
-        gap: 5px; 
-    }
+    .cyber-btn { min-width: 120px; padding: 8px 12px; font-size: 0.75rem; margin: 3px; }
+    .user-profile-container { flex-direction: column; text-align: center; gap: 5px; }
     .user-info { text-align: center; margin-bottom: 5px; }
     .input-code { width: 160px; font-size: 1rem; }
-    
-    /* Ajuste HUD no mobile */
     .hud-top { padding: 5px; }
     .score-val { font-size: 1.8rem; }
-    
-    /* Ajuste Cartas no mobile */
     .hand-wrapper { bottom: 10px; }
     .card { width: 60px; height: 90px; }
     .card-icon { font-size: 1.5rem; }
     .card-name { font-size: 0.5rem; }
-    
-    /* Ajuste Chat no mobile */
     .chat-bar { right: 5px; gap: 8px; }
     .emoji-btn { width: 40px; height: 40px; font-size: 1.2rem; }
 }

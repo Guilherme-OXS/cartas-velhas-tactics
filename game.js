@@ -1,3 +1,7 @@
+/* --- CONFIGURAÇÃO DE EVENTO --- */
+// TROQUE PARA false DEPOIS DO NATAL PARA VOLTAR AO NORMAL
+const EVENT_CHRISTMAS = true; 
+
 // --- CONFIG FIREBASE ---
 const firebaseConfig = {
 apiKey: "AIzaSyCSkDG6kWhKcuK0bhzJU7HazHBwHtuQ9zo",
@@ -12,7 +16,7 @@ measurementId: "G-H70FLB4DB4"
 // INICIALIZAR FIREBASE
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
-const db = firebase.firestore(); // BANCO DE DADOS ATIVO
+const db = firebase.firestore();
 let currentUser = null;
 let userStats = { wins: 0, losses: 0, rank: 1000, displayName: "Player" };
 let opponentStats = { rank: '?', wins: '?' }; 
@@ -22,15 +26,28 @@ const APP_ID = "cv-tactics-final-v5-";
 const MAX_PUB_ROOMS = 20;
 const BOT_TIMEOUT = 10000; 
 
-// SE EMOJIS APARECEREM ESTRANHOS, SALVE ESTE ARQUIVO COMO UTF-8
-const CARDS = {
-    'PLACE': { name: 'Básica', icon: '♟️', rarity: 'common', weight: 40, desc: 'Coloca uma peça no tabuleiro. Se tiveres 3, a mais velha some.' },
-    'BOMB': { name: 'Bomba', icon: '💣', rarity: 'rare', weight: 15, desc: 'Destrói uma peça do inimigo (se não tiver escudo).' },
-    'SHIELD': { name: 'Escudo', icon: '🛡️', rarity: 'rare', weight: 15, desc: 'Coloca uma peça protegida contra Bombas e Trocas.' },
-    'MOVE': { name: 'Mover', icon: '🔄', rarity: 'rare', weight: 10, desc: 'Move uma peça TUA para um espaço vazio.' },
-    'PUSH': { name: 'Empurrar', icon: '✋', rarity: 'rare', weight: 10, desc: 'Move uma peça INIMIGA para um espaço vazio.' },
-    'SWAP': { name: 'Trocar', icon: '🔁', rarity: 'legendary', weight: 10, desc: 'Troca a posição de uma peça tua com uma do inimigo.' }
+// --- CARTAS (BASE) ---
+let CARDS = {
+    'PLACE': { name: 'Básica', icon: '♟️', rarity: 'common', weight: 40, desc: 'Coloca uma peça. Se tiver 3, a mais velha some.' },
+    'BOMB': { name: 'Bomba', icon: '💣', rarity: 'rare', weight: 15, desc: 'Destrói peça inimiga (se s/ escudo).' },
+    'SHIELD': { name: 'Escudo', icon: '🛡️', rarity: 'rare', weight: 15, desc: 'Protege uma peça sua.' },
+    'MOVE': { name: 'Mover', icon: '🔄', rarity: 'rare', weight: 10, desc: 'Move peça TUA para espaço vazio.' },
+    'PUSH': { name: 'Empurrar', icon: '✋', rarity: 'rare', weight: 10, desc: 'Move peça INIMIGA para espaço vazio.' },
+    'SWAP': { name: 'Trocar', icon: '🔁', rarity: 'legendary', weight: 10, desc: 'Troca tua peça com uma inimiga.' }
 };
+
+// --- SOBRESCRITA DE EVENTO ---
+if (EVENT_CHRISTMAS) {
+    CARDS['PLACE'] = { name: 'Elfo', icon: '🧝', rarity: 'common', weight: 40, desc: 'Coloca um elfo ajudante no tabuleiro.' };
+    CARDS['BOMB'] = { name: 'Presente', icon: '🎁', rarity: 'rare', weight: 15, desc: 'Um presente explosivo! Destrói inimigo.' };
+    CARDS['SHIELD'] = { name: 'Gelo', icon: '❄️', rarity: 'rare', weight: 15, desc: 'Congela a peça protegendo-a.' };
+    // Move, Push, Swap mantém mecânica, só muda flavor se quiser
+    document.body.classList.add('christmas-theme');
+    document.getElementById('snow-overlay').classList.remove('hidden');
+    document.getElementById('boot-title').innerText = "NEON FROST v2.0";
+    document.getElementById('main-title').innerHTML = "NATAL<br>NEON";
+    document.getElementById('subtitle-version').innerText = "FROST TACTICS v2.0";
+}
 
 const GameState = {
     board: Array(9).fill(null),
@@ -48,7 +65,7 @@ const GameState = {
 let peer, conn, mySide = null, isHost = false, isBotMatch = false;
 let timeLeft = 16, myName = "PLAYER", isQuickMatch = false;
 let selectedHandIdx = null, activeCardType = null, stepSourceIdx = null;
-let particles = [], cameraShake = 0;
+let cameraShake = 0;
 let isInGame = false;
 let botTimer = null;
 let isMuted = false;
@@ -61,15 +78,10 @@ let socialInitialized = false;
 // --- UTILS ---
 function escapeHtml(text) {
     if (!text) return text;
-    return text
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
 
-// --- BOOT SYSTEM (TRUE LOADING) ---
+// --- BOOT SYSTEM ---
 let bootState = { animFinished: false, authFinished: false };
 
 function checkBootState() {
@@ -82,18 +94,8 @@ function checkBootState() {
             document.getElementById('screen-menu').classList.remove('hidden');
             setTimeout(() => screen.classList.add('hidden'), 500);
         }
-    } else if (bootState.animFinished && !bootState.authFinished) {
-        let text = document.getElementById('loading-text');
-        if(text) text.innerText = "> WAITING FOR SERVER RESPONSE...";
     }
 }
-
-document.addEventListener("DOMContentLoaded", () => {
-    let bar = document.getElementById('loading-fill');
-    let text = document.getElementById('loading-text');
-    if(bar) bar.style.width = '60%'; 
-    if(text) text.innerText = "> PARSING DATA...";
-});
 
 window.addEventListener('load', () => {
     let bar = document.getElementById('loading-fill');
@@ -102,14 +104,11 @@ window.addEventListener('load', () => {
 });
 
 // --- DATABASE LOGIC ---
-
 async function loadUserProfile(user) {
     try {
         const userRef = db.collection('players').doc(user.uid);
         userRef.set({ lastSeen: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
-        
         const doc = await userRef.get();
-
         if (doc.exists) {
             userStats = doc.data();
             if (userStats.rank === undefined) userRef.update({ rank: 1000, wins: 0, losses: 0 }); 
@@ -138,83 +137,51 @@ async function loadUserProfile(user) {
     }
 }
 
-// --- FRIEND & INVITE SYSTEM (UNIFICADO) ---
+// --- FRIEND SYSTEM ---
 let incomingInviteCode = null;
 
 function setupFriendSystem() {
     if(!currentUser || socialInitialized) return;
-    socialInitialized = true; // LOCK
+    socialInitialized = true; 
     
-    // 1. Escutar Pedidos de Amizade Pendentes
-    db.collection('friend_requests').where('to', '==', currentUser.uid)
-    .onSnapshot(snapshot => {
+    db.collection('friend_requests').where('to', '==', currentUser.uid).onSnapshot(snapshot => {
         const list = document.getElementById('friend-requests-list');
+        if(!list) return;
         list.innerHTML = '';
         snapshot.forEach(doc => {
             const req = doc.data();
-            list.innerHTML += `
-                <div class="friend-card" style="border: 1px solid #ffaa00;">
-                    <span class="friend-name" style="color:#ffaa00;">${escapeHtml(req.fromName)} quer ser seu amigo.</span>
-                    <div>
-                        <button class="cyber-btn" style="min-width:auto; padding:5px 10px;" onclick="acceptFriend('${doc.id}', '${req.from}', '${escapeHtml(req.fromName)}')">✓</button>
-                        <button class="cyber-btn secondary" style="min-width:auto; padding:5px 10px;" onclick="rejectFriend('${doc.id}')">X</button>
-                    </div>
-                </div>`;
+            list.innerHTML += `<div class="friend-card" style="border: 1px solid #ffaa00;"><span class="friend-name" style="color:#ffaa00;">${escapeHtml(req.fromName)} quer ser amigo.</span><div><button class="cyber-btn" style="min-width:auto; padding:5px 10px;" onclick="acceptFriend('${doc.id}', '${req.from}', '${escapeHtml(req.fromName)}')">✓</button><button class="cyber-btn secondary" style="min-width:auto; padding:5px 10px;" onclick="rejectFriend('${doc.id}')">X</button></div></div>`;
         });
     });
 
-    // 2. Escutar Lista de Amigos
-    db.collection('players').doc(currentUser.uid).collection('friends')
-    .onSnapshot(snapshot => {
+    db.collection('players').doc(currentUser.uid).collection('friends').onSnapshot(snapshot => {
         const list = document.getElementById('friends-list-content');
         const lobbyList = document.getElementById('lobby-friends-list');
-        list.innerHTML = '';
-        lobbyList.innerHTML = '';
+        if(!list) return;
+        list.innerHTML = ''; lobbyList.innerHTML = '';
         
-        if(snapshot.empty) {
-            list.innerHTML = '<p style="color:#aaa; text-align:center;">Busque jogadores acima para adicionar.</p>';
-            return;
-        }
+        if(snapshot.empty) { list.innerHTML = '<p style="color:#aaa; text-align:center;">Busque jogadores acima.</p>'; return; }
 
         snapshot.forEach(async doc => {
             const f = doc.data();
             const fDoc = await db.collection('players').doc(doc.id).get();
             let isOnline = false;
-            
-            // Check de Online mais rigoroso
             if(fDoc.exists && fDoc.data().lastSeen) {
                 const diff = Date.now() - fDoc.data().lastSeen.toMillis();
-                if(diff < 120000) isOnline = true; // 2 minutos
+                if(diff < 120000) isOnline = true; 
             }
-
-            const html = `
-                <div class="friend-card">
-                    <div style="display:flex; align-items:center;">
-                        <span class="status-indicator ${isOnline?'online':''}"></span>
-                        <span class="friend-name">${escapeHtml(f.name)}</span>
-                    </div>
-                    ${isOnline 
-                        ? `<button class="cyber-btn" style="min-width:auto; padding:5px 10px; font-size:0.7rem;" onclick="inviteFriend('${doc.id}')">✉️ CONVIDAR</button>` 
-                        : '<span style="color:#666; font-size:0.7rem;">OFFLINE</span>'}
-                </div>`;
-            
+            const html = `<div class="friend-card"><div style="display:flex; align-items:center;"><span class="status-indicator ${isOnline?'online':''}"></span><span class="friend-name">${escapeHtml(f.name)}</span></div>${isOnline ? `<button class="cyber-btn" style="min-width:auto; padding:5px 10px; font-size:0.7rem;" onclick="inviteFriend('${doc.id}')">✉️</button>` : '<span style="color:#666; font-size:0.7rem;">OFF</span>'}</div>`;
             list.innerHTML += html;
-            
-            if(isOnline) {
-                document.getElementById('lobby-friends-invite').style.display = 'block';
-                lobbyList.innerHTML += html;
-            }
+            if(isOnline && lobbyList) { document.getElementById('lobby-friends-invite').style.display = 'block'; lobbyList.innerHTML += html; }
         });
     });
 
-    // 3. Escutar Convites de Partida
-    db.collection('players').doc(currentUser.uid).collection('invites')
-    .onSnapshot(snapshot => {
+    db.collection('players').doc(currentUser.uid).collection('invites').onSnapshot(snapshot => {
         snapshot.docChanges().forEach(change => {
             if (change.type === "added") {
                 const invite = change.doc.data();
                 incomingInviteCode = invite.code;
-                document.getElementById('invite-text').innerText = `${escapeHtml(invite.from)} te chamou para a batalha!`;
+                document.getElementById('invite-text').innerText = `${escapeHtml(invite.from)} te chamou!`;
                 document.getElementById('invite-modal').classList.remove('hidden');
                 SoundFX.matchWin(); 
                 change.doc.ref.delete(); 
@@ -223,123 +190,67 @@ function setupFriendSystem() {
     });
 }
 
-// BUSCAR PARA ADICIONAR (UNIFICADO)
 function searchPlayer() {
     const queryName = document.getElementById('search-player-input').value.trim();
     const resultsArea = document.getElementById('search-results-area');
     resultsArea.innerHTML = '<div class="loader"></div>';
-    
     if(!queryName) { resultsArea.innerHTML = '<p style="color:#aaa;">Digite um nome.</p>'; return; }
-    
-    // Desabilita botão
-    const btn = document.getElementById('btn-search');
-    if(btn) btn.disabled = true;
+    const btn = document.getElementById('btn-search'); if(btn) btn.disabled = true;
 
     db.collection('players').where('displayName', '==', queryName).limit(5).get()
     .then(async snapshot => {
         resultsArea.innerHTML = '';
         if(snapshot.empty) { resultsArea.innerHTML = '<p style="color:#ff3333;">Ninguém encontrado.</p>'; return; }
-        
         for (const doc of snapshot.docs) {
             const p = doc.data();
-            if(doc.id === currentUser.uid) continue; // Não mostrar a si mesmo
-
+            if(doc.id === currentUser.uid) continue; 
             const friendCheck = await db.collection('players').doc(currentUser.uid).collection('friends').doc(doc.id).get();
             const isFriend = friendCheck.exists;
-
-            resultsArea.innerHTML += `
-                <div class="search-result-card">
-                    <img src="${p.photoURL}" class="user-avatar">
-                    <div class="search-info">
-                        <div class="search-name">${escapeHtml(p.displayName)}</div>
-                        <div class="search-rank">RANK: ${p.rank || 1000}</div>
-                    </div>
-                    ${isFriend 
-                        ? '<span style="color:#00ff88; font-size:0.8rem;">AMIGO ✓</span>' 
-                        : `<button class="cyber-btn" style="min-width:auto; padding:5px 10px;" onclick="sendFriendRequest('${doc.id}')">➕</button>`}
-                </div>`;
+            resultsArea.innerHTML += `<div class="search-result-card"><img src="${p.photoURL}" class="user-avatar"><div class="search-info"><div class="search-name">${escapeHtml(p.displayName)}</div><div class="search-rank">RANK: ${p.rank || 1000}</div></div>${isFriend ? '<span style="color:#00ff88; font-size:0.8rem;">AMIGO ✓</span>' : `<button class="cyber-btn" style="min-width:auto; padding:5px 10px;" onclick="sendFriendRequest('${doc.id}')">➕</button>`}</div>`;
         }
-        if(resultsArea.innerHTML === '') resultsArea.innerHTML = '<p style="color:#aaa;">É você mesmo.</p>';
+        if(resultsArea.innerHTML === '') resultsArea.innerHTML = '<p style="color:#aaa;">É você.</p>';
     })
-    .catch(e => {
-        console.error(e);
-        if(e.code === 'permission-denied') resultsArea.innerHTML = '<p style="color:#ff3333;">ERRO: Atualize as Regras do Firebase.</p>';
-        else if(e.message.includes('index')) resultsArea.innerHTML = '<p style="color:#ff3333;">ERRO DB: Index Faltando</p>';
-        else resultsArea.innerHTML = '<p style="color:#ff3333;">Erro de conexão.</p>';
-    })
-    .finally(() => {
-        if(btn) btn.disabled = false;
-    });
+    .catch(e => { console.error(e); resultsArea.innerHTML = '<p style="color:#ff3333;">Erro conexão/Permissão.</p>'; })
+    .finally(() => { if(btn) btn.disabled = false; });
 }
 
 function sendFriendRequest(targetUid) {
     if(targetUid === currentUser.uid) return;
-    
-    db.collection('friend_requests')
-        .where('from', '==', currentUser.uid)
-        .where('to', '==', targetUid)
-        .get()
-        .then(snap => {
-            if(!snap.empty) { showToast("JÁ ENVIADO", "#ffaa00"); return; }
-            
-            db.collection('friend_requests').add({
-                from: currentUser.uid,
-                fromName: myName,
-                to: targetUid,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            }).then(() => {
-                showToast("PEDIDO ENVIADO", "#00ff88");
-                searchPlayer(); // Atualiza a lista para sumir o botão
-            });
-        });
+    db.collection('friend_requests').add({
+        from: currentUser.uid, fromName: myName, to: targetUid, timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => { showToast("ENVIADO", "#00ff88"); searchPlayer(); });
 }
 
 function acceptFriend(reqId, friendUid, friendName) {
     db.collection('players').doc(currentUser.uid).collection('friends').doc(friendUid).set({ name: friendName });
     db.collection('players').doc(friendUid).collection('friends').doc(currentUser.uid).set({ name: myName });
     db.collection('friend_requests').doc(reqId).delete();
-    showToast("AMIGO ADICIONADO", "#00ff88");
+    showToast("ACEITO", "#00ff88");
 }
 
-function rejectFriend(reqId) {
-    db.collection('friend_requests').doc(reqId).delete();
-}
+function rejectFriend(reqId) { db.collection('friend_requests').doc(reqId).delete(); }
 
 function inviteFriend(friendUid) {
-    if(!peer || !peer.id) { showToast("CRIE UMA SALA PRIMEIRO", "#ff3333"); return; }
+    if(!peer || !peer.id) { showToast("CRIE SALA", "#ff3333"); return; }
     const code = peer.id.replace(APP_ID, '');
     db.collection('players').doc(friendUid).collection('invites').add({
-        code: code,
-        from: myName,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    }).then(() => {
-        showToast("CONVITE ENVIADO", "#00e5ff");
-    });
+        code: code, from: myName, timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => { showToast("CONVITE ENVIADO", "#00e5ff"); });
 }
 
 function acceptInvite() {
     document.getElementById('invite-modal').classList.add('hidden');
     if(incomingInviteCode) {
         document.getElementById('input-code').value = incomingInviteCode;
-        openLobby('join');
-        connectToHost();
+        openLobby('join'); connectToHost();
     }
 }
+function closeInvite() { document.getElementById('invite-modal').classList.add('hidden'); }
 
-function closeInvite() {
-    document.getElementById('invite-modal').classList.add('hidden');
-}
-
-// --- ONLINE STATUS SYSTEM ---
+// --- ONLINE & UI ---
 function startHeartbeat() {
     updateOnlineCount();
-    setInterval(() => {
-        if(currentUser) {
-            db.collection('players').doc(currentUser.uid).update({
-                lastSeen: firebase.firestore.FieldValue.serverTimestamp()
-            }).catch(e => {});
-        }
-    }, 60000); 
+    setInterval(() => { if(currentUser) db.collection('players').doc(currentUser.uid).update({ lastSeen: firebase.firestore.FieldValue.serverTimestamp() }).catch(e=>{}); }, 60000); 
     setInterval(updateOnlineCount, 120000);
 }
 
@@ -350,44 +261,34 @@ async function updateOnlineCount() {
         const count = snapshot.size || 1;
         const el = document.getElementById('online-count-val');
         const box = document.getElementById('online-counter-display');
-        if(el && box) {
-            el.innerText = count;
-            box.classList.remove('hidden');
-        }
+        if(el && box) { el.innerText = count; box.classList.remove('hidden'); }
     } catch(e) {}
 }
 
 function saveInitialNickname() {
     if(!currentUser) return;
     let newNick = document.getElementById('permanent-nick-input').value.trim();
-    newNick = escapeHtml(newNick); // SANITIZE
-    
+    newNick = escapeHtml(newNick); 
     if(newNick.length > 2 && newNick.length <= 10) {
         db.collection('players').doc(currentUser.uid).update({ displayName: newNick, hasSetNick: true })
         .then(() => {
             userStats.displayName = newNick; userStats.hasSetNick = true; myName = newNick;
-            localStorage.setItem('cv_username', newNick); 
             updateUIWithStats(); document.getElementById('modal-nickname').classList.add('hidden');
             showToast("BEM-VINDO " + newNick, "#00ff88");
-        })
-        .catch(err => { showToast("ERRO SALVAR", "#ff0000"); });
-    } else { showToast("NOME INVÁLIDO (3-10 CARACTERES)", "#ff3333"); }
+        });
+    } else { showToast("NOME INVÁLIDO", "#ff3333"); }
 }
 
 function saveNewNickname() {
-    if(!currentUser) { showToast("ERRO: NÃO LOGADO", "#ff0000"); return; }
+    if(!currentUser) { showToast("ERRO", "#ff0000"); return; }
     let newNick = document.getElementById('edit-nick-input').value.trim();
-    newNick = escapeHtml(newNick); // SANITIZE
-
+    newNick = escapeHtml(newNick);
     if(newNick.length > 0 && newNick.length <= 10) {
         db.collection('players').doc(currentUser.uid).update({ displayName: newNick })
         .then(() => {
             userStats.displayName = newNick; myName = newNick;
-            updateUIWithStats(); 
-            localStorage.setItem('cv_username', newNick);
-            showToast("NICK SALVO", "#00ff88");
-        })
-        .catch(err => { showToast("ERRO AO SALVAR", "#ff0000"); });
+            updateUIWithStats(); showToast("SALVO", "#00ff88");
+        });
     } else { showToast("NOME INVÁLIDO", "#ff3333"); }
 }
 
@@ -397,19 +298,14 @@ async function loadLeaderboard() {
     try {
         const snapshot = await db.collection('players').orderBy('rank', 'desc').limit(100).get();
         list.innerHTML = '';
-        if(snapshot.empty) {
-            list.innerHTML = '<p style="color:#aaa;">SEM DADOS DE RANKING</p>';
-            return;
-        }
+        if(snapshot.empty) { list.innerHTML = '<p style="color:#aaa;">SEM DADOS</p>'; return; }
         let rank = 1;
         snapshot.forEach(doc => {
             const p = doc.data();
             const hl = (currentUser && doc.id === currentUser.uid) ? "rgba(0, 229, 255, 0.1)" : "transparent";
             list.innerHTML += `<div class="ranking-row" style="background:${hl}"><div class="rank-num">${rank++}</div><div class="rank-name">${escapeHtml(p.displayName || 'Anon')}</div><div class="rank-elo">${p.rank || 1000}</div><div class="rank-wl">${p.wins}/${p.losses}</div></div>`;
         });
-    } catch(e) {
-        list.innerHTML = '<p style="color:#ff3333;">ERRO AO CARREGAR RANKING</p>';
-    }
+    } catch(e) { list.innerHTML = '<p style="color:#ff3333;">ERRO</p>'; }
 }
 
 function updateUIWithStats() {
@@ -424,30 +320,23 @@ function updateUIWithStats() {
     document.getElementById('stat-losses').innerText = userStats.losses || 0;
 }
 
-// --- SECURITY & SAVE LOGIC ---
+// --- GAME SAVING ---
 function saveGameResult(isWin, token) {
-    if (!token || token !== matchSecurityToken) {
-        if(isWin) showToast("ERRO: SYNC FAIL", "#ff3333");
-        return;
-    }
+    if (!token || token !== matchSecurityToken) return;
     const duration = Date.now() - matchStartTime;
-    if (duration < 1000) {
-        if(isWin) showToast("ERRO: VERY FAST", "#ff3333");
-        return;
-    }
+    if (duration < 1000) return;
     if (!GameState.winner) return;
 
     if (!currentUser) return; 
     if (isBotMatch) { saveLocalHistory(isWin ? "Vitória vs BOT" : "Derrota vs BOT", isWin); return; }
-    if (!userStats) return;
 
     const userRef = db.collection('players').doc(currentUser.uid);
     if (isWin) {
-        userRef.update({ wins: firebase.firestore.FieldValue.increment(1), rank: firebase.firestore.FieldValue.increment(25) }).catch(e => console.log(e));
+        userRef.update({ wins: firebase.firestore.FieldValue.increment(1), rank: firebase.firestore.FieldValue.increment(25) });
         userStats.wins++; userStats.rank += 25;
         saveLocalHistory(`Vitória vs ${GameState.names[mySide==='X'?'O':'X']}`, true);
     } else {
-        userRef.update({ losses: firebase.firestore.FieldValue.increment(1), rank: firebase.firestore.FieldValue.increment(-15) }).catch(e => console.log(e));
+        userRef.update({ losses: firebase.firestore.FieldValue.increment(1), rank: firebase.firestore.FieldValue.increment(-15) });
         userStats.losses++; userStats.rank -= 15;
         saveLocalHistory(`Derrota vs ${GameState.names[mySide==='X'?'O':'X']}`, false);
     }
@@ -467,7 +356,7 @@ function loadMatchHistory() {
     const div = document.getElementById('match-history-list');
     const hist = JSON.parse(localStorage.getItem('cv_history') || '[]');
     div.innerHTML = '';
-    if(hist.length === 0) div.innerHTML = '<div style="text-align:center; padding-top:20px;">Sem dados recentes.</div>';
+    if(hist.length === 0) div.innerHTML = '<div style="text-align:center; padding-top:20px;">Sem dados.</div>';
     hist.forEach(h => {
         div.innerHTML += `<div class="history-item"><span class="${h.win?'win-tag':'lose-tag'}">${h.win?'WIN':'LOSE'}</span> ${h.text} <span style="float:right; font-size:0.7rem;">${h.date}</span></div>`;
     });
@@ -478,10 +367,10 @@ function showPlayerStats(side) {
     else showToast(isBotMatch ? "BOT T-800" : `OPONENTE: RANK ${opponentStats.rank}`, "#ffff00");
 }
 
-// --- LOGIN ---
+// --- AUTH ---
 function loginGoogle() {
     const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider).then((result) => { showToast("LOGIN SUCESSO!", "#00ff88"); }).catch((error) => { showToast("ERRO LOGIN", "#ff0000"); });
+    auth.signInWithPopup(provider).then((result) => { showToast("SUCESSO!", "#00ff88"); }).catch((error) => { showToast("ERRO", "#ff0000"); });
 }
 function logout() { auth.signOut().then(() => { showToast("SAIU", "#ffffff"); }); }
 
@@ -500,12 +389,10 @@ auth.onAuthStateChanged((user) => {
         guestArea.classList.remove('hidden'); userArea.classList.add('hidden'); gameControls.classList.add('hidden');
         document.getElementById('modal-nickname').classList.add('hidden');
     }
-    
-    bootState.authFinished = true;
-    checkBootState();
+    bootState.authFinished = true; checkBootState();
 });
 
-// --- UI HELPERS ---
+// --- UI NAVIGATION ---
 function resetLobbyUI() {
     document.getElementById('lobby-host-ui').classList.add('hidden');
     document.getElementById('lobby-client-ui').classList.add('hidden');
@@ -515,12 +402,10 @@ function openScreen(screenId) {
     document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
     const target = document.getElementById(screenId);
     if(target) target.classList.remove('hidden');
-    if(audioCtx.state === 'suspended') audioCtx.resume();
     if(screenId === 'screen-cards') renderCardsHelp();
     if(screenId === 'screen-profile' && currentUser) { 
         document.getElementById('edit-nick-input').value = userStats.displayName || myName;
-        updateUIWithStats(); 
-        loadMatchHistory(); 
+        updateUIWithStats(); loadMatchHistory(); 
     }
     if(screenId === 'screen-leaderboard') loadLeaderboard();
 }
@@ -533,10 +418,19 @@ function renderCardsHelp() {
     }
 }
 
-// --- AUDIO & CHAT ---
+// --- AUDIO FIX ---
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-window.addEventListener('click', () => { if(audioCtx.state === 'suspended') audioCtx.resume(); }, {once:true});
-window.addEventListener('touchstart', () => { if(audioCtx.state === 'suspended') audioCtx.resume(); }, {once:true});
+
+function unlockAudio() {
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume().then(() => {
+            window.removeEventListener('click', unlockAudio);
+            window.removeEventListener('touchstart', unlockAudio);
+        });
+    }
+}
+window.addEventListener('click', unlockAudio);
+window.addEventListener('touchstart', unlockAudio);
 
 function toggleMute() {
     isMuted = !isMuted;
@@ -547,7 +441,7 @@ function toggleMute() {
 
 function sendChat(emoji) {
     if(!isInGame) return;
-    showToast(emoji, "#fff"); // Mostra pra mim
+    showToast(emoji, "#fff"); 
     if(conn && conn.open && !isBotMatch) conn.send({ type: 'CHAT', msg: emoji });
 }
 
@@ -585,10 +479,9 @@ function openLobby(mode) {
     if (mode === 'host') setupHostPrivate(); 
     else if (mode === 'join') document.getElementById('lobby-client-ui').classList.remove('hidden');
 
-    // Re-enable buttons after short delay in case user goes back
     setTimeout(() => {
-         if(btnCreate) btnCreate.disabled = false;
-         if(btnJoin) btnJoin.disabled = false;
+            if(btnCreate) btnCreate.disabled = false;
+            if(btnJoin) btnJoin.disabled = false;
     }, 1000);
 }
 
@@ -615,7 +508,6 @@ function connectToHost() {
     peer.on('open', () => {
         conn = peer.connect(APP_ID + code, { reliable: true });
         configureConnection();
-        // TIMEOUT FIX
         setTimeout(() => { if(!conn.open) { btn.disabled = false; btn.innerText = "CONECTAR"; stat.innerText = "Sala não encontrada."; } }, 5000);
     });
 }
@@ -626,7 +518,7 @@ function startQuickMatch() {
     isBotMatch = false; openScreen('screen-lobby-wait'); resetLobbyUI();
     document.getElementById('lobby-quick-ui').classList.remove('hidden');
     document.getElementById('quick-log').innerText = "Iniciando...";
-    setTimeout(() => findPublicMatch(0), Math.random() * 1500);
+    setTimeout(() => findPublicMatch(0), Math.random() * 1000 + 500);
 }
 
 function findPublicMatch(roomIndex) {
@@ -667,12 +559,11 @@ function connectToPublicRoom(roomID, currentIdx) {
             if(data.type === 'ROOM_FULL') { conn.close(); tempPeer.destroy(); findPublicMatch(currentIdx + 1); } 
             else handleData(data);
         });
-        // TIMEOUT FIX
         setTimeout(() => { if(!conn.open) { tempPeer.destroy(); findPublicMatch(currentIdx + 1); } }, 3000);
     });
 }
 
-// --- BOT MODE INTELIGENTE ---
+// --- BOT ---
 function startBotMatch() {
     if(peer) peer.destroy();
     isBotMatch = true; isHost = true; mySide = 'X';
@@ -691,28 +582,18 @@ function botTurn() {
         const placeCardIdx = hand.indexOf('PLACE');
 
         if(placeCardIdx !== -1 && availableMoves.length > 0) {
-            // 1. TENTAR GANHAR
             let bestMove = -1;
             for(let move of availableMoves) {
-                GameState.board[move] = 'O'; // Simula
-                if(checkLineWin('O')) bestMove = move;
-                GameState.board[move] = null; // Desfaz
+                GameState.board[move] = 'O'; if(checkLineWin('O')) bestMove = move; GameState.board[move] = null;
                 if(bestMove !== -1) break;
             }
-            
-            // 2. BLOQUEAR
             if(bestMove === -1) {
                 for(let move of availableMoves) {
-                    GameState.board[move] = 'X'; // Simula oponente ganhando
-                    if(checkLineWin('X')) bestMove = move;
-                    GameState.board[move] = null;
+                    GameState.board[move] = 'X'; if(checkLineWin('X')) bestMove = move; GameState.board[move] = null;
                     if(bestMove !== -1) break;
                 }
             }
-
-            // 3. ALEATÓRIO ESTRATÉGICO
             if(bestMove === -1) bestMove = availableMoves[Math.floor(Math.random()*availableMoves.length)];
-
             action = { type: 'PLACE', target: bestMove, cardIdx: placeCardIdx };
         } else {
             action = { type: 'TIMEOUT' };
@@ -757,11 +638,8 @@ function resetMatch() {
     GameState.winner = null; 
     GameState.hands = { 'X': generateHand(), 'O': generateHand() }; 
     GameState.turn = 'X'; 
-    
-    // SECURITY RESET
     matchStartTime = Date.now();
     matchSecurityToken = Math.random().toString(36).substr(2) + Math.random().toString(36).substr(2);
-    
     broadcastState(); 
     if(isHost && !isBotMatch) sendData({ type: 'RESTART' }); 
 }
@@ -875,7 +753,9 @@ function showGameOver() {
     isInGame = false; openScreen('screen-gameover');
     const wName = GameState.names[GameState.winner];
     document.getElementById('winner-text').innerText = wName + " VENCEU!";
-    document.getElementById('winner-text').style.color = (GameState.winner==='X'?'var(--x-color)':'var(--o-color)');
+    // CORRIGIDO: Cores dinâmicas para o vencedor
+    const winColor = GameState.winner === 'X' ? (EVENT_CHRISTMAS ? '#ff0033' : '#ff0055') : (EVENT_CHRISTMAS ? '#00ff66' : '#00e5ff');
+    document.getElementById('winner-text').style.color = winColor;
     SoundFX.matchWin();
     
     if(currentUser && GameState.winner === mySide) { 
@@ -896,15 +776,89 @@ function sendAction(a) { if(isHost) processAction(a, 'X'); else { conn.send({ ty
 function resetSelection() { selectedHandIdx=null; activeCardType=null; stepSourceIdx=null; updateHandUI(); document.getElementById('hint-pill').classList.remove('active'); }
 
 /* =========================================
-    THREE.JS VISUALS
-    ========================================= */
+   THREE.JS VISUALS & OPTIMIZATION (POOLING)
+   ========================================= */
 const scene = new THREE.Scene(); scene.fog = new THREE.FogExp2(0x050510, 0.02);
 const camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 0.1, 100);
 const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.getElementById('canvas-container').appendChild(renderer.domElement);
+
 const pieceGroup = new THREE.Group(); scene.add(pieceGroup);
 const particlesGroup = new THREE.Group(); scene.add(particlesGroup);
+const snowGroup = new THREE.Group(); scene.add(snowGroup); // Grupo separado para neve
+
+// --- OBJECT POOLING SYSTEM ---
+const PARTICLE_LIMIT = 300;
+const particlePool = [];
+const particleGeo = new THREE.BoxGeometry(0.1, 0.1, 0.1);
+const particleMat = new THREE.MeshBasicMaterial({color: 0xffffff});
+
+// Init Pool
+for(let i=0; i<PARTICLE_LIMIT; i++) {
+    const mesh = new THREE.Mesh(particleGeo, particleMat.clone());
+    mesh.visible = false;
+    particlesGroup.add(mesh);
+    particlePool.push({ mesh: mesh, active: false, life: 0, vel: new THREE.Vector3() });
+}
+
+let particles = []; 
+
+function spawnExplosion(idx) {
+    const x = (idx%3-1)*3.1; const z = (Math.floor(idx/3)-1)*3.1;
+    for(let i=0; i<25; i++) {
+        const p = getFreeParticle();
+        if(p) {
+            p.active = true;
+            p.life = 1.0;
+            p.mesh.position.set(x, 1, z);
+            p.mesh.rotation.x = Math.random();
+            p.mesh.material.color.setHex(0xffaa00);
+            p.mesh.visible = true;
+            p.vel.set((Math.random()-0.5)*0.6, Math.random()*0.6, (Math.random()-0.5)*0.6);
+            p.gravity = 0;
+        }
+    }
+}
+function spawnWinParticles(idxList) {
+    idxList.forEach(idx => {
+        const x = (idx%3-1)*3.1; const z = (Math.floor(idx/3)-1)*3.1;
+        // CORES DE NATAL SE ATIVO
+        let color;
+        if (EVENT_CHRISTMAS) {
+             color = GameState.board[idx] === 'X' ? 0xff0033 : 0x00ff66;
+        } else {
+             color = GameState.board[idx] === 'X' ? 0xff0055 : 0x00e5ff;
+        }
+
+        for(let i=0; i<15; i++) {
+            const p = getFreeParticle();
+            if(p) {
+                p.active = true; p.life = 2.0;
+                p.mesh.position.set(x + (Math.random()-0.5), 2, z + (Math.random()-0.5));
+                p.mesh.material.color.setHex(color);
+                p.mesh.visible = true;
+                p.vel.set(0, Math.random()*0.2, 0);
+                p.gravity = -0.05;
+            }
+        }
+    });
+}
+function getFreeParticle() { return particlePool.find(p => !p.active); }
+
+// --- SISTEMA DE NEVE (NATAL) ---
+const snowflakes = [];
+if(EVENT_CHRISTMAS) {
+    const snowGeo = new THREE.BoxGeometry(0.05, 0.05, 0.05);
+    const snowMat = new THREE.MeshBasicMaterial({color: 0xffffff, transparent: true, opacity: 0.8});
+    for(let i=0; i<100; i++) {
+        const m = new THREE.Mesh(snowGeo, snowMat);
+        m.position.set((Math.random()-0.5)*20, Math.random()*10, (Math.random()-0.5)*20);
+        snowGroup.add(m);
+        snowflakes.push({mesh: m, speed: 0.02 + Math.random()*0.05});
+    }
+}
+
 const gridHelper = new THREE.GridHelper(100, 100, 0x222222, 0x111111); gridHelper.position.y = -2; scene.add(gridHelper);
 window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
 
@@ -917,26 +871,14 @@ for(let i=0; i<9; i++) {
     t.add(edges); scene.add(t); tiles.push(t);
 }
 const dl = new THREE.DirectionalLight(0xffffff, 0.5); dl.position.set(5, 10, 5); scene.add(dl);
-const pl1 = new THREE.PointLight(0xff0055, 1, 30); pl1.position.set(5, 5, 5); scene.add(pl1);
-const pl2 = new THREE.PointLight(0x00e5ff, 1, 30); pl2.position.set(-5, 5, -5); scene.add(pl2);
+
+// LUZES TEMÁTICAS
+const pl1 = new THREE.PointLight(EVENT_CHRISTMAS ? 0xff0033 : 0xff0055, 1, 30); pl1.position.set(5, 5, 5); scene.add(pl1);
+const pl2 = new THREE.PointLight(EVENT_CHRISTMAS ? 0x00ff66 : 0x00e5ff, 1, 30); pl2.position.set(-5, 5, -5); scene.add(pl2);
 scene.add(new THREE.AmbientLight(0xffffff, 0.3));
 
-const particleGeo = new THREE.BoxGeometry(0.1, 0.1, 0.1); 
-
-function spawnExplosion(idx) {
-    const x = (idx%3-1)*3.1; const z = (Math.floor(idx/3)-1)*3.1;
-    for(let i=0; i<25; i++) particles.push({ pos: new THREE.Vector3(x, 1, z), vel: new THREE.Vector3((Math.random()-0.5)*0.6, Math.random()*0.6, (Math.random()-0.5)*0.6), life: 1.0, color: 0xffaa00 });
-}
-function spawnWinParticles(idxList) {
-    idxList.forEach(idx => {
-        const x = (idx%3-1)*3.1; const z = (Math.floor(idx/3)-1)*3.1;
-        const color = GameState.board[idx] === 'X' ? 0xff0055 : 0x00e5ff;
-        for(let i=0; i<15; i++) particles.push({ pos: new THREE.Vector3(x + (Math.random()-0.5), 2, z + (Math.random()-0.5)), vel: new THREE.Vector3(0, Math.random()*0.2, 0), life: 2.0, color: color, gravity: -0.05 });
-    });
-}
-
 function updateVisuals() {
-    camera.userData.targetRot = (mySide==='X') ? 0 : Math.PI; // Rotação fixa
+    camera.userData.targetRot = (mySide==='X') ? 0 : Math.PI; 
     pieceGroup.clear();
     if(GameState.winningLine) spawnWinParticles(GameState.winningLine);
     GameState.board.forEach((c, i) => {
@@ -944,28 +886,27 @@ function updateVisuals() {
             const x = (i%3-1)*3.1; const z = (Math.floor(i/3)-1)*3.1;
             const isWinner = GameState.winningLine && GameState.winningLine.includes(i);
             let m;
-            // FEEDBACK INFINITO: Se a história tem 3, o índice 0 vai sumir.
             const isOldest = GameState.history[c].length === 3 && GameState.history[c][0] === i;
             
+            // CORES E FORMAS TEMÁTICAS
             if(c==='X') {
                 const g = new THREE.Group();
-                const mat = new THREE.MeshStandardMaterial({ color: 0xff0055, emissive: isOldest ? 0xff0000 : 0xff0055, emissiveIntensity: isWinner ? 5.0 : (isOldest ? 3.0 : 1.5) });
+                const color = EVENT_CHRISTMAS ? 0xff0033 : 0xff0055; // Vermelho Natal vs Pink Cyber
+                const mat = new THREE.MeshStandardMaterial({ color: color, emissive: isOldest ? 0xff0000 : color, emissiveIntensity: isWinner ? 5.0 : (isOldest ? 3.0 : 1.5) });
                 const b1=new THREE.Mesh(new THREE.BoxGeometry(2,0.4,0.4), mat); b1.rotation.y=Math.PI/4;
                 const b2=new THREE.Mesh(new THREE.BoxGeometry(2,0.4,0.4), mat); b2.rotation.y=-Math.PI/4; g.add(b1); g.add(b2); m=g;
             } else {
-                const mat = new THREE.MeshStandardMaterial({ color: 0x00e5ff, emissive: isOldest ? 0xff0000 : 0x00e5ff, emissiveIntensity: isWinner ? 5.0 : (isOldest ? 3.0 : 1.5) });
+                const color = EVENT_CHRISTMAS ? 0x00ff66 : 0x00e5ff; // Verde Natal vs Cyan Cyber
+                const mat = new THREE.MeshStandardMaterial({ color: color, emissive: isOldest ? 0xff0000 : color, emissiveIntensity: isWinner ? 5.0 : (isOldest ? 3.0 : 1.5) });
                 m=new THREE.Mesh(new THREE.TorusGeometry(0.8, 0.2, 16, 32), mat); m.rotation.x=Math.PI/2;
             }
             m.position.set(x, 1, z);
             if(isWinner) m.userData.spinSpeed = 0.2;
-            if(!isWinner && isOldest) {
-                    m.userData.isGlitching = true; // Pisca
-            } else {
-                    m.userData.isGlitching = false;
-                    m.visible=true; m.scale.setScalar(1);
-            }
+            if(!isWinner && isOldest) { m.userData.isGlitching = true; } else { m.userData.isGlitching = false; m.visible=true; m.scale.setScalar(1); }
             if(GameState.shields[i]>0) {
-                const s = new THREE.Mesh(new THREE.IcosahedronGeometry(1.2), new THREE.MeshBasicMaterial({color:0x0088ff, wireframe:true, transparent:true, opacity:0.5}));
+                // ESCUDO DE GELO NO NATAL
+                const sColor = EVENT_CHRISTMAS ? 0xaaddff : 0x0088ff;
+                const s = new THREE.Mesh(new THREE.IcosahedronGeometry(1.2), new THREE.MeshBasicMaterial({color:sColor, wireframe:true, transparent:true, opacity:0.5}));
                 s.userData.anim='shield'; m.add(s);
             }
             pieceGroup.add(m);
@@ -976,40 +917,55 @@ function updateVisuals() {
     const isTurnX = GameState.turn === 'X';
     document.getElementById('p1-score').className = `player-score ${isTurnX?'active-turn':''}`;
     document.getElementById('p2-score').className = `player-score ${!isTurnX?'active-turn':''}`;
+    
+    // ATUALIZA AS CORES DO SCORE CSS DINAMICAMENTE
+    if(EVENT_CHRISTMAS) {
+         document.documentElement.style.setProperty('--x-color', '#ff0033');
+         document.documentElement.style.setProperty('--o-color', '#00ff66');
+    }
+
     updateHandUI();
 }
 
 const raycaster = new THREE.Raycaster(); const mouse = new THREE.Vector2(); let menuTime = 0;
 
-// --- CÂMERA FIXA NO MOBILE (Sem listeners de touchmove para câmera) ---
-
 function animate() {
     requestAnimationFrame(animate);
     if(isInGame) {
         if(cameraShake > 0) { cameraShake -= 0.05; if(cameraShake < 0) cameraShake = 0; camera.position.x += (Math.random()-0.5) * cameraShake; camera.position.y += (Math.random()-0.5) * cameraShake; camera.position.z += (Math.random()-0.5) * cameraShake; }
-        
-        // CAMERA LOGIC SIMPLIFICADA (FIXA)
         let targetRot = camera.userData.targetRot || 0;
         const angle = THREE.MathUtils.lerp(Math.atan2(camera.position.x, camera.position.z), targetRot, 0.05);
-        
         if(cameraShake < 0.1) { camera.position.x = Math.sin(angle) * 14; camera.position.z = Math.cos(angle) * 14; camera.position.y = THREE.MathUtils.lerp(camera.position.y, 15, 0.1); camera.lookAt(0,0,0); }
     } else { menuTime += 0.005; camera.position.x = Math.sin(menuTime) * 18; camera.position.z = Math.cos(menuTime) * 18; camera.position.y = 12; camera.lookAt(0,0,0); }
     gridHelper.position.z = (Date.now() * 0.002) % 2;
     
     pieceGroup.children.forEach(p => { 
         p.rotation.y += p.userData.spinSpeed || 0.01; 
-        if(p.userData.isGlitching) { 
-            const scale = 0.9 + Math.sin(Date.now() * 0.01) * 0.1;
-            p.scale.setScalar(scale); 
-        } 
+        if(p.userData.isGlitching) { const scale = 0.9 + Math.sin(Date.now() * 0.01) * 0.1; p.scale.setScalar(scale); } 
         p.children.forEach(c => { if(c.userData.anim === 'shield') c.rotation.z -= 0.05; }); 
     });
     
-    particlesGroup.clear();
-    for(let i=particles.length-1; i>=0; i--) { const p = particles[i]; p.life -= 0.02; p.pos.add(p.vel); if(p.gravity) p.vel.y += p.gravity; if(p.life <= 0) { particles.splice(i,1); continue; } 
-        const mesh = new THREE.Mesh(particleGeo, new THREE.MeshBasicMaterial({color:p.color})); 
-        mesh.position.copy(p.pos); mesh.rotation.x = Math.random()*Math.PI; particlesGroup.add(mesh); 
+    // PARTICLE UPDATE
+    particlePool.forEach(p => {
+        if(p.active) {
+            p.life -= 0.02;
+            p.mesh.position.add(p.vel);
+            if(p.gravity) p.vel.y += p.gravity;
+            if(p.life <= 0) {
+                p.active = false;
+                p.mesh.visible = false;
+            }
+        }
+    });
+
+    // SNOW UPDATE (SE ATIVO)
+    if(EVENT_CHRISTMAS) {
+        snowflakes.forEach(s => {
+            s.mesh.position.y -= s.speed;
+            if(s.mesh.position.y < -5) s.mesh.position.y = 10;
+        });
     }
+
     renderer.render(scene, camera);
 }
 animate();
@@ -1019,7 +975,16 @@ setInterval(() => { if(!GameState.winner && document.getElementById('screen-lobb
 function handleCardClick(idx, type) {
     if(GameState.turn !== mySide) return; if(selectedHandIdx === idx) { resetSelection(); return; }
     selectedHandIdx=idx; activeCardType=type; stepSourceIdx=null; SoundFX.click(); updateHandUI();
-    const hint = { 'PLACE':'Espaço vazio', 'BOMB':'Inimigo', 'SHIELD':'Sua peça', 'MOVE':'1. Sua peça', 'PUSH':'1. Peça Inimiga', 'SWAP':'1. Inimigo' };
+    
+    // HINTS DINÂMICOS
+    const hint = { 
+        'PLACE': EVENT_CHRISTMAS ? 'Colocar Elfo' : 'Espaço vazio', 
+        'BOMB': EVENT_CHRISTMAS ? 'Entregar Presente' : 'Inimigo', 
+        'SHIELD': 'Sua peça', 
+        'MOVE': '1. Sua peça', 
+        'PUSH': '1. Peça Inimiga', 
+        'SWAP': '1. Inimigo' 
+    };
     document.getElementById('hint-pill').innerText = hint[type] || ''; document.getElementById('hint-pill').classList.add('active');
 }
 
@@ -1034,7 +999,6 @@ function updateHandUI() {
     });
 }
 
-// --- INPUT HANDLING ---
 function onInput(x, y) {
     mouse.x=(x/window.innerWidth)*2-1; mouse.y=-(y/window.innerHeight)*2+1;
     raycaster.setFromCamera(mouse, camera);
@@ -1090,5 +1054,5 @@ function onInput(x, y) {
 
 window.addEventListener('mousedown', e => { if(e.button===0) onInput(e.clientX, e.clientY); else resetSelection(); });
 window.addEventListener('touchstart', e => { if(e.touches.length > 0 && e.target.tagName === 'CANVAS') { e.preventDefault(); onInput(e.touches[0].clientX, e.touches[0].clientY); } }, {passive: false});
-function showToast(m,c) { const t=document.getElementById('toast-msg'); t.innerText=m; t.style.textShadow=`0 0 50px ${c}`; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000); }
+function showToast(m,c) { const t=document.getElementById('toast-msg'); if(t) { t.innerText=m; t.style.textShadow=`0 0 50px ${c}`; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000); } }
 function quitGame() { if(conn) conn.close(); location.reload(); }

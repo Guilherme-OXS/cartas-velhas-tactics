@@ -4,19 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <meta name="description" content="Cartas Velhas: Cyberpunk Tactics. A reinvenção tática 3D do Jogo da Velha. Multiplayer, Cartas e Estratégia.">
+    <meta name="description" content="Cartas Velhas: Cyberpunk Tactics v2.0. Edição de Natal Neon Frost.">
     <meta name="author" content="Guilherme Otávio Xavier de Souza">
-    <meta name="robots" content="index, follow">
-
-    <meta property="og:title" content="Cartas Velhas: Cyberpunk Tactics v1.0">
-    <meta property="og:description" content="Jogue a versão final! Estratégia, Cartas e Multiplayer em tempo real.">
+    
+    <meta property="og:title" content="Cartas Velhas: Neon Frost v2.0">
+    <meta property="og:description" content="Evento de Natal! Jogue agora a versão festiva.">
     <meta property="og:type" content="website">
 
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎄</text></svg>">
 
-    <title>Cartas Velhas: Cyberpunk Tactics v1.0</title>
+    <title>Cartas Velhas: Neon Frost v2.0</title>
     
-    <link rel="stylesheet" href="style.css?v=1.0">
+    <link rel="stylesheet" href="style.css?v=2.0">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
@@ -26,13 +25,15 @@
 </head>
 <body>
 
+    <div id="snow-overlay" class="hidden"></div>
+
     <div id="loading-screen">
         <div class="loader-content">
-            <div class="glitch-text" style="font-size: 2rem; font-weight: bold; margin-bottom: 20px;">SYSTEM BOOT v1.0</div>
+            <div class="glitch-text" id="boot-title" style="font-size: 2rem; font-weight: bold; margin-bottom: 20px;">SYSTEM BOOT v2.0</div>
             <div class="loading-bar-frame">
                 <div id="loading-fill" class="loading-bar-fill"></div>
             </div>
-            <div id="loading-text" style="font-family: monospace; color: #00ff88; font-size: 0.8rem; margin-top: 10px;">> INITIALIZING KERNEL...</div>
+            <div id="loading-text" style="font-family: monospace; color: #00ff88; font-size: 0.8rem; margin-top: 10px;">> LOADING HOLIDAY PROTOCOLS...</div>
         </div>
     </div>
 
@@ -73,10 +74,10 @@
         <div id="toast-msg">TOAST</div>
         
         <div class="chat-bar">
-            <button class="emoji-btn" onclick="sendChat('👋')">👋</button>
+            <button class="emoji-btn" onclick="sendChat('🎅')">🎅</button>
+            <button class="emoji-btn" onclick="sendChat('🎁')">🎁</button>
+            <button class="emoji-btn" onclick="sendChat('❄️')">❄️</button>
             <button class="emoji-btn" onclick="sendChat('😂')">😂</button>
-            <button class="emoji-btn" onclick="sendChat('😡')">😡</button>
-            <button class="emoji-btn" onclick="sendChat('👏')">👏</button>
         </div>
 
         <div class="hand-wrapper"><div id="hand-container" class="hand-container pointer-events-auto"></div></div>
@@ -85,8 +86,8 @@
 
     <div id="screen-menu" class="screen hidden">
         <div class="cyber-panel">
-            <div class="title-glitch" style="font-size: 3.5rem;">CARTAS<br>VELHAS</div>
-            <p style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 20px; font-size: 0.9rem; font-weight: bold;">TACTICAL SYSTEM v1.0</p>
+            <div class="title-glitch" id="main-title" style="font-size: 3.5rem;">CARTAS<br>VELHAS</div>
+            <p id="subtitle-version" style="letter-spacing: 5px; color: var(--o-color); margin-bottom: 20px; font-size: 0.9rem; font-weight: bold;">TACTICAL v2.0</p>
             
             <div id="online-counter-display" class="online-tag hidden">
                 <span class="live-dot">●</span> <span id="online-count-val">0</span> AGENTES ONLINE
@@ -129,7 +130,6 @@
     <div id="screen-social" class="screen hidden">
         <div class="cyber-panel" style="max-width: 700px;">
             <h2 style="color:#fff; margin-top:0;">REDE NEURAL</h2>
-            
             <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
                 <p style="color:#aaa; font-size:0.8rem; margin-top:0;">BUSCAR NOVOS AGENTES</p>
                 <div style="display:flex; gap:5px;">
@@ -138,18 +138,10 @@
                 </div>
                 <div id="search-results-area" style="margin-top:10px;"></div>
             </div>
-
-            <div id="friend-requests-area">
-                <div id="friend-requests-list"></div>
-            </div>
-
+            <div id="friend-requests-area"><div id="friend-requests-list"></div></div>
             <h3 style="color:var(--o-color); font-size:1rem; border-bottom:1px solid #333; padding-bottom:5px;">MEUS AMIGOS</h3>
-            <div id="friends-list-content" class="scroll-content" style="height: 250px;">
-                <p style="color:#aaa; text-align:center;">Carregando lista...</p>
-            </div>
-            
-            <br>
-            <button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button>
+            <div id="friends-list-content" class="scroll-content" style="height: 250px;"><p style="color:#aaa; text-align:center;">Carregando lista...</p></div>
+            <br><button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button>
         </div>
     </div>
 
@@ -174,8 +166,7 @@
                 <label style="color:#aaa; font-size:0.7rem;">HISTÓRICO RECENTE (LOCAL)</label>
                 <div id="match-history-list" class="history-list"><div style="text-align:center;">Sem dados.</div></div>
             </div>
-            <br>
-            <button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button>
+            <br><button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button>
         </div>
     </div>
 
@@ -222,12 +213,16 @@
             <h3 style="color:var(--o-color); margin-top:0;">CHANGELOG OFICIAL</h3>
             <div class="scroll-content" style="height: 200px;">
                 <div class="update-block" style="border:none;">
-                    <div class="update-title">v1.0.0 - GOLD MASTER</div>
-                    <span class="update-item">Lançamento Oficial.</span>
-                    <span class="update-item">Sistema Social Completo (Amigos/Convites).</span>
-                    <span class="update-item">Segurança Reforçada (Anti-Cheat).</span>
-                    <span class="update-item">Otimização de Carregamento (Smart Boot).</span>
-                    <span class="update-item">Interface Cyberpunk Finalizada.</span>
+                    <div class="update-title">v2.0.0 - EVENTO DE NATAL</div>
+                    <span class="update-item">Tema "Neon Frost" Ativado.</span>
+                    <span class="update-item">Peças temáticas (Vermelho e Verde).</span>
+                    <span class="update-item">Cartas Especiais de Natal.</span>
+                    <span class="update-item">Efeito de Neve Digital.</span>
+                </div>
+                <div class="update-block" style="border:none;">
+                    <div class="update-title">v1.5.0 - CORE UPDATE</div>
+                    <span class="update-item">Otimização Gráfica.</span>
+                    <span class="update-item">Correção de Áudio e Matchmaking.</span>
                 </div>
             </div>
             <center><button class="cyber-btn secondary" style="margin-top:20px;" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button></center>
@@ -261,6 +256,6 @@
         <button class="cyber-btn secondary" onclick="location.reload()" style="margin-top:20px;"><span>SAIR</span></button>
     </div>
 
-    <script src="game.js?v=1.0"></script>
+    <script src="game.js?v=2.0"></script>
 </body>
 </html>
