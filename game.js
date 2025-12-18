@@ -38,15 +38,14 @@ let CARDS = {
 
 // --- SOBRESCRITA DE EVENTO ---
 if (EVENT_CHRISTMAS) {
-    CARDS['PLACE'] = { name: 'Elfo', icon: '🧝', rarity: 'common', weight: 40, desc: 'Coloca um elfo ajudante no tabuleiro.' };
-    CARDS['BOMB'] = { name: 'Presente', icon: '🎁', rarity: 'rare', weight: 15, desc: 'Um presente explosivo! Destrói inimigo.' };
+    CARDS['PLACE'] = { name: 'Duende', icon: '🧝', rarity: 'common', weight: 40, desc: 'Coloca um ajudante no tabuleiro.' };
+    CARDS['BOMB'] = { name: 'Carvão', icon: '🎁', rarity: 'rare', weight: 15, desc: 'Presente explosivo! Destrói inimigo.' };
     CARDS['SHIELD'] = { name: 'Gelo', icon: '❄️', rarity: 'rare', weight: 15, desc: 'Congela a peça protegendo-a.' };
-    // Move, Push, Swap mantém mecânica, só muda flavor se quiser
+    
     document.body.classList.add('christmas-theme');
     document.getElementById('snow-overlay').classList.remove('hidden');
-    document.getElementById('boot-title').innerText = "NEON FROST v2.0";
-    document.getElementById('main-title').innerHTML = "NATAL<br>NEON";
-    document.getElementById('subtitle-version').innerText = "FROST TACTICS v2.0";
+    document.getElementById('christmas-lights-border').classList.remove('hidden'); // ATIVA BORDA
+    document.getElementById('boot-title').innerText = "NATAL SYSTEM v2.1";
 }
 
 const GameState = {
@@ -567,7 +566,7 @@ function connectToPublicRoom(roomID, currentIdx) {
 function startBotMatch() {
     if(peer) peer.destroy();
     isBotMatch = true; isHost = true; mySide = 'X';
-    GameState.names['X'] = myName; GameState.names['O'] = "BOT-T800";
+    GameState.names['X'] = myName; GameState.names['O'] = "BOT-KRAMPUS";
     startGame();
 }
 
@@ -873,8 +872,8 @@ for(let i=0; i<9; i++) {
 const dl = new THREE.DirectionalLight(0xffffff, 0.5); dl.position.set(5, 10, 5); scene.add(dl);
 
 // LUZES TEMÁTICAS
-const pl1 = new THREE.PointLight(EVENT_CHRISTMAS ? 0xff0033 : 0xff0055, 1, 30); pl1.position.set(5, 5, 5); scene.add(pl1);
-const pl2 = new THREE.PointLight(EVENT_CHRISTMAS ? 0x00ff66 : 0x00e5ff, 1, 30); pl2.position.set(-5, 5, -5); scene.add(pl2);
+const pl1 = new THREE.PointLight(EVENT_CHRISTMAS ? 0xff0022 : 0xff0055, 1, 30); pl1.position.set(5, 5, 5); scene.add(pl1);
+const pl2 = new THREE.PointLight(EVENT_CHRISTMAS ? 0xffd700 : 0x00e5ff, 1, 30); pl2.position.set(-5, 5, -5); scene.add(pl2);
 scene.add(new THREE.AmbientLight(0xffffff, 0.3));
 
 function updateVisuals() {
@@ -891,12 +890,12 @@ function updateVisuals() {
             // CORES E FORMAS TEMÁTICAS
             if(c==='X') {
                 const g = new THREE.Group();
-                const color = EVENT_CHRISTMAS ? 0xff0033 : 0xff0055; // Vermelho Natal vs Pink Cyber
+                const color = EVENT_CHRISTMAS ? 0xff0022 : 0xff0055; 
                 const mat = new THREE.MeshStandardMaterial({ color: color, emissive: isOldest ? 0xff0000 : color, emissiveIntensity: isWinner ? 5.0 : (isOldest ? 3.0 : 1.5) });
                 const b1=new THREE.Mesh(new THREE.BoxGeometry(2,0.4,0.4), mat); b1.rotation.y=Math.PI/4;
                 const b2=new THREE.Mesh(new THREE.BoxGeometry(2,0.4,0.4), mat); b2.rotation.y=-Math.PI/4; g.add(b1); g.add(b2); m=g;
             } else {
-                const color = EVENT_CHRISTMAS ? 0x00ff66 : 0x00e5ff; // Verde Natal vs Cyan Cyber
+                const color = EVENT_CHRISTMAS ? 0xffd700 : 0x00e5ff; // Dourado no Natal
                 const mat = new THREE.MeshStandardMaterial({ color: color, emissive: isOldest ? 0xff0000 : color, emissiveIntensity: isWinner ? 5.0 : (isOldest ? 3.0 : 1.5) });
                 m=new THREE.Mesh(new THREE.TorusGeometry(0.8, 0.2, 16, 32), mat); m.rotation.x=Math.PI/2;
             }
@@ -920,8 +919,8 @@ function updateVisuals() {
     
     // ATUALIZA AS CORES DO SCORE CSS DINAMICAMENTE
     if(EVENT_CHRISTMAS) {
-         document.documentElement.style.setProperty('--x-color', '#ff0033');
-         document.documentElement.style.setProperty('--o-color', '#00ff66');
+         document.documentElement.style.setProperty('--x-color', '#ff0022');
+         document.documentElement.style.setProperty('--o-color', '#ffd700');
     }
 
     updateHandUI();
@@ -931,6 +930,14 @@ const raycaster = new THREE.Raycaster(); const mouse = new THREE.Vector2(); let 
 
 function animate() {
     requestAnimationFrame(animate);
+
+    // EFEITO DE LUZES PULSANTES (PISCA PISCA 3D)
+    if(EVENT_CHRISTMAS) {
+        const t = Date.now() * 0.005;
+        pl1.intensity = 1.5 + Math.sin(t) * 0.5; // Vermelho pulsa
+        pl2.intensity = 1.5 + Math.cos(t) * 0.5; // Dourado pulsa
+    }
+
     if(isInGame) {
         if(cameraShake > 0) { cameraShake -= 0.05; if(cameraShake < 0) cameraShake = 0; camera.position.x += (Math.random()-0.5) * cameraShake; camera.position.y += (Math.random()-0.5) * cameraShake; camera.position.z += (Math.random()-0.5) * cameraShake; }
         let targetRot = camera.userData.targetRot || 0;
@@ -978,7 +985,7 @@ function handleCardClick(idx, type) {
     
     // HINTS DINÂMICOS
     const hint = { 
-        'PLACE': EVENT_CHRISTMAS ? 'Colocar Elfo' : 'Espaço vazio', 
+        'PLACE': EVENT_CHRISTMAS ? 'Colocar Duende' : 'Espaço vazio', 
         'BOMB': EVENT_CHRISTMAS ? 'Entregar Presente' : 'Inimigo', 
         'SHIELD': 'Sua peça', 
         'MOVE': '1. Sua peça', 
