@@ -43,9 +43,14 @@ if (EVENT_CHRISTMAS) {
     CARDS['SHIELD'] = { name: 'Gelo', icon: '❄️', rarity: 'rare', weight: 15, desc: 'Congela a peça protegendo-a.' };
     
     document.body.classList.add('christmas-theme');
-    document.getElementById('snow-overlay').classList.remove('hidden');
-    document.getElementById('christmas-lights-border').classList.remove('hidden'); // ATIVA BORDA
-    document.getElementById('boot-title').innerText = "NATAL SYSTEM v2.1";
+    const snowOverlay = document.getElementById('snow-overlay');
+    if(snowOverlay) snowOverlay.classList.remove('hidden');
+    
+    const lightsBorder = document.getElementById('christmas-lights-border');
+    if(lightsBorder) lightsBorder.classList.remove('hidden'); 
+
+    const bootTitle = document.getElementById('boot-title');
+    if(bootTitle) bootTitle.innerText = "NATAL SYSTEM v2.1";
 }
 
 const GameState = {
@@ -66,6 +71,7 @@ let timeLeft = 16, myName = "PLAYER", isQuickMatch = false;
 let selectedHandIdx = null, activeCardType = null, stepSourceIdx = null;
 let cameraShake = 0;
 let isInGame = false;
+let gameSaved = false; // --- CORREÇÃO DO BUG (TRAVA) ---
 let botTimer = null;
 let isMuted = false;
 
@@ -635,6 +641,9 @@ function startGame() { GameState.scores = { 'X': 0, 'O': 0 }; resetMatch(); }
 function resetMatch() { 
     resetBoard(); 
     GameState.winner = null; 
+    // CORREÇÃO DO BUG DE DUPLICAÇÃO
+    gameSaved = false; 
+    
     GameState.hands = { 'X': generateHand(), 'O': generateHand() }; 
     GameState.turn = 'X'; 
     matchStartTime = Date.now();
@@ -752,17 +761,21 @@ function showGameOver() {
     isInGame = false; openScreen('screen-gameover');
     const wName = GameState.names[GameState.winner];
     document.getElementById('winner-text').innerText = wName + " VENCEU!";
-    // CORRIGIDO: Cores dinâmicas para o vencedor
-    const winColor = GameState.winner === 'X' ? (EVENT_CHRISTMAS ? '#ff0033' : '#ff0055') : (EVENT_CHRISTMAS ? '#00ff66' : '#00e5ff');
+    // Cores dinâmicas para o vencedor
+    const winColor = GameState.winner === 'X' ? (EVENT_CHRISTMAS ? '#ff0022' : '#ff0055') : (EVENT_CHRISTMAS ? '#ffd700' : '#00e5ff');
     document.getElementById('winner-text').style.color = winColor;
-    SoundFX.matchWin();
     
-    if(currentUser && GameState.winner === mySide) { 
-        saveGameResult(true, matchSecurityToken); 
-        showToast("RANK SUBIU!", "#00ff88"); 
-    } 
-    else if (currentUser && GameState.winner !== mySide) { 
-        saveGameResult(false, matchSecurityToken); 
+    if(!gameSaved) SoundFX.matchWin();
+    
+    // --- CORREÇÃO DO BUG DE DUPLICAÇÃO ---
+    if (!gameSaved && currentUser) {
+        if (GameState.winner === mySide) { 
+            saveGameResult(true, matchSecurityToken); 
+            showToast("RANK SUBIU!", "#00ff88"); 
+        } else if (GameState.winner !== mySide) { 
+            saveGameResult(false, matchSecurityToken); 
+        }
+        gameSaved = true; // TRAVA
     }
     
     const area = document.getElementById('rematch-area'); area.innerHTML = '';
@@ -785,7 +798,7 @@ document.getElementById('canvas-container').appendChild(renderer.domElement);
 
 const pieceGroup = new THREE.Group(); scene.add(pieceGroup);
 const particlesGroup = new THREE.Group(); scene.add(particlesGroup);
-const snowGroup = new THREE.Group(); scene.add(snowGroup); // Grupo separado para neve
+const snowGroup = new THREE.Group(); scene.add(snowGroup);
 
 // --- OBJECT POOLING SYSTEM ---
 const PARTICLE_LIMIT = 300;
@@ -822,10 +835,9 @@ function spawnExplosion(idx) {
 function spawnWinParticles(idxList) {
     idxList.forEach(idx => {
         const x = (idx%3-1)*3.1; const z = (Math.floor(idx/3)-1)*3.1;
-        // CORES DE NATAL SE ATIVO
         let color;
         if (EVENT_CHRISTMAS) {
-             color = GameState.board[idx] === 'X' ? 0xff0033 : 0x00ff66;
+             color = GameState.board[idx] === 'X' ? 0xff0022 : 0xffd700;
         } else {
              color = GameState.board[idx] === 'X' ? 0xff0055 : 0x00e5ff;
         }
@@ -845,7 +857,7 @@ function spawnWinParticles(idxList) {
 }
 function getFreeParticle() { return particlePool.find(p => !p.active); }
 
-// --- SISTEMA DE NEVE (NATAL) ---
+// --- SISTEMA DE NEVE ---
 const snowflakes = [];
 if(EVENT_CHRISTMAS) {
     const snowGeo = new THREE.BoxGeometry(0.05, 0.05, 0.05);
@@ -887,7 +899,6 @@ function updateVisuals() {
             let m;
             const isOldest = GameState.history[c].length === 3 && GameState.history[c][0] === i;
             
-            // CORES E FORMAS TEMÁTICAS
             if(c==='X') {
                 const g = new THREE.Group();
                 const color = EVENT_CHRISTMAS ? 0xff0022 : 0xff0055; 
@@ -895,7 +906,7 @@ function updateVisuals() {
                 const b1=new THREE.Mesh(new THREE.BoxGeometry(2,0.4,0.4), mat); b1.rotation.y=Math.PI/4;
                 const b2=new THREE.Mesh(new THREE.BoxGeometry(2,0.4,0.4), mat); b2.rotation.y=-Math.PI/4; g.add(b1); g.add(b2); m=g;
             } else {
-                const color = EVENT_CHRISTMAS ? 0xffd700 : 0x00e5ff; // Dourado no Natal
+                const color = EVENT_CHRISTMAS ? 0xffd700 : 0x00e5ff; 
                 const mat = new THREE.MeshStandardMaterial({ color: color, emissive: isOldest ? 0xff0000 : color, emissiveIntensity: isWinner ? 5.0 : (isOldest ? 3.0 : 1.5) });
                 m=new THREE.Mesh(new THREE.TorusGeometry(0.8, 0.2, 16, 32), mat); m.rotation.x=Math.PI/2;
             }
@@ -903,7 +914,6 @@ function updateVisuals() {
             if(isWinner) m.userData.spinSpeed = 0.2;
             if(!isWinner && isOldest) { m.userData.isGlitching = true; } else { m.userData.isGlitching = false; m.visible=true; m.scale.setScalar(1); }
             if(GameState.shields[i]>0) {
-                // ESCUDO DE GELO NO NATAL
                 const sColor = EVENT_CHRISTMAS ? 0xaaddff : 0x0088ff;
                 const s = new THREE.Mesh(new THREE.IcosahedronGeometry(1.2), new THREE.MeshBasicMaterial({color:sColor, wireframe:true, transparent:true, opacity:0.5}));
                 s.userData.anim='shield'; m.add(s);
@@ -917,7 +927,6 @@ function updateVisuals() {
     document.getElementById('p1-score').className = `player-score ${isTurnX?'active-turn':''}`;
     document.getElementById('p2-score').className = `player-score ${!isTurnX?'active-turn':''}`;
     
-    // ATUALIZA AS CORES DO SCORE CSS DINAMICAMENTE
     if(EVENT_CHRISTMAS) {
          document.documentElement.style.setProperty('--x-color', '#ff0022');
          document.documentElement.style.setProperty('--o-color', '#ffd700');
@@ -965,7 +974,7 @@ function animate() {
         }
     });
 
-    // SNOW UPDATE (SE ATIVO)
+    // SNOW UPDATE
     if(EVENT_CHRISTMAS) {
         snowflakes.forEach(s => {
             s.mesh.position.y -= s.speed;
@@ -983,7 +992,6 @@ function handleCardClick(idx, type) {
     if(GameState.turn !== mySide) return; if(selectedHandIdx === idx) { resetSelection(); return; }
     selectedHandIdx=idx; activeCardType=type; stepSourceIdx=null; SoundFX.click(); updateHandUI();
     
-    // HINTS DINÂMICOS
     const hint = { 
         'PLACE': EVENT_CHRISTMAS ? 'Colocar Duende' : 'Espaço vazio', 
         'BOMB': EVENT_CHRISTMAS ? 'Entregar Presente' : 'Inimigo', 
