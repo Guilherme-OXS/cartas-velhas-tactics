@@ -2,250 +2,372 @@
 <html lang="pt-pt">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <meta name="description" content="Cartas Velhas: Cyberpunk Tactics v2.1. Edição de Natal Extravagante.">
+    <meta name="description" content="Cartas Velhas: Cyberpunk Tactics v3.0 - Samhain Protocol. A reinvenção tática 3D do Jogo da Velha com IA avançada, Mini-Jogos e Multiplayer em tempo real.">
     <meta name="author" content="Guilherme Otávio Xavier de Souza">
-    
-    <meta property="og:title" content="Cartas Velhas: Natal v2.1">
-    <meta property="og:description" content="Versão de Natal! Estratégia, Luzes e Caos.">
+    <meta name="robots" content="index, follow">
+
+    <meta property="og:title" content="Cartas Velhas: Cyberpunk Tactics v3.0 (Halloween Edition)">
+    <meta property="og:description" content="Entra no Samhain Protocol! Joga a versão definitiva com IA melhorada, Mini-Jogos e Multiplayer em tempo real.">
     <meta property="og:type" content="website">
 
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎅</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎃</text></svg>">
 
-    <title>Cartas Velhas: Natal v2.1</title>
+    <title>Cartas Velhas: Cyberpunk Tactics v3.0 [Samhain Protocol]</title>
     
-    <link rel="stylesheet" href="style.css?v=2.1">
+    <link rel="stylesheet" href="style.css?v=3.0">
     
+    <!-- BIBLIOTECAS EXTERNAS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 </head>
-<body>
+<body class="halloween-theme">
 
-    <div id="snow-overlay" class="hidden"></div>
-    <div id="christmas-lights-border" class="hidden"></div> <div id="loading-screen">
+    <!-- OVERLAYS ATMOSFÉRICOS -->
+    <div id="fog-overlay"></div>
+    <div id="lights-frame"></div>
+
+    <!-- ECRÃ DE BOOT -->
+    <div id="loading-screen">
         <div class="loader-content">
-            <div class="glitch-text" id="boot-title" style="font-size: 2rem; font-weight: bold; margin-bottom: 20px;">SYSTEM BOOT v2.1</div>
+            <div class="glitch-text" id="boot-title">SYSTEM BOOT v3.0</div>
             <div class="loading-bar-frame">
                 <div id="loading-fill" class="loading-bar-fill"></div>
             </div>
-            <div id="loading-text" style="font-family: monospace; color: #ff0033; font-size: 0.8rem; margin-top: 10px;">> WRAPPING PRESENTS...</div>
+            <div id="loading-text">> INICIALIZANDO PROTOCOLO SAMHAIN...</div>
         </div>
     </div>
 
+    <!-- MODAL DE CONVITE P2P -->
     <div id="invite-modal" class="hidden">
-        <div style="color:#ffd700; font-weight:bold; margin-bottom:10px;">🎁 CONVITE DE NATAL</div>
-        <div id="invite-text" style="color:#fff; font-size:0.9rem; margin-bottom:15px;">...</div>
-        <div style="display:flex; gap:10px; justify-content:center;">
-            <button class="cyber-btn" onclick="acceptInvite()">ACEITAR</button>
-            <button class="cyber-btn secondary" onclick="closeInvite()">IGNORAR</button>
+        <div class="modal-badge">INVOCAÇÃO DETETADA</div>
+        <div id="invite-text">Oponente convida-te para a arena.</div>
+        <div class="btn-group-center">
+            <button class="cyber-btn" onclick="acceptInvite()"><span>ACEITAR</span></button>
+            <button class="cyber-btn secondary" onclick="closeInvite()"><span>RECUSAR</span></button>
         </div>
     </div>
 
-    <div id="canvas-container" style="position: absolute; top:0; left:0; width:100%; height:100%;"></div>
+    <!-- CANVAS THREE.JS -->
+    <div id="canvas-container"></div>
 
+    <!-- MODAL DE REGISTO DE IDENTIDADE -->
     <div id="modal-nickname" class="hidden">
-        <div class="cyber-panel" style="text-align: center;">
-            <h2 style="color:var(--o-color);">IDENTIDADE</h2>
-            <p style="color:#fff;">REGISTRE SEU NOME DE OPERADOR</p>
-            <input type="text" id="permanent-nick-input" class="input-code" maxlength="10" placeholder="Nickname">
+        <div class="cyber-panel text-center">
+            <h2 class="neon-subtitle">REGISTO DE ALMA</h2>
+            <p class="panel-desc">REGISTA A TUA MATRÍCULA NO TERMINAL</p>
+            <input type="text" id="permanent-nick-input" class="input-code" maxlength="10" placeholder="NICKNAME" autocomplete="off" spellcheck="false">
             <br>
-            <button class="cyber-btn" onclick="saveInitialNickname()"><span>CONFIRMAR</span></button>
+            <button class="cyber-btn" onclick="saveInitialNickname()"><span>CONECTAR ALMA</span></button>
         </div>
     </div>
 
+    <!-- CAMADA HUD DE JOGO -->
     <div id="ui-layer" class="hidden">
         <div class="hud-top pointer-events-auto">
-            <button class="mute-btn" id="btn-mute" onclick="toggleMute()">🔊</button>
-            <div style="font-size:0.7rem; color:#ffd700; letter-spacing:2px; cursor:pointer; text-shadow: 0 0 5px #ff0000;" onclick="copyCode()">SALA: <span id="room-code" style="color:#fff;">---</span></div>
-            <div id="hint-pill">Sua Vez</div>
-            <div class="scores">
-                <div id="p1-score" class="player-score" onclick="showPlayerStats('X')"><div class="score-val" style="color:var(--x-color)">0</div><div class="player-name" id="name-x">P1</div></div>
-                <div style="font-size:1.5rem; color:#fff;">//</div>
-                <div id="p2-score" class="player-score" onclick="showPlayerStats('O')"><div class="score-val" style="color:var(--o-color)">0</div><div class="player-name" id="name-o">P2</div></div>
+            <div class="hud-bar-actions">
+                <button class="icon-hud-btn" id="btn-mute" onclick="toggleMute()" title="Alternar Áudio">🔊</button>
+                <div class="room-indicator" onclick="copyCode()">
+                    SALA: <span id="room-code">---</span>
+                </div>
+                <button class="cyber-btn secondary btn-exit-corner" onclick="quitGame()"><span>ABANDONAR</span></button>
             </div>
-            <div class="timer-container"><div id="timer-bar" class="timer-bar"></div></div>
+            
+            <div id="hint-pill">O TEU TURNO</div>
+
+            <div class="scores">
+                <div id="p1-score" class="player-score" onclick="showPlayerStats('X')">
+                    <div class="score-val" style="color:var(--x-color);">0</div>
+                    <div class="player-name" id="name-x">P1</div>
+                </div>
+                <div class="score-divider">//</div>
+                <div id="p2-score" class="player-score" onclick="showPlayerStats('O')">
+                    <div class="score-val" style="color:var(--o-color);">0</div>
+                    <div class="player-name" id="name-o">P2</div>
+                </div>
+            </div>
+
+            <div class="timer-container">
+                <div id="timer-bar" class="timer-bar"></div>
+            </div>
         </div>
         
-        <div id="toast-msg">TOAST</div>
+        <div id="toast-msg">MENSAGEM</div>
         
+        <!-- BARRA LATERAL DE REAÇÕES ESPETRAIS -->
         <div class="chat-bar">
-            <button class="emoji-btn" onclick="sendChat('🎅')">🎅</button>
-            <button class="emoji-btn" onclick="sendChat('🎁')">🎁</button>
-            <button class="emoji-btn" onclick="sendChat('🎄')">🎄</button>
-            <button class="emoji-btn" onclick="sendChat('🔥')">🔥</button>
+            <button class="emoji-btn" onclick="sendChat('🎃')">🎃</button>
+            <button class="emoji-btn" onclick="sendChat('👻')">👻</button>
+            <button class="emoji-btn" onclick="sendChat('💀')">💀</button>
+            <button class="emoji-btn" onclick="sendChat('🦇')">🦇</button>
+            <button class="emoji-btn" onclick="sendChat('⚡')">⚡</button>
         </div>
 
-        <div class="hand-wrapper"><div id="hand-container" class="hand-container pointer-events-auto"></div></div>
-        <button onclick="quitGame()" class="cyber-btn secondary pointer-events-auto" style="position:absolute; top:10px; right:10px; min-width:auto; padding:5px 15px; font-size:0.7rem;"><span>SAIR</span></button>
+        <!-- MÃO DE CARTAS DO JOGADOR -->
+        <div class="hand-wrapper">
+            <div id="hand-container" class="hand-container pointer-events-auto"></div>
+        </div>
     </div>
 
+    <!-- ECRÃ: MENU PRINCIPAL -->
     <div id="screen-menu" class="screen hidden">
         <div class="cyber-panel">
-            <div class="title-glitch" id="main-title" style="font-size: 3.5rem; color: #ff0033;">CARTAS<br>VELHAS</div>
-            <p id="subtitle-version" style="letter-spacing: 3px; color: #ffd700; margin-bottom: 20px; font-size: 0.9rem; font-weight: bold; text-shadow: 0 0 10px #ff0000;">🎄 ESPECIAL DE NATAL v2.1 🎄</p>
+            <div class="title-glitch" id="main-title">CARTAS<br>VELHAS</div>
+            <p id="subtitle-version">CYBERPUNK TACTICS :: SAMHAIN v3.0</p>
             
             <div id="online-counter-display" class="online-tag hidden">
-                <span class="live-dot">●</span> <span id="online-count-val">0</span> ELFOS ONLINE
+                <span class="live-dot">●</span> <span id="online-count-val">0</span> ALMAS CONECTADAS
             </div>
-            <br>
             
             <div id="guest-input-area" class="hidden">
-                <p style="color:#aaa; font-size:0.8rem;">ACESSO RESTRITO</p>
-                <button class="cyber-btn google-btn" onclick="loginGoogle()"><span>G+ ENTRAR COM GOOGLE</span></button>
+                <p class="panel-desc">ACESSO RESTRITO A OPERADORES AUTENTICADOS</p>
+                <button class="cyber-btn google-btn" onclick="loginGoogle()"><span>ENTRAR COM O GOOGLE</span></button>
             </div>
 
             <div id="user-profile-area" class="user-profile-container hidden">
-                <img id="profile-img" class="user-avatar" src="" alt="User">
+                <img id="profile-img" class="user-avatar" src="" alt="Avatar">
                 <div class="user-info">
-                    <div id="profile-name" class="user-nick">Player</div>
-                    <div class="user-status">● Pronto para o Natal</div>
+                    <div id="profile-name" class="user-nick">Operador</div>
+                    <div class="user-status">● Sistema Nominal</div>
                 </div>
-                <button class="cyber-btn" style="min-width:auto; padding:5px 10px; font-size:0.6rem; margin-left:10px;" onclick="openScreen('screen-profile')">PERFIL</button>
-                <button class="cyber-btn secondary" style="min-width:auto; padding:5px 10px; font-size:0.6rem; margin-left:5px;" onclick="logout()">SAIR</button>
+                <div class="profile-actions">
+                    <button class="cyber-btn mini" onclick="openScreen('screen-profile')">PERFIL</button>
+                    <button class="cyber-btn secondary mini" onclick="logout()">SAIR</button>
+                </div>
             </div>
-            <br>
             
-            <div id="game-controls" class="hidden">
-                <button id="btn-quick" class="cyber-btn" onclick="startQuickMatch()"><span>⚡ PARTIDA RÁPIDA</span></button>
-                <br>
-                <button class="cyber-btn" onclick="startBotMatch()"><span>🤖 JOGAR VS KRAMPUS</span></button>
-                <br>
-                <button class="cyber-btn secondary" style="width: 200px;" onclick="openScreen('screen-social')"><span>👥 AMIGOS & FESTA</span></button>
-                <br>
-                <div style="margin-top: 15px; display:flex; justify-content:center; gap:5px; flex-wrap:wrap;">
-                    <button class="cyber-btn secondary" style="min-width: 80px; font-size: 0.7rem;" onclick="openScreen('screen-leaderboard')"><span>RANK</span></button>
-                    <button class="cyber-btn secondary" style="min-width: 80px; font-size: 0.7rem;" onclick="openScreen('screen-lobby-custom')"><span>SALAS</span></button>
-                    <button class="cyber-btn secondary" style="min-width: 80px; font-size: 0.7rem;" onclick="openScreen('screen-cards')"><span>CARTAS</span></button>
-                    <button class="cyber-btn secondary" style="min-width: 80px; font-size: 0.7rem;" onclick="openScreen('screen-updates')"><span>SOBRE</span></button>
+            <div id="game-controls" class="hidden menu-actions-grid">
+                <button id="btn-quick" class="cyber-btn main-action" onclick="startQuickMatch()"><span>⚡ BATALHA RÁPIDA</span></button>
+                <button class="cyber-btn main-action" onclick="startBotMatch()"><span>💀 ENFRENTAR IA NECROMANTE</span></button>
+                <button class="cyber-btn special-action" onclick="openScreen('screen-minigames')"><span>🎮 CRIPTA DE MINI-JOGOS</span></button>
+                <button class="cyber-btn secondary" onclick="openScreen('screen-social')"><span>👥 REDE & AMIGOS</span></button>
+                
+                <div class="bottom-menu-bar">
+                    <button class="cyber-btn secondary micro" onclick="openScreen('screen-leaderboard')"><span>RANK</span></button>
+                    <button class="cyber-btn secondary micro" onclick="openScreen('screen-lobby-custom')"><span>SALAS</span></button>
+                    <button class="cyber-btn secondary micro" onclick="openScreen('screen-cards')"><span>GRIMÓRIO</span></button>
+                    <button class="cyber-btn secondary micro" onclick="openScreen('screen-updates')"><span>SISTEMA</span></button>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- ECRÃ: CRIPTA DE MINI-JOGOS (NOVIDADE v3.0) -->
+    <div id="screen-minigames" class="screen hidden">
+        <div class="cyber-panel wide-panel">
+            <h2 class="neon-subtitle">CRIPTA DE MINI-JOGOS</h2>
+            <p class="panel-desc">PROVAS HACKER & RITUAIS DE VELOCIDADE TÁTICA</p>
+
+            <div class="minigames-selection">
+                <div class="minigame-card" onclick="startMiniGame('ghost-hunt')">
+                    <div class="mg-icon">👻</div>
+                    <div class="mg-details">
+                        <h3>CAÇA AOS ESPECTROS</h3>
+                        <p>Exorciza anomalias no terminal em 30 segundos.</p>
+                    </div>
+                </div>
+                <div class="minigame-card" onclick="startMiniGame('puzzle-tactics')">
+                    <div class="mg-icon">🧩</div>
+                    <div class="mg-details">
+                        <h3>DESAFIO TÁTICO</h3>
+                        <p>Resolve cenários avançados de 1 turno com feitiços.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ÁREA DO MINI-JOGO ATIVO -->
+            <div id="minigame-active-stage" class="hidden">
+                <div class="stage-header">
+                    <span id="mg-title">Mini-Jogo</span>
+                    <span id="mg-timer">Tempo: 30s</span>
+                    <span id="mg-score">Pontos: 0</span>
+                </div>
+                <div id="mg-board-container" class="mg-board-frame"></div>
+            </div>
+
+            <br>
+            <button class="cyber-btn secondary" onclick="exitMiniGame()"><span>VOLTAR AO MENU</span></button>
+        </div>
+    </div>
+
+    <!-- ECRÃ: REDE SOCIAL & AMIGOS -->
     <div id="screen-social" class="screen hidden">
-        <div class="cyber-panel" style="max-width: 700px;">
-            <h2 style="color:#fff; margin-top:0;">LISTA DE BONZINHOS</h2>
-            <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                <p style="color:#aaa; font-size:0.8rem; margin-top:0;">BUSCAR NOVOS AGENTES</p>
-                <div style="display:flex; gap:5px;">
-                    <input type="text" id="search-player-input" class="input-code" placeholder="Nick exato" style="width:100%; font-size:0.9rem;">
-                    <button id="btn-search" class="cyber-btn" onclick="searchPlayer()" style="min-width:auto;">🔍</button>
+        <div class="cyber-panel wide-panel">
+            <h2 class="neon-subtitle">REDE NEURAL DE ALMAS</h2>
+            
+            <div class="search-box-group">
+                <p class="panel-desc">PESQUISAR AGENTES NO TERMINAL</p>
+                <div class="flex-input-row">
+                    <input type="text" id="search-player-input" class="input-code full-width" placeholder="Nickname Exato">
+                    <button id="btn-search" class="cyber-btn square-btn" onclick="searchPlayer()">🔍</button>
                 </div>
-                <div id="search-results-area" style="margin-top:10px;"></div>
+                <div id="search-results-area"></div>
             </div>
-            <div id="friend-requests-area"><div id="friend-requests-list"></div></div>
-            <h3 style="color:var(--o-color); font-size:1rem; border-bottom:1px solid #333; padding-bottom:5px;">MEUS AMIGOS</h3>
-            <div id="friends-list-content" class="scroll-content" style="height: 250px;"><p style="color:#aaa; text-align:center;">Carregando lista...</p></div>
-            <br><button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button>
+
+            <div id="friend-requests-area">
+                <div id="friend-requests-list"></div>
+            </div>
+
+            <h3 class="sub-header-line">PACTOS DE AMIZADE</h3>
+            <div id="friends-list-content" class="scroll-content friends-scroll">
+                <p class="text-muted">A ler rede neural...</p>
+            </div>
+            
+            <br>
+            <button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button>
         </div>
     </div>
 
+    <!-- ECRÃ: DADOS DO OPERADOR -->
     <div id="screen-profile" class="screen hidden">
         <div class="cyber-panel">
-            <h2 style="color:#fff; margin-top:0;">CARTÃO DE NATAL</h2>
+            <h2 class="neon-subtitle">MATRÍCULA DO OPERADOR</h2>
             <img id="detail-profile-img" class="big-avatar" src="" alt="Avatar">
             <br>
-            <div style="margin-bottom: 20px;">
-                <label style="color:#aaa; font-size:0.7rem;">NICKNAME</label><br>
-                <div style="display:flex; justify-content:center; align-items:center; gap:5px;">
-                    <input type="text" id="edit-nick-input" class="input-code" style="width: 200px; font-size:1rem; border-color: #555;" maxlength="10">
-                    <button class="cyber-btn secondary" style="min-width: auto; padding: 10px;" onclick="saveNewNickname()">💾</button>
+            <div class="nick-change-box">
+                <label class="small-label">NICKNAME DE REGISTO</label><br>
+                <div class="flex-input-row justify-center">
+                    <input type="text" id="edit-nick-input" class="input-code mid-width" maxlength="10">
+                    <button class="cyber-btn square-btn secondary" onclick="saveNewNickname()">💾</button>
                 </div>
             </div>
             <div class="stats-grid">
-                <div class="stat-box" style="border-color: #bd00ff;"><div class="stat-val" id="stat-rank">---</div><div class="stat-label">ELO RANK</div></div>
-                <div class="stat-box" style="border-color: #00ff88;"><div class="stat-val" id="stat-wins">---</div><div class="stat-label">VITÓRIAS</div></div>
-                <div class="stat-box" style="border-color: #ff0055;"><div class="stat-val" id="stat-losses">---</div><div class="stat-label">DERROTAS</div></div>
-            </div>
-            <div style="margin-top: 20px;">
-                <label style="color:#aaa; font-size:0.7rem;">HISTÓRICO</label>
-                <div id="match-history-list" class="history-list"><div style="text-align:center;">Sem dados.</div></div>
-            </div>
-            <br><button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button>
-        </div>
-    </div>
-
-    <div id="screen-lobby-custom" class="screen hidden">
-        <h2 style="color:#fff;">MODO PRIVADO</h2>
-        <button id="btn-create-room" class="cyber-btn" onclick="openLobby('host')"><span>CRIAR SALA</span></button>
-        <button id="btn-join-room" class="cyber-btn" onclick="openLobby('join')"><span>ENTRAR COM CÓDIGO</span></button>
-        <br><br>
-        <div id="lobby-friends-invite" style="margin-top:20px; display:none;">
-            <p style="color:#aaa; font-size:0.8rem;">CHAMAR AMIGOS PARA A CEIA</p>
-            <div id="lobby-friends-list" style="max-height:100px; overflow-y:auto;"></div>
-        </div>
-        <button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button>
-    </div>
-
-    <div id="screen-leaderboard" class="screen hidden">
-        <div class="cyber-panel">
-            <h2 style="color:#bd00ff; margin-top:0;">TOP 100 ELITE</h2>
-            <div id="leaderboard-list" class="scroll-content" style="height: 400px;"><div class="loader"></div></div>
-            <br><button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button>
-        </div>
-    </div>
-
-    <div id="screen-cards" class="screen hidden">
-        <div class="cyber-panel">
-            <h2 style="color:#fff; margin-top:0;">LISTA DE PRESENTES</h2>
-            <div class="scroll-content" id="cards-list-ui"></div>
-            <center><button class="cyber-btn secondary" style="margin-top:20px;" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button></center>
-        </div>
-    </div>
-
-    <div id="screen-updates" class="screen hidden">
-        <div class="cyber-panel">
-            <h2 style="color:#fff; margin-top:0;">SOBRE O SISTEMA</h2>
-            <div style="text-align:center; margin-bottom: 30px;">
-                <p style="color:#aaa; font-size:0.8rem;">DESENVOLVIDO POR:</p>
-                <span class="credits-name" style="font-size: 1.5rem; color: #ff0033;">Guilherme Otávio<br>Xavier de Souza</span>
-                <p style="color:#ffd700; font-size:0.7rem; margin-top:5px;">MERRY CHRISTMAS © 2025</p>
-            </div>
-            <hr style="border-color:#333; margin: 20px 0;">
-            <h3 style="color:var(--o-color); margin-top:0;">CHANGELOG</h3>
-            <div class="scroll-content" style="height: 200px;">
-                <div class="update-block" style="border:none;">
-                    <div class="update-title">v2.1.0 - EXTRAVAGANZA</div>
-                    <span class="update-item">Mais Vermelho. Mais Luzes. Mais Caos.</span>
-                    <span class="update-item">Borda Pisca-Pisca na tela.</span>
-                    <span class="update-item">Efeitos 3D pulsantes.</span>
+                <div class="stat-box purple-border">
+                    <div class="stat-val" id="stat-rank">---</div>
+                    <div class="stat-label">ELO TÁTICO</div>
+                </div>
+                <div class="stat-box green-border">
+                    <div class="stat-val" id="stat-wins">---</div>
+                    <div class="stat-label">VITÓRIAS</div>
+                </div>
+                <div class="stat-box red-border">
+                    <div class="stat-val" id="stat-losses">---</div>
+                    <div class="stat-label">DERROTAS</div>
                 </div>
             </div>
-            <center><button class="cyber-btn secondary" style="margin-top:20px;" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button></center>
+            <div class="history-container">
+                <label class="small-label">HISTÓRICO DE SESSÕES LOCAIS</label>
+                <div id="match-history-list" class="history-list">
+                    <div class="text-muted text-center pt-10">Sem registos recentes.</div>
+                </div>
+            </div>
+            <br>
+            <button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button>
         </div>
     </div>
 
+    <!-- ECRÃ: SALAS PRIVADAS -->
+    <div id="screen-lobby-custom" class="screen hidden">
+        <div class="cyber-panel">
+            <h2 class="neon-subtitle">FREQUÊNCIA PRIVADA</h2>
+            <button id="btn-create-room" class="cyber-btn" onclick="openLobby('host')"><span>CRIAR SALA CRIPTOGRAFADA</span></button>
+            <button id="btn-join-room" class="cyber-btn" onclick="openLobby('join')"><span>ENTRAR COM CÓDIGO</span></button>
+            <br><br>
+            <div id="lobby-friends-invite" class="hidden">
+                <p class="panel-desc">CONVOCAR AMIGOS ONLINE</p>
+                <div id="lobby-friends-list" class="mini-friends-scroll"></div>
+            </div>
+            <br>
+            <button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button>
+        </div>
+    </div>
+
+    <!-- ECRÃ: LEADERBOARD -->
+    <div id="screen-leaderboard" class="screen hidden">
+        <div class="cyber-panel wide-panel">
+            <h2 class="neon-subtitle purple-text">ELITE DO SAMHAIN [TOP 100]</h2>
+            <div id="leaderboard-list" class="scroll-content leaderboard-scroll">
+                <div class="loader"></div>
+            </div>
+            <br>
+            <button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button>
+        </div>
+    </div>
+
+    <!-- ECRÃ: GRIMÓRIO (CARTAS) -->
+    <div id="screen-cards" class="screen hidden">
+        <div class="cyber-panel wide-panel">
+            <h2 class="neon-subtitle">GRIMÓRIO DE MANOBRAS</h2>
+            <div class="scroll-content" id="cards-list-ui"></div>
+            <br>
+            <button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button>
+        </div>
+    </div>
+
+    <!-- ECRÃ: SOBRE & ATUALIZAÇÕES -->
+    <div id="screen-updates" class="screen hidden">
+        <div class="cyber-panel wide-panel">
+            <h2 class="neon-subtitle">TERMINAL CENTRAL</h2>
+            <div class="author-credits">
+                <p class="panel-desc">ARQUITETURA & DESENVOLVIMENTO:</p>
+                <span class="credits-name">Guilherme Otávio<br>Xavier de Souza</span>
+                <p class="copyright-tag">ALL RIGHTS RESERVED © 2026</p>
+            </div>
+            <hr class="panel-hr">
+            <h3 class="sub-header-line">CHANGELOG OFICIAL</h3>
+            <div class="scroll-content changelog-scroll">
+                <div class="update-block">
+                    <div class="update-title">v3.0.0 - SAMHAIN PROTOCOL (DIA DAS BRUXAS)</div>
+                    <span class="update-item">IA Necromante v3.0 com Minimax Tático e cálculo de cartas.</span>
+                    <span class="update-item">Cripta de Mini-Jogos (Caça aos Espectros e Desafios de 1 Turno).</span>
+                    <span class="update-item">Correção estrita do bug de duplicação de Rank/Vitórias/Derrotas.</span>
+                    <span class="update-item">Revisão gráfica Samhain (Névoa, Iluminação espectral e Abóboras).</span>
+                    <span class="update-item">Otimização de Pooling de Memória e responsividade mobile estrita.</span>
+                </div>
+                <div class="update-block">
+                    <div class="update-title">v2.1.0 - HOTFIX FESTIVO</div>
+                    <span class="update-item">Flag de eventos sazonais implementada.</span>
+                </div>
+                <div class="update-block">
+                    <div class="update-title">v1.5.0 - CORE PERFORMANCE</div>
+                    <span class="update-item">Sistema de pooling para Three.js e desbloqueio áudio seguro.</span>
+                </div>
+            </div>
+            <br>
+            <button class="cyber-btn secondary" onclick="openScreen('screen-menu')"><span>VOLTAR</span></button>
+        </div>
+    </div>
+
+    <!-- ECRÃ: ESPERA DE LOBBY -->
     <div id="screen-lobby-wait" class="screen hidden">
-        <h2 style="color:#fff;">LOBBY</h2>
-        <div id="lobby-host-ui" class="hidden" style="text-align:center;">
-            <p style="color:#aaa;">CÓDIGO DO PRESENTE</p>
-            <div id="display-code" class="input-code" style="border:none; cursor:pointer; color:#ffd700;" onclick="copyCode()">...</div>
-            <p style="color:var(--o-color); animation: pulse-border 1s infinite; padding: 5px;">Esperando o Grinch...</p>
+        <div class="cyber-panel">
+            <h2 class="neon-subtitle">TERMINAL DE ENLACE</h2>
+            <div id="lobby-host-ui" class="hidden">
+                <p class="panel-desc">PARTILHA ESTA FREQUÊNCIA</p>
+                <div id="display-code" class="input-code code-display" onclick="copyCode()">...</div>
+                <p class="pulse-status">À ESPERA DE OPONENTE...</p>
+            </div>
+            <div id="lobby-client-ui" class="hidden">
+                <p class="panel-desc">INTRODUZ A FREQUÊNCIA DA SALA</p>
+                <input type="text" id="input-code" class="input-code" maxlength="6" placeholder="XXXXXX">
+                <br>
+                <button id="btn-connect" class="cyber-btn" onclick="connectToHost()"><span>SINCRONIZAR</span></button>
+                <p id="client-status" class="match-log"></p>
+            </div>
+            <div id="lobby-quick-ui" class="hidden">
+                <p class="matchmaking-title">A RASTREAR OPONENTES NA REDE</p>
+                <div class="loader"></div>
+                <p id="quick-log" class="match-log">A iniciar sensores...</p>
+            </div>
+            <br>
+            <button class="cyber-btn secondary" onclick="location.reload()"><span>CANCELAR</span></button>
         </div>
-        <div id="lobby-client-ui" class="hidden" style="text-align:center;">
-            <p style="color:#aaa;">DIGITE O CÓDIGO</p>
-            <input type="text" id="input-code" class="input-code" maxlength="6" placeholder="XXXXXX">
-            <br><button id="btn-connect" class="cyber-btn" onclick="connectToHost()"><span>CONECTAR</span></button>
-            <p id="client-status" class="match-log"></p>
-        </div>
-        <div id="lobby-quick-ui" class="hidden" style="text-align:center;">
-            <p style="color:#00ff88; font-weight:bold;">BUSCANDO PARTIDA</p>
-            <div class="loader"></div>
-            <p id="quick-log" class="match-log">Olhando a lista...</p>
-        </div>
-        <button class="cyber-btn secondary" onclick="location.reload()" style="margin-top:30px;"><span>CANCELAR</span></button>
     </div>
 
+    <!-- ECRÃ: FIM DE PARTIDA -->
     <div id="screen-gameover" class="screen hidden">
-        <h1 id="winner-text" class="title-glitch" style="font-size:3rem;">VENCEDOR</h1>
-        <div id="rematch-area"></div>
-        <button class="cyber-btn secondary" onclick="location.reload()" style="margin-top:20px;"><span>SAIR</span></button>
+        <div class="cyber-panel">
+            <h1 id="winner-text" class="title-glitch victory-title">VENCEDOR</h1>
+            <div id="rematch-area"></div>
+            <br>
+            <button class="cyber-btn secondary" onclick="location.reload()"><span>REGRESSAR AO TERMINAL</span></button>
+        </div>
     </div>
 
-    <script src="game.js?v=2.1"></script>
+    <script src="game.js?v=3.0"></script>
 </body>
 </html>
